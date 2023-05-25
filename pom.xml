@@ -86,6 +86,12 @@
             <artifactId>spring-boot-starter-logging</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.codehaus.xfire</groupId>
+            <artifactId>xfire-core</artifactId>
+            <version>1.2.6</version>
+        </dependency>
+
     </dependencies>
 
 
