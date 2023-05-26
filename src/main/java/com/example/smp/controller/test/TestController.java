@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/testproject/test")
+@RequestMapping("/test")
 @CrossOrigin
 public class TestController {
     Logger logger = LoggerFactory.getLogger(getClass());
