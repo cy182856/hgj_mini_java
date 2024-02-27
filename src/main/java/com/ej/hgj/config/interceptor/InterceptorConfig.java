@@ -1,4 +1,4 @@
-package com.example.smp.config.interceptor;
+package com.ej.hgj.config.interceptor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -13,10 +13,10 @@ public class InterceptorConfig extends WebMvcConfigurerAdapter {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(jwtInterceptor)
-                .addPathPatterns("/**")    //拦截所有请求 通过判断token是否合法来决定是否登陆
-                .excludePathPatterns("/user/login","/user/getInfo","/user/register","/**/export","/**/import", "/file/**","/role/**","/menu/**"); //放行接口
-        super.addInterceptors(registry);
+//        registry.addInterceptor(jwtInterceptor)
+//                .addPathPatterns("/**")    //拦截所有请求 通过判断token是否合法来决定是否登陆
+//                .excludePathPatterns("/doLogin"); //放行接口
+//        super.addInterceptors(registry);
     }
 
 }

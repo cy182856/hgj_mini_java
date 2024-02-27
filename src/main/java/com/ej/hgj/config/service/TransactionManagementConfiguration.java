@@ -1,4 +1,4 @@
-package com.example.smp.config.service;
+package com.ej.hgj.config.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;

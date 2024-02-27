@@ -1,6 +1,5 @@
-package com.example.smp.utils;
+package com.ej.hgj.utils;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.ParseException;
 import org.apache.http.client.ClientProtocolException;

@@ -1,4 +1,4 @@
-package com.example.smp.config;
+package com.ej.hgj.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -15,7 +15,7 @@ public class CorsFilter implements WebMvcConfigurer {
                 // 放行哪些原始域
                 .allowedOriginPatterns("*")
                 // 放行哪些请求方式
-                .allowedMethods("GET", "POST", "PUT", "DELETE")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 // 放行哪些原始请求头部信息
                 .allowedHeaders("*")
                 // 暴露哪些头部信息
