@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ej.hgj.dao.wechat.WechatPubConfMapper" >
+  <resultMap id="BaseResultMap" type="com.ej.hgj.entity.login.WechatPubConfDo" >
+    <id column="PUB_ORG_ID" property="pubOrgId" jdbcType="VARCHAR" />
+    <result column="PUB_APP_ID" property="pubAppId" jdbcType="VARCHAR" />
+    <result column="CUST_ID" property="custId" jdbcType="VARCHAR" />
+    <result column="APP_SECRET" property="appSecret" jdbcType="VARCHAR" />
+    <result column="ACCESS_TOKEN" property="accessToken" jdbcType="VARCHAR" />
+    <result column="STAT" property="stat" jdbcType="CHAR" />
+    <result column="UPD_TIME" property="updTime" jdbcType="CHAR" />
+    <result column="SINGLE_OR_MUTL" property="singleOrMutl" jdbcType="CHAR" />
+  </resultMap>
+  
+  <sql id="Base_Column_List" >
+    PUB_ORG_ID, PUB_APP_ID, CUST_ID, APP_SECRET, ACCESS_TOKEN, STAT, UPD_TIME,SINGLE_OR_MUTL
+  </sql>
+	<resultMap id="extensionResultMap" extends="BaseResultMap" type="com.ej.hgj.entity.login.WechatPubConfExtDo">
+		<result column="SHORT_NAME" property="shortName" jdbcType="VARCHAR" />
+		<result column="USR_NAME" property="usrName" jdbcType="VARCHAR" />
+		<result column="EW_CORP_ID" property="ewCorpId" jdbcType="VARCHAR" />
+		<result column="USR_STAT" property="usrStat" jdbcType="CHAR" />
+		<result column="USR_PROV" property="usrProv" jdbcType="CHAR" />
+		<result column="USR_AREA" property="usrArea" jdbcType="CHAR" />
+		<result column="OPEN_DATE" property="openDate" jdbcType="CHAR" />
+		<result column="OPEN_TIME" property="openTime" jdbcType="CHAR" />
+		<result column="BRANCH_ID" property="branchId" jdbcType="VARCHAR" />
+		<result column="BDEP_ID" property="bdepId" jdbcType="VARCHAR" />
+		<result column="SALE_ID" property="saleId" jdbcType="VARCHAR" />
+		<result column="PO_SEQ_ID" property="poSeqId" jdbcType="CHAR" />
+		<result column="MAG_MP" property="magMp" jdbcType="CHAR" />
+		<result column="MAG_EMAIL" property="magEmail" jdbcType="VARCHAR" />
+		<result column="MAG_TEL" property="magTel" jdbcType="VARCHAR" />
+		<result column="MAG_NAME" property="magName" jdbcType="VARCHAR" />
+		<result column="URGENT_MP" property="urgentMp" jdbcType="CHAR" />
+		<result column="LOGIN_ACTION" property="loginAction" jdbcType="CHAR" />
+		<result column="UPD_DATETIME" property="updDatetime" jdbcType="CHAR" />
+	</resultMap>
+    
+  <select id="getWechatPubConfByPk" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from WECHAT_PUB_CONF
+    where PUB_ORG_ID = #{pubOrgId,jdbcType=VARCHAR}
+  </select>
+</mapper>

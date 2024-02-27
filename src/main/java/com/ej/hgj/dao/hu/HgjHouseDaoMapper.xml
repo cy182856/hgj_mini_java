@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ej.hgj.dao.hu.HgjHouseDaoMapper">
+
+    <resultMap id="BaseMap" type="com.ej.hgj.entity.hu.HgjHouse">
+        <result column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="org_id" jdbcType="VARCHAR" property="orgId"/>
+        <result column="bud_id" jdbcType="VARCHAR" property="budId"/>
+        <result column="bud_code" jdbcType="VARCHAR" property="budCode"/>
+        <result column="bud_name" jdbcType="VARCHAR" property="budName"/>
+        <result column="grp_id" jdbcType="VARCHAR" property="grpId"/>
+        <result column="grp_code" jdbcType="VARCHAR" property="grpCode"/>
+        <result column="grp_name" jdbcType="VARCHAR" property="grpName"/>
+        <result column="res_code" jdbcType="VARCHAR" property="resCode"/>
+        <result column="res_name" jdbcType="VARCHAR" property="resName"/>
+        <result column="res_no" jdbcType="VARCHAR" property="resNo"/>
+        <result column="unit_no" jdbcType="VARCHAR" property="unitNo"/>
+        <result column="bud_area" jdbcType="DECIMAL" property="budArea"/>
+        <result column="house_floor" jdbcType="VARCHAR" property="houseFloor"/>
+        <result column="floor_num" jdbcType="INTEGER" property="floorNum"/>
+        <result column="rental_area" jdbcType="DECIMAL" property="rentalArea"/>
+        <result column="fee_area" jdbcType="DECIMAL" property="feeArea"/>
+        <result column="use_area" jdbcType="DECIMAL" property="useArea"/>
+        <result column="res_type" jdbcType="VARCHAR" property="resType"/>
+        <result column="porp_user" jdbcType="VARCHAR" property="porpUser"/>
+        <result column="rent_status" jdbcType="VARCHAR" property="rentStatus"/>
+        <result column="res_status" jdbcType="VARCHAR" property="resStatus"/>
+        <result column="deco_staus" jdbcType="VARCHAR" property="decoStatus"/>
+        <result column="fin_staus" jdbcType="VARCHAR" property="finStatus"/>
+        <result column="ser_status" jdbcType="VARCHAR" property="serStatus"/>
+        <result column="is_affect" jdbcType="INTEGER" property="isAffect"/>
+        <result column="status" jdbcType="VARCHAR" property="status"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+    </resultMap>
+    <sql id="Base_Column_List" >
+            id,
+            org_id,
+            bud_id,
+            bud_code,
+            bud_name,
+            grp_id,
+            grp_code,
+            grp_name,
+            res_code,
+            res_name,
+            res_no,
+            unit_no,
+            bud_area,
+            house_floor,
+            floor_num,
+            rental_area,
+            fee_area,
+            use_area,
+            res_type,
+            porp_user,
+            rent_status,
+            res_status,
+            deco_status,
+            fin_status,
+            ser_status,
+            is_affect,
+            status,
+            create_time,
+            update_time
+    </sql>
+
+    <!-- 根据主键查询-->
+    <select id="getById" resultMap="BaseMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from s_house
+        where id = #{id}
+    </select>
+
+    <!-- 查询列表-->
+    <select id="getList" resultMap="BaseMap"  parameterType="com.ej.hgj.entity.hu.HgjHouse">
+        select
+        <include refid="Base_Column_List" />
+        from s_house where 1 = 1
+        <if test="budName != null">
+            and bud_name like CONCAT('%', #{budName,jdbcType=VARCHAR},'%') ESCAPE '/'
+        </if>
+        <if test="unitNo != null">
+            and unit_no like CONCAT('%', #{unitNo,jdbcType=VARCHAR},'%') ESCAPE '/'
+        </if>
+    </select>
+
+    <!-- 根据客户编号查询房屋列表-->
+    <select id="getListByCstCode" resultMap="BaseMap" parameterType="com.ej.hgj.entity.hu.HgjHouse" >
+        select
+        <include refid="Base_Column_List" />
+        from
+            (
+                select
+                    hu.*
+                from
+                    s_rcr rcr
+                        left join s_contract con on con.id = rcr.ctt_id
+                        left join s_house hu on hu.id = rcr.res_id
+                where
+                        rcr.cst_id = (
+                        select
+                            id
+                        from
+                            s_cst
+                        where
+                            code = #{cstCode,jdbcType=VARCHAR}
+                    )
+                    <if test="houseIdList != null and houseIdList.size() > 0">
+                        and hu.id in
+                        <foreach collection="houseIdList" item="houseId" index="index" open="(" close=")" separator=",">
+                            #{houseId,jdbcType=VARCHAR}
+                        </foreach>
+                    </if>
+            ) t
+
+    </select>
+
+</mapper>

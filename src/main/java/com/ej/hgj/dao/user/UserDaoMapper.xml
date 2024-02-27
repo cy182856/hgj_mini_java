@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ej.hgj.dao.user.UserDaoMapper">
+
+    <resultMap id="BaseMap" type="com.ej.hgj.entity.user.User">
+        <result column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="project_num" jdbcType="VARCHAR" property="projectNum"/>
+        <result column="staff_id" jdbcType="VARCHAR" property="staffId"/>
+        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
+        <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+        <result column="qr_code" jdbcType="VARCHAR" property="qrCode"/>
+        <result column="role_id" jdbcType="VARCHAR" property="roleId"/>
+        <result column="role_name" jdbcType="VARCHAR" property="roleName"/>
+        <result column="password" jdbcType="VARCHAR" property="password"/>
+        <result column="alias" jdbcType="VARCHAR" property="alias"/>
+        <result column="dept_name" jdbcType="VARCHAR" property="deptName"/>
+        <result column="position" jdbcType="VARCHAR" property="position"/>
+        <result column="mobile" jdbcType="VARCHAR" property="mobile"/>
+        <result column="biz_mail" jdbcType="VARCHAR" property="bizMail"/>
+        <result column="avatar" jdbcType="VARCHAR" property="avatar"/>
+        <result column="thumb_avatar" jdbcType="VARCHAR" property="thumbAvatar"/>
+        <result column="gender" jdbcType="INTEGER" property="gender"/>
+        <result column="status" jdbcType="INTEGER" property="status"/>
+        <result column="create_by" jdbcType="VARCHAR" property="createBy"/>
+        <result column="update_by" jdbcType="VARCHAR" property="updateBy"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
+    </resultMap>
+    <sql id="Base_Column_List" >
+        id, project_num, staff_id, user_id, user_name, qr_code, password, alias, dept_name, `position`,
+		mobile, biz_mail, avatar, thumb_avatar, gender, status, create_time, update_time, create_by,
+        update_by, delete_flag
+    </sql>
+
+    <select id="queryUser" resultMap="BaseMap" >
+        select
+            <include refid="Base_Column_List" />
+        from t_user
+        where mobile = #{userName,jdbcType=VARCHAR} and password = #{password,jdbcType=VARCHAR}
+    </select>
+
+    <!-- 根据主键查询-->
+    <select id="getById" resultMap="BaseMap" parameterType="java.lang.String" >
+        select
+            <include refid="Base_Column_List" />
+        from t_user
+        where staff_id = #{id}
+    </select>
+
+    <!-- 根据cstCode查询-->
+    <select id="getByCstCode" resultMap="BaseMap" parameterType="java.lang.String" >
+        SELECT
+            u.*
+        FROM
+            t_user_build b
+                LEFT JOIN t_user u ON u.mobile = b.mobile
+        WHERE
+                b.bud_id IN (
+                SELECT
+                    hu.bud_id
+                FROM
+                    s_rcr rcr
+                        INNER JOIN s_house hu ON hu.id = rcr.res_id
+                        INNER JOIN s_cst c ON c.id = rcr.cst_id
+                WHERE
+                    c.`code` = #{cstCode}
+            )
+    </select>
+
+    <insert id="insertList" parameterType="java.util.List">
+        insert into t_user (
+        id, project_num, staff_id, user_id, user_name, password, alias, dept_name, `position`,
+        mobile, biz_mail, avatar, thumb_avatar, gender, status, create_time, update_time, create_by,
+        update_by, delete_flag
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.id,jdbcType=VARCHAR},
+            #{item.projectNum,jdbcType=VARCHAR},
+            #{item.staffId,jdbcType=VARCHAR},
+            #{item.userId,jdbcType=VARCHAR},
+            #{item.userName,jdbcType=VARCHAR},
+            #{item.password,jdbcType=VARCHAR},
+            #{item.alias,jdbcType=VARCHAR},
+            #{item.deptName,jdbcType=VARCHAR},
+            #{item.position,jdbcType=VARCHAR},
+            #{item.mobile,jdbcType=VARCHAR},
+            #{item.bizMail,jdbcType=VARCHAR},
+            #{item.avatar,jdbcType=VARCHAR},
+            #{item.thumbAvatar,jdbcType=VARCHAR},
+            #{item.gender,jdbcType=INTEGER},
+            #{item.status,jdbcType=INTEGER},
+            #{item.createTime,jdbcType=TIMESTAMP},
+            #{item.updateTime,jdbcType=TIMESTAMP},
+            #{item.createBy,jdbcType=VARCHAR},
+            #{item.updateBy,jdbcType=VARCHAR},
+            #{item.deleteFlag,jdbcType=INTEGER}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 查询列表-->
+    <select id="getList" resultMap="BaseMap"  parameterType="com.ej.hgj.entity.user.User">
+        select
+        u.*,r.role_name,r.id as role_id
+        from t_user u left join t_user_role ur on u.staff_id = ur.staff_id and ur.delete_flag = 0
+                      left join t_role r on ur.role_id = r.id and r.delete_flag = 0
+        where u.delete_flag = 0
+        <if test="userName != null">
+            and u.user_name like CONCAT('%', #{userName,jdbcType=VARCHAR},'%') ESCAPE '/'
+        </if>
+        <if test="deptName != null">
+            and u.dept_name like CONCAT('%', #{deptName,jdbcType=VARCHAR},'%') ESCAPE '/'
+        </if>
+        <if test="roleName != null and roleName != '' and roleName != '无角色'">
+            and r.role_name like CONCAT('%', #{roleName,jdbcType=VARCHAR},'%') ESCAPE '/'
+        </if>
+        <if test="roleName == '无角色'">
+            and r.role_name is null
+        </if>
+        <if test="mobile != null">
+            and u.mobile like CONCAT('%', #{mobile,jdbcType=VARCHAR},'%') ESCAPE '/'
+        </if>
+        order by r.role_name desc, id
+    </select>
+
+    <!-- 查询部门列表-->
+    <select id="getDeptList" resultMap="BaseMap"  parameterType="com.ej.hgj.entity.user.User">
+        select
+            u.dept_name
+        from
+            t_user u
+        where
+            u.delete_flag = 0
+          and u.dept_name is not null
+        group by
+            u.dept_name
+        order by
+            u.dept_name
+    </select>
+
+    <!-- 保存-->
+    <insert id="save" parameterType="com.ej.hgj.entity.user.User" >
+        insert into  t_user(
+        <if test="userCode != null">
+            `user_code`,
+        </if>
+        <if test="userName != null">
+            `user_name`,
+        </if>
+        <if test="nikeName != null">
+            `nike_name`,
+        </if>
+        <if test="mobile != null">
+            `mobile`,
+        </if>
+        <if test="userType != null">
+            `user_type`,
+        </if>
+        <if test="createTime != null">
+            `create_time`,
+        </if>
+        <if test="updateTime != null">
+            `update_time`,
+        </if>
+        <if test="deleteFlag != null">
+            `delete_flag`,
+        </if>
+        <if test="password != null">
+            `password`
+        </if>
+        )
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="userCode != null" >
+                #{userCode,jdbcType=VARCHAR},
+            </if>
+            <if test="userName != null" >
+                #{userName,jdbcType=VARCHAR},
+            </if>
+            <if test="nikeName != null" >
+                #{nikeName,jdbcType=VARCHAR},
+            </if>
+            <if test="mobile != null" >
+                #{mobile,jdbcType=VARCHAR},
+            </if>
+            <if test="userType != null">
+                #{userType,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="deleteFlag != null">
+                #{deleteFlag,jdbcType=INTEGER},
+            </if>
+            <if test="password != null">
+                #{password,jdbcType=VARCHAR}
+            </if>
+        </trim>
+    </insert>
+
+    <!-- 更新-->
+    <update id="update" parameterType="com.ej.hgj.entity.user.User" >
+        update
+        t_user
+        <set>
+            <if test="fileDate != null">
+                file_date = #{fileDate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="companyCode != null" >
+                company_code = #{companyCode,jdbcType=VARCHAR},
+            </if>
+            <if test="projectCode != null" >
+                project_code = #{projectCode,jdbcType=VARCHAR},
+            </if>
+            <if test="affDept != null" >
+                aff_dept = #{affDept,jdbcType=VARCHAR},
+            </if>
+            <if test="archiveTypeCode != null" >
+                archive_type_code = #{archiveTypeCode,jdbcType=VARCHAR},
+            </if>
+            <if test="tenantFloor != null" >
+                tenant_floor = #{tenantFloor,jdbcType=VARCHAR},
+            </if>
+            <if test="tenantUnit != null" >
+                tenant_unit = #{tenantUnit,jdbcType=VARCHAR},
+            </if>
+            <if test="depositCabinetNum != null" >
+                deposit_cabinet_num = #{depositCabinetNum,jdbcType=VARCHAR},
+            </if>
+            <if test="depositNum != null" >
+                deposit_num = #{depositNum,jdbcType=VARCHAR},
+            </if>
+            <if test="depositBoxNum != null" >
+                deposit_box_num = #{depositBoxNum,jdbcType=VARCHAR},
+            </if>
+            <if test="fileNum != null" >
+                file_num = #{fileNum,jdbcType=INTEGER},
+            </if>
+            <if test="scriptNum != null">
+                script_num = #{scriptNum,jdbcType=INTEGER},
+            </if>
+            <if test="scriptPage != null">
+                script_page = #{scriptPage,jdbcType=INTEGER},
+            </if>
+            <if test="copyNum != null">
+                copy_num = #{copyNum,jdbcType=INTEGER},
+            </if>
+            <if test="copyPage != null">
+                copy_page = #{copyPage,jdbcType=INTEGER},
+            </if>
+            <if test="fileSecLevel != null">
+                file_sec_level = #{fileSecLevel,jdbcType=VARCHAR},
+            </if>
+            <if test="contractStartDate != null">
+                contract_start_date = #{contractStartDate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="contractEndDate != null">
+                contract_end_date = #{contractEndDate,jdbcType=TIMESTAMP},
+            </if>
+            <!--<if test="createBy != null" >
+                create_by = #{createBy,jdbcType=VARCHAR},
+            </if>-->
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <!--<if test="updateBy != null" >
+                update_by = #{updateBy,jdbcType=VARCHAR},
+            </if>-->
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where id=#{id,jdbcType=VARCHAR}
+    </update>
+
+    <!-- 删除-->
+    <update id="delete" parameterType="java.lang.String" >
+        delete from t_user where id=#{id}
+    </update>
+
+</mapper>

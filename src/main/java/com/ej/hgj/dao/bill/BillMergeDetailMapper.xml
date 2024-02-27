@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ej.hgj.dao.bill.BillMergeDetailDaoMapper">
+
+    <resultMap id="BaseMap" type="com.ej.hgj.entity.bill.BillMergeDetail">
+        <result column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="bill_id" jdbcType="VARCHAR" property="billId"/>
+        <result column="rep_years" jdbcType="VARCHAR" property="repYears"/>
+        <result column="order_no" jdbcType="VARCHAR" property="orderNo"/>
+        <result column="pro_num" jdbcType="VARCHAR" property="proNum"/>
+        <result column="wx_open_id" jdbcType="VARCHAR" property="wxOpenId"/>
+        <result column="cst_code" jdbcType="VARCHAR" property="cstCode"/>
+        <result column="pri_rev" jdbcType="DECIMAL" property="priRev"/>
+        <result column="pri_paid" jdbcType="DECIMAL" property="priPaid"/>
+        <result column="ip_item_name" jdbcType="VARCHAR" property="ipItemName"/>
+        <result column="bill_status" jdbcType="INTEGER" property="billStatus"/>
+        <result column="sy_pay_status" jdbcType="INTEGER" property="syPayStatus"/>
+        <result column="sy_pay_msg" jdbcType="VARCHAR" property="syPayMsg"/>
+        <result column="create_by" jdbcType="VARCHAR" property="createBy"/>
+        <result column="update_by" jdbcType="VARCHAR" property="updateBy"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
+    </resultMap>
+    <sql id="Base_Column_List" >
+        id, bill_id, rep_years, order_no, pro_num, wx_open_id, cst_code,pri_rev, pri_paid, ip_item_name,
+        bill_status, sy_pay_status, sy_pay_msg, create_time, update_time, create_by, update_by, delete_flag
+    </sql>
+
+    <!-- 查询列表-->
+    <select id="getList"  resultMap="BaseMap"  parameterType="com.ej.hgj.entity.bill.BillMergeDetail">
+        select
+        <include refid="Base_Column_List" />
+        from t_bill_merge_detail
+        where delete_flag = 0
+        <if test="repYears != null">
+            AND rep_years = #{repYears,jdbcType=VARCHAR}
+        </if>
+        <if test="proNum != null">
+            AND pro_num = #{proNum,jdbcType=VARCHAR}
+        </if>
+        <if test="cstCode != null">
+            AND cst_code = #{cstCode,jdbcType=VARCHAR}
+        </if>
+        <if test="wxOpenId != null">
+            AND wx_open_id = #{wxOpenId,jdbcType=VARCHAR}
+        </if>
+        <if test="orderNo != null">
+            AND order_no = #{orderNo,jdbcType=VARCHAR}
+        </if>
+        <if test="billId != null">
+            AND bill_id = #{billId,jdbcType=VARCHAR}
+        </if>
+        <if test="priPaid != null">
+            AND pri_paid = #{priPaid,jdbcType=DECIMAL}
+        </if>
+        <if test="billOrderNoList != null and billOrderNoList.size() > 0">
+            and order_no in
+            <foreach collection="billOrderNoList" item="orderNoList" index="index" open="(" close=")" separator=",">
+                #{orderNoList,jdbcType=VARCHAR}
+            </foreach>
+        </if>
+        <if test="billStatusList != null and billStatusList.size() > 0">
+            and bill_status in
+            <foreach collection="billStatusList" item="billStatus" index="index" open="(" close=")" separator=",">
+                #{billStatus,jdbcType=INTEGER}
+            </foreach>
+        </if>
+        <if test="syPayStatusList != null and syPayStatusList.size() > 0">
+            and sy_pay_status in
+            <foreach collection="syPayStatusList" item="syPayStatus" index="index" open="(" close=")" separator=",">
+                #{syPayStatus,jdbcType=INTEGER}
+            </foreach>
+        </if>
+        order by update_time desc
+    </select>
+
+    <!-- 查询一小时前支付成功但思源未同步支付状态的数据-->
+    <select id="getBillByStatus"  resultMap="BaseMap"  parameterType="java.lang.String">
+        select
+        <include refid="Base_Column_List" />
+        from t_bill_merge_detail
+        where delete_flag = 0
+        and bill_status = 2
+        and sy_pay_status in (0,2)
+        and DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s' ) &lt;= #{beForOneHour,jdbcType=VARCHAR}
+    </select>
+
+    <!-- 批量插入-->
+    <insert id="insertList" parameterType="java.util.List">
+        insert into t_bill_merge_detail (
+        id, bill_id, rep_years, order_no, pro_num, wx_open_id, cst_code, pri_rev, pri_paid, ip_item_name,
+        bill_status, sy_pay_status, create_time, update_time, delete_flag
+        )
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.id,jdbcType=VARCHAR},
+            #{item.billId,jdbcType=VARCHAR},
+            #{item.repYears,jdbcType=VARCHAR},
+            #{item.orderNo,jdbcType=VARCHAR},
+            #{item.proNum,jdbcType=VARCHAR},
+            #{item.wxOpenId,jdbcType=VARCHAR},
+            #{item.cstCode,jdbcType=VARCHAR},
+            #{item.priRev,jdbcType=DECIMAL},
+            #{item.priPaid,jdbcType=DECIMAL},
+            #{item.ipItemName,jdbcType=VARCHAR},
+            #{item.billStatus,jdbcType=INTEGER},
+            #{item.syPayStatus,jdbcType=INTEGER},
+            #{item.createTime,jdbcType=TIMESTAMP},
+            #{item.updateTime,jdbcType=TIMESTAMP},
+            #{item.deleteFlag,jdbcType=INTEGER}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 根据账单号更新-->
+    <update id="updateByBillId" parameterType="com.ej.hgj.entity.bill.BillMergeDetail" >
+        update
+        t_bill_merge_detail
+        <set>
+            <if test="priPaid != null">
+                pri_paid = #{priPaid,jdbcType=DECIMAL},
+            </if>
+            <if test="billStatus != null">
+                bill_status = #{billStatus,jdbcType=INTEGER},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where bill_id = #{billId,jdbcType=VARCHAR}
+    </update>
+
+    <!-- 根据账单号更新为支付中-->
+    <update id="updateMerDetailStatus" parameterType="com.ej.hgj.entity.bill.BillMergeDetail" >
+        update
+        t_bill_merge_detail
+        <set>
+            <if test="billStatus != null">
+                bill_status = #{billStatus,jdbcType=INTEGER},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where bill_id = #{billId,jdbcType=VARCHAR} and bill_status = 0
+    </update>
+
+    <!-- 更新-->
+    <update id="update" parameterType="com.ej.hgj.entity.bill.BillMergeDetail" >
+        update
+        t_bill_merge_detail
+        <set>
+            <if test="priPaid != null">
+                pri_paid = #{priPaid,jdbcType=DECIMAL},
+            </if>
+            <if test="syPayStatus != null">
+                sy_pay_status = #{syPayStatus,jdbcType=INTEGER},
+            </if>
+            <if test="syPayMsg != null">
+                sy_pay_msg = #{syPayMsg,jdbcType=VARCHAR},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where id = #{id,jdbcType=VARCHAR}
+    </update>
+
+</mapper>

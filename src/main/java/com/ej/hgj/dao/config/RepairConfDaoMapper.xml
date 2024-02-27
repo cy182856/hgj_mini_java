@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ej.hgj.dao.config.RepairConfDaoMapper">
+
+    <resultMap id="BaseMap" type="com.ej.hgj.entity.config.RepairConfig">
+        <result column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="project_num" jdbcType="VARCHAR" property="projectNum"/>
+        <result column="wo_no_basic_id" jdbcType="VARCHAR" property="woNoBasicId"/>
+        <result column="wo_no_basic_name" jdbcType="VARCHAR" property="woNoBasicName"/>
+        <result column="ques_type_id" jdbcType="VARCHAR" property="quesTypeId"/>
+        <result column="ques_type_name" jdbcType="VARCHAR" property="quesTypeName"/>
+        <result column="repair_type" jdbcType="VARCHAR" property="repairType"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <result column="create_by" jdbcType="VARCHAR" property="createBy"/>
+        <result column="update_by" jdbcType="VARCHAR" property="updateBy"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
+    </resultMap>
+    <sql id="Base_Column_List" >
+        id, project_num, wo_no_basic_id, wo_no_basic_name, ques_type_id, ques_type_name, repair_type, description, create_time, update_time, create_by,
+        update_by, delete_flag
+    </sql>
+
+    <!-- 根据主键查询-->
+    <select id="getById" resultMap="BaseMap" parameterType="java.lang.String" >
+        select
+            <include refid="Base_Column_List" />
+        from t_repair_config
+        where id = #{id}
+    </select>
+
+    <!-- 根据项目号查询-->
+    <select id="getByProjectNum" resultMap="BaseMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from t_repair_config
+        where project_num = #{projectNum}
+    </select>
+
+    <!-- 查询列表-->
+    <select id="getList" resultMap="BaseMap"  parameterType="com.ej.hgj.entity.config.RepairConfig">
+        select
+        <include refid="Base_Column_List" />
+        from t_repair_config
+        where delete_flag = 0
+        <if test="projectNum != null">
+            and project_num = #{projectNum}
+        </if>
+    </select>
+
+</mapper>

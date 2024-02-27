@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ej.hgj.sy.dao.bill.BillDaoMapper">
+
+    <resultMap id="BaseMap" type="com.ej.hgj.entity.bill.Bill">
+        <result column="ID" jdbcType="VARCHAR" property="id"/>
+        <result column="RepYears" jdbcType="VARCHAR" property="repYears"/>
+        <result column="PriRev" jdbcType="DECIMAL" property="priRev"/>
+        <result column="PriPaid" jdbcType="DECIMAL" property="priPaid"/>
+        <result column="PriFailures" jdbcType="DECIMAL" property="priFailures"/>
+        <result column="LFRev" jdbcType="DECIMAL" property="lFRev"/>
+        <result column="LFPaid" jdbcType="DECIMAL" property="lFPaid"/>
+        <result column="LFFailures" jdbcType="DECIMAL" property="lFFailures"/>
+        <result column="ResID" jdbcType="VARCHAR" property="resId"/>
+        <result column="RevAbstract" jdbcType="VARCHAR" property="revAbstract"/>
+        <result column="LockLogo" jdbcType="INTEGER" property="lockLogo"/>
+        <result column="RevPSDate" jdbcType="TIMESTAMP" property="revPSDate"/>
+        <result column="RevPEDate" jdbcType="TIMESTAMP" property="revPEDate"/>
+        <result column="ImaCode" jdbcType="VARCHAR" property="imaCode"/>
+        <result column="DOMR" jdbcType="DECIMAL" property="doMr"/>
+        <result column="DataOfRead" jdbcType="DECIMAL" property="dataOfRead"/>
+        <result column="LMRD" jdbcType="TIMESTAMP" property="lMrd"/>
+        <result column="TMRD" jdbcType="TIMESTAMP" property="tMrd"/>
+        <result column="LMR" jdbcType="DECIMAL" property="lMr"/>
+        <result column="TMR" jdbcType="DECIMAL" property="tMr"/>
+        <result column="LCIAmount" jdbcType="DECIMAL" property="lciAmount"/>
+        <result column="CIAmount" jdbcType="DECIMAL" property="ciAmount"/>
+        <result column="ResName" jdbcType="VARCHAR" property="resName"/>
+        <result column="IPItemName" jdbcType="VARCHAR" property="ipItemName"/>
+    </resultMap>
+    <sql id="Base_Column_List" >
+        ID,
+        RepYears,
+        PriRev,
+        PriPaid,
+        PriFailures,
+        LFRev,
+        LFPaid,
+        LFFailures,
+        ResID,
+        RevAbstract,
+        LockLogo,
+        RevPSDate,
+        RevPEDate,
+        ImaCode,
+        DOMR,
+        DataOfRead,
+        LMRD,
+        TMRD,
+        LMR,
+        TMR,
+        LCIAmount,
+        CIAmount,
+        ResName,
+        IPItemName
+    </sql>
+
+    <select id="getListByRepYears" resultMap="BaseMap" parameterType="com.ej.hgj.vo.bill.BillRequestVo" >
+        select t.RepYears,sum(t.PriRev) as PriRev, sum(t.PriPaid) as PriPaid from(
+            SELECT
+            vfr.ID,
+            vfr.RepYears,
+            vfr.PriRev,
+            vfr.PriPaid,
+            vfr.PriFailures,
+            vfr.LFRev,
+            vfr.LFPaid,
+            vfr.LFFailures,
+            vfr.ResID,
+            vfr.RevAbstract,
+            (
+            CASE
+            WHEN vfr.PendingLogo = 1 THEN
+            10
+            ELSE
+            vfr.LockLogo
+            END
+            ) AS LockLogo,
+            vfr.RevPSDate,
+            vfr.RevPEDate,
+            h.ResName,
+            vfr.IPItemName
+            FROM
+            vw_FnRev AS vfr
+            LEFT JOIN House AS h ON h.ID = vfr.ResID
+            WHERE vfr.IsAffect = 1
+            AND vfr.OrgID = #{proNum,jdbcType=VARCHAR}
+            AND vfr.CstID = #{cstId,jdbcType=VARCHAR}
+            <if test="repYears != null">
+                AND vfr.RepYears = #{repYears,jdbcType=VARCHAR}
+            </if>
+<!--            <if test="lockLogo != null and lockLogo == 0">-->
+<!--                AND vfr.LockLogo IN (0, 1)-->
+<!--            </if>-->
+<!--            <if test="lockLogo != null and lockLogo == 1">-->
+<!--                AND vfr.LockLogo IN (9)-->
+<!--            </if>-->
+        )t
+        group by t.RepYears
+        ORDER BY t.RepYears DESC
+    </select>
+
+    <!-- 根据ID查询-->
+    <select id="getOrderById" resultMap="BaseMap" parameterType="java.lang.String" >
+        SELECT
+        vfr.ID,
+        vfr.RepYears,
+        vfr.PriRev,
+        vfr.PriPaid,
+        vfr.PriFailures,
+        vfr.LFRev,
+        vfr.LFPaid,
+        vfr.LFFailures,
+        vfr.ResID,
+        vfr.RevAbstract,
+        (
+        CASE
+        WHEN vfr.PendingLogo = 1 THEN
+        10
+        ELSE
+        vfr.LockLogo
+        END
+        ) AS LockLogo,
+        vfr.RevPSDate,
+        vfr.RevPEDate,
+        vfr.IPItemName
+        FROM
+        vw_FnRev AS vfr
+        WHERE vfr.IsAffect = 1
+        AND vfr.ID = #{id,jdbcType=VARCHAR}
+    </select>
+
+
+    <!-- 查询ID查询-->
+    <select id="getOrderByIds" resultMap="BaseMap" parameterType="com.ej.hgj.vo.bill.BillRequestVo" >
+        SELECT
+            vfr.ID,
+            vfr.RepYears,
+            vfr.PriRev,
+            vfr.PriPaid,
+            vfr.PriFailures,
+            vfr.LFRev,
+            vfr.LFPaid,
+            vfr.LFFailures,
+            vfr.ResID,
+            vfr.RevAbstract,
+            (
+                CASE
+                    WHEN vfr.PendingLogo = 1 THEN
+                        10
+                    ELSE
+                        vfr.LockLogo
+                    END
+                ) AS LockLogo,
+            vfr.RevPSDate,
+            vfr.RevPEDate,
+            h.ResName,
+            vfr.IPItemName
+        FROM
+            vw_FnRev AS vfr
+        LEFT JOIN House AS h ON h.ID = vfr.ResID
+        WHERE vfr.IsAffect = 1
+        and vfr.id in
+        <foreach collection="billIds" item="ids" index="index" open="(" close=")" separator=",">
+            #{ids,jdbcType=VARCHAR}
+        </foreach>
+        <if test="lockLogo != null and lockLogo == 0">
+            AND vfr.LockLogo IN (0)
+        </if>
+    </select>
+
+    <!--查询列表-->
+    <select id="getList" resultMap="BaseMap" parameterType="com.ej.hgj.vo.bill.BillRequestVo" >
+            SELECT
+            vfr.ID,
+            vfr.RepYears,
+            vfr.PriRev,
+            vfr.PriPaid,
+            vfr.PriFailures,
+            vfr.LFRev,
+            vfr.LFPaid,
+            vfr.LFFailures,
+            vfr.ResID,
+            vfr.RevAbstract,
+            (
+            CASE
+            WHEN vfr.PendingLogo = 1 THEN
+            10
+            ELSE
+            vfr.LockLogo
+            END
+            ) AS LockLogo,
+            vfr.RevPSDate,
+            vfr.RevPEDate,
+            --         ir.ImaCode,
+            --         ir.DOMR,
+            --         ir.DataOfRead,
+            --         ir.LMRD,
+            --         ir.TMRD,
+            --         ir.LMR,
+            --         ir.TMR,
+            --         ir.LCIAmount,
+            --         ir.CIAmount,
+            h.ResName,
+            vfr.IPItemName
+            FROM
+            vw_FnRev AS vfr
+            --         LEFT JOIN FnRevReadRelation AS frrr ON frrr.RevID = vfr.ID
+            --         LEFT JOIN ImaRead AS ir ON ir.ID = frrr.ReadID
+            LEFT JOIN House AS h ON h.ID = vfr.ResID
+            WHERE vfr.IsAffect = 1
+            AND vfr.OrgID = #{proNum,jdbcType=VARCHAR}
+            AND vfr.CstID = #{cstId,jdbcType=VARCHAR}
+            <if test="id != null">
+                AND vfr.ID = #{id,jdbcType=VARCHAR}
+            </if>
+            <if test="ipItemName != null">
+                AND  vfr.IPItemName = #{ipItemName,jdbcType=VARCHAR}
+            </if>
+            <if test="repYears != null">
+                AND vfr.RepYears = #{repYears,jdbcType=VARCHAR}
+            </if>
+            <if test="lockLogo != null and lockLogo == 0">
+                AND vfr.LockLogo IN (0)
+            </if>
+            <if test="lockLogo != null and lockLogo == 1">
+                AND vfr.LockLogo IN (9)
+            </if>
+            <if test="billItemNameList != null and billItemNameList.size() > 0">
+                and vfr.IPItemName in
+                <foreach collection="billItemNameList" item="billItemName" index="index" open="(" close=")" separator=",">
+                    #{billItemName,jdbcType=VARCHAR}
+                </foreach>
+            </if>
+            <if test="houseIdList != null and houseIdList.size() > 0">
+                and h.id in
+                <foreach collection="houseIdList" item="houseId" index="index" open="(" close=")" separator=",">
+                    #{houseId,jdbcType=VARCHAR}
+                </foreach>
+            </if>
+            <if test="billOrderNoList != null and billOrderNoList.size() > 0">
+                and vfr.ID not in
+                <foreach collection="billOrderNoList" item="orderNoList" index="index" open="(" close=")" separator=",">
+                    #{orderNoList,jdbcType=VARCHAR}
+                </foreach>
+            </if>
+            ORDER BY vfr.RepYears DESC
+            <!--         AND vfr.LockLogo IN (0, 1, 9)-->
+            <!--         AND h.GrpID='P20170502bc8b54a4124'-->
+            <!--         AND vfr.BudID='P201705021cc4644c547'-->
+            <!--         AND vfr.ResID='P201705026bcdd7ae866'-->
+            <!--         AND vfr.CttID='1708231135030001006E'-->
+            <!--        AND vfr.RepYears >= '2022-01' AND vfr.RepYears <= '2023-08'-->
+    </select>
+
+    <!--查询月账单金额-->
+    <select id="getBillMonthAmount" resultMap="BaseMap" parameterType="com.ej.hgj.vo.bill.BillRequestVo" >
+        SELECT
+        vfr.RepYears, sum(vfr.PriRev) as PriRev
+        FROM
+        vw_FnRev AS vfr
+        LEFT JOIN House AS h ON h.ID = vfr.ResID
+        WHERE vfr.IsAffect = 1
+        AND vfr.OrgID = #{proNum,jdbcType=VARCHAR}
+        AND vfr.CstID = #{cstId,jdbcType=VARCHAR}
+        <if test="ipItemName != null">
+            AND  vfr.IPItemName = #{ipItemName,jdbcType=VARCHAR}
+        </if>
+        <if test="repYears != null">
+            AND vfr.RepYears = #{repYears,jdbcType=VARCHAR}
+        </if>
+        <if test="lockLogo != null and lockLogo == 0">
+            AND vfr.LockLogo IN (0)
+        </if>
+        <if test="lockLogo != null and lockLogo == 1">
+            AND vfr.LockLogo IN (9)
+        </if>
+        <if test="houseIdList != null and houseIdList.size() > 0">
+            and h.id in
+            <foreach collection="houseIdList" item="houseId" index="index" open="(" close=")" separator=",">
+                #{houseId,jdbcType=VARCHAR}
+            </foreach>
+        </if>
+        group by vfr.RepYears
+        ORDER BY vfr.RepYears DESC
+    </select>
+
+    <!--查询总欠费金额-->
+    <select id="priRevAmount" resultMap="BaseMap" parameterType="com.ej.hgj.vo.bill.BillRequestVo" >
+        SELECT
+            sum(vfr.PriRev) as PriRev
+        FROM
+            vw_FnRev AS vfr
+                LEFT JOIN House AS h ON h.ID = vfr.ResID
+        WHERE vfr.IsAffect = 1 and vfr.LockLogo in (0)
+          AND vfr.OrgID = #{proNum,jdbcType=VARCHAR}
+          AND vfr.CstID = #{cstId,jdbcType=VARCHAR}
+        <if test="billItemNameList != null and billItemNameList.size() > 0">
+            and vfr.IPItemName in
+            <foreach collection="billItemNameList" item="billItemName" index="index" open="(" close=")" separator=",">
+                #{billItemName,jdbcType=VARCHAR}
+            </foreach>
+        </if>
+        <if test="houseIdList != null and houseIdList.size() > 0">
+            and h.id in
+            <foreach collection="houseIdList" item="houseId" index="index" open="(" close=")" separator=",">
+                #{houseId,jdbcType=VARCHAR}
+            </foreach>
+        </if>
+    </select>
+
+    <!--获取所有账单月份-->
+    <select id="getMonthBill_09" resultMap="BaseMap" parameterType="com.ej.hgj.vo.bill.BillRequestVo" >
+        SELECT
+        RepYears, vfr.IPItemName, 0 as PriRev
+        FROM
+        vw_FnRev AS vfr
+        LEFT JOIN House AS h ON h.ID = vfr.ResID
+        WHERE vfr.IsAffect = 1 and vfr.LockLogo in (0,9)
+        AND vfr.OrgID = #{proNum,jdbcType=VARCHAR}
+        AND vfr.CstID = #{cstId,jdbcType=VARCHAR}
+        <if test="billItemNameList != null and billItemNameList.size() > 0">
+            and vfr.IPItemName in
+            <foreach collection="billItemNameList" item="billItemName" index="index" open="(" close=")" separator=",">
+                #{billItemName,jdbcType=VARCHAR}
+            </foreach>
+        </if>
+        <if test="houseIdList != null and houseIdList.size() > 0">
+            and h.id in
+            <foreach collection="houseIdList" item="houseId" index="index" open="(" close=")" separator=",">
+                #{houseId,jdbcType=VARCHAR}
+            </foreach>
+        </if>
+        group by vfr.RepYears,vfr.IPItemName
+        order by vfr.RepYears desc
+    </select>
+
+    <!--获取未缴清账单月份-->
+    <select id="getMonthBill_0" resultMap="BaseMap" parameterType="com.ej.hgj.vo.bill.BillRequestVo" >
+        SELECT
+        RepYears,vfr.IPItemName, SUM(vfr.priRev) as PriRev
+        FROM
+        vw_FnRev AS vfr
+        LEFT JOIN House AS h ON h.ID = vfr.ResID
+        WHERE vfr.IsAffect = 1 and vfr.LockLogo in (0)
+        AND vfr.OrgID = #{proNum,jdbcType=VARCHAR}
+        AND vfr.CstID = #{cstId,jdbcType=VARCHAR}
+        <if test="billItemNameList != null and billItemNameList.size() > 0">
+            and vfr.IPItemName in
+            <foreach collection="billItemNameList" item="billItemName" index="index" open="(" close=")" separator=",">
+                #{billItemName,jdbcType=VARCHAR}
+            </foreach>
+        </if>
+        <if test="houseIdList != null and houseIdList.size() > 0">
+            and h.id in
+            <foreach collection="houseIdList" item="houseId" index="index" open="(" close=")" separator=",">
+                #{houseId,jdbcType=VARCHAR}
+            </foreach>
+        </if>
+        group by vfr.RepYears,vfr.IPItemName
+        order by vfr.RepYears desc
+    </select>
+
+    <!--查询月账单详细-->
+    <select id="getMonthBillDetail" resultMap="BaseMap" parameterType="com.ej.hgj.vo.bill.BillRequestVo" >
+        SELECT
+        RepYears,vfr.IPItemName, SUM(vfr.priRev) as PriRev
+        FROM
+        vw_FnRev AS vfr
+        LEFT JOIN House AS h ON h.ID = vfr.ResID
+        WHERE vfr.IsAffect = 1 and vfr.LockLogo in (0)
+        AND vfr.OrgID = #{proNum,jdbcType=VARCHAR}
+        AND vfr.CstID = #{cstId,jdbcType=VARCHAR}
+        <if test="billItemNameList != null and billItemNameList.size() > 0">
+            and vfr.IPItemName in
+            <foreach collection="billItemNameList" item="billItemName" index="index" open="(" close=")" separator=",">
+                #{billItemName,jdbcType=VARCHAR}
+            </foreach>
+        </if>
+        <if test="houseIdList != null and houseIdList.size() > 0">
+            and h.id in
+            <foreach collection="houseIdList" item="houseId" index="index" open="(" close=")" separator=",">
+                #{houseId,jdbcType=VARCHAR}
+            </foreach>
+        </if>
+        group by vfr.RepYears,vfr.IPItemName
+        order by vfr.RepYears desc
+    </select>
+
+</mapper>

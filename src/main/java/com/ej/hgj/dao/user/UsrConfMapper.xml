@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ej.hgj.dao.user.UsrConfMapper" >
+	<resultMap id="BaseResultMap" type="com.ej.hgj.entity.user.UsrConfDO" >
+		<id column="CUST_ID" property="custId" jdbcType="VARCHAR" />
+		<result column="PROP_TYPE" property="propType" jdbcType="CHAR" />
+		<result column="EXP_DATE" property="expDate" jdbcType="CHAR" />
+		<result column="HOUSE_CNT" property="houseCnt" jdbcType="INTEGER" />
+		<result column="MAX_PO_CNT" property="maxPoCnt" jdbcType="SMALLINT" />
+		<result column="MAX_HU_CNT" property="maxHuCnt" jdbcType="SMALLINT" />
+		<result column="MODULE_BITMAP" property="moduleBitmap" jdbcType="VARCHAR" />
+		<result column="HU_OPEN_MODE" property="huOpenMode" jdbcType="CHAR" />
+		<result column="IS_PACK_CODE" property="isPackCode" jdbcType="CHAR" />
+		<result column="REPAIR_WORK_TIME" property="repairWorkTime" jdbcType="CHAR" />
+		<result column="WK_TIME_TEL" property="wkTimeTel" jdbcType="VARCHAR" />
+		<result column="URGENT_TEL" property="urgentTel" jdbcType="VARCHAR" />
+		<result column="REPAIR_ASSIGN" property="repairAssign" jdbcType="CHAR" />
+		<result column="REPAIR_TIME_CNT" property="repairTimeCnt" jdbcType="INTEGER" />
+		<result column="AUDIT_BITMAP" property="auditBitmap" jdbcType="VARCHAR" />
+		<result column="HOME_IMG_CNT" property="homeImgCnt" jdbcType="SMALLINT" />
+		<result column="WX_PUB_GREET" property="wxPubGreet" jdbcType="VARCHAR" />
+		<result column="UPD_DATETIME" property="updDatetime" jdbcType="CHAR" />
+		<result column="PACK_PAGE_TIP" property="packPageTip" jdbcType="VARCHAR" />
+		<result column="LOGIN_ERR_DESC" property="loginErrDesc" jdbcType="VARCHAR" />
+		<result column="QPAD_BITMAP" property="qpadBitmap" jdbcType="VARCHAR" />
+		<result column="ADV_PFEE_MON" property="advPfeeMon" jdbcType="SMALLINT" />
+		<result column="PFEE_START_MON" property="pfeeStartMon" jdbcType="CHAR" />
+		<result column="IS_REPAIR_TIME" property="isRepairTime" jdbcType="CHAR" />
+		<result column="REPAIR_BTYPE_ID" property="repairBtypeId" jdbcType="VARCHAR" />
+		<result column="ADV_CFEE_MON" property="advCfeeMon" jdbcType="TINYINT" />
+		<result column="PFEE_PAY_CYC" property="pfeePayCyc" jdbcType="CHAR" />
+		<result column="IS_PFEE_SPAN" property="isPfeeSpan" jdbcType="CHAR" />
+		<result column="PFEE_REMARK" property="pfeeRemark" jdbcType="VARCHAR" />
+		<result column="HEO_MSG_OPEN" property="heoMsgOpen" jdbcType="CHAR" />
+		<result column="PFEE_END_MON" property="pfeeEndMon" jdbcType="CHAR" />
+	</resultMap>
+	
+	<sql id="Base_Column_List" >
+		CUST_ID, PROP_TYPE, EXP_DATE, HOUSE_CNT, MAX_PO_CNT, MAX_HU_CNT, MODULE_BITMAP, HU_OPEN_MODE, IS_PACK_CODE, 
+		REPAIR_WORK_TIME, WK_TIME_TEL, URGENT_TEL, REPAIR_ASSIGN, REPAIR_TIME_CNT, AUDIT_BITMAP, HOME_IMG_CNT, WX_PUB_GREET, UPD_DATETIME,
+		PACK_PAGE_TIP, LOGIN_ERR_DESC, QPAD_BITMAP, ADV_PFEE_MON, PFEE_START_MON, IS_REPAIR_TIME, REPAIR_BTYPE_ID, ADV_CFEE_MON,
+		PFEE_PAY_CYC, IS_PFEE_SPAN, PFEE_REMARK, HEO_MSG_OPEN, PFEE_END_MON
+	</sql>
+	
+	<select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+		select 
+		<include refid="Base_Column_List" />
+		from usr_conf
+		where CUST_ID = #{custId,jdbcType=VARCHAR}
+	</select>
+</mapper>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ej.hgj.dao.hu.HuHgjBindMapper">
+    <resultMap id="BaseResultMap" type="com.ej.hgj.entity.hu.HuHgjBindDo">
+        <!--@mbg.generated-->
+        <!--@Table hu_hgj_bind-->
+        <id column="HGJ_OPEN_ID" jdbcType="VARCHAR" property="hgjOpenId"/>
+        <id column="WX_SEQ_ID" jdbcType="CHAR" property="wxSeqId"/>
+        <result column="CUST_ID" jdbcType="VARCHAR" property="custId"/>
+        <result column="HU_SEQ_ID" jdbcType="CHAR" property="huSeqId"/>
+        <result column="HOUSE_SEQ_ID" jdbcType="CHAR" property="houseSeqId"/>
+        <result column="STAT" jdbcType="CHAR" property="stat"/>
+    </resultMap>
+    <resultMap id="BaseResultMapExt" extends="BaseResultMap" type="com.ej.hgj.entity.ext.HuHgjBindExtDo">
+        <result column="AUTH_BITMAP" jdbcType="VARCHAR" property="authBitmap"/>
+        <result column="NOTIFY_BITMAP" jdbcType="VARCHAR" property="notifyBitmap"/>
+        <result column="BUILDING_ID" jdbcType="CHAR" property="buildingId"/>
+        <result column="AREA_ID" jdbcType="CHAR" property="areaId"/>
+        <result column="HEAD_IMG_URL" jdbcType="VARCHAR" property="headImgUrl"/>
+        <result column="NICK_NAME" jdbcType="VARCHAR" property="nickName"/>
+        <result column="HOUSE_STAT" jdbcType="CHAR" property="houseStat"/>
+        <result column="SCORE_SUM" jdbcType="INTEGER" property="scoreSum"/>
+        <result column="BUILDING_NAME" jdbcType="VARCHAR" property="buildingName"/>
+        <result column="AREA_NAME" jdbcType="VARCHAR" property="areaName"/>
+        <result column="HOUSE_NO" jdbcType="VARCHAR" property="houseNo"/>
+        <result column="HU_ROLE" jdbcType="VARCHAR" property="huRole"/>
+        <result column="SHORT_NAME" jdbcType="VARCHAR" property="commanyShortName"/>
+        <result column="MODULE_BITMAP" jdbcType="VARCHAR" property="moduleBitmap"/>
+        <result column="REPAIR_WORK_TIME" jdbcType="VARCHAR" property="repairWorkTime"/>
+        <result column="URGENT_TEL" jdbcType="VARCHAR" property="urgentTel"/>
+        <result column="WK_TIME_TEL" jdbcType="VARCHAR" property="wkTimeTel"/>
+        <result column="REPAIR_TIME_CNT" jdbcType="VARCHAR" property="repairTimeCnt"/>
+        <result column="PROP_TYPE" jdbcType="CHAR" property="propType"/>
+        <result column="HU_STAT" jdbcType="CHAR" property="huStat"/>
+        <result column="AUTH_MASK_BM" jdbcType="VARCHAR" property="authMaskBm"/>
+        <result column="LOGIN_ERR_DESC" jdbcType="VARCHAR" property="loginErrDesc"/>
+        <result column="USR_STAT" jdbcType="CHAR" property="usrStat"/>
+        <result column="PO_KEEPER_SEQ" jdbcType="CHAR" property="poKeeperSeq"/>
+        <result column="PUB_ORG_ID" jdbcType="VARCHAR" property="pubOrgId"/>
+        <result column="QPAD_BITMAP" jdbcType="VARCHAR" property="qpadBitmap"/>
+        <result column="IS_REPAIR_TIME" jdbcType="VARCHAR" property="isRepairTime"/>
+        <result column="ADV_CFEE_MON" jdbcType="TINYINT" property="advCfeeMon"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        HGJ_OPEN_ID, WX_SEQ_ID, CUST_ID, HU_SEQ_ID, HOUSE_SEQ_ID, STAT
+    </sql>
+
+    <select id="queryBindUsrByOpenId" resultMap="BaseResultMapExt">
+        select hhb.hgj_open_id,
+               hhb.cust_id,
+               hhb.stat,
+               hhb.wx_seq_id,
+               hi.stat as house_stat,
+               hi.area_id,
+               hi.house_no,
+               hi.building_name,
+               hi.area_name,
+               ui.short_name,
+               hui.hu_seq_id,
+               hui.house_seq_id
+        from hu_hgj_bind hhb
+                     left join house_info hi on hhb.cust_id = hi.cust_id and hhb.house_seq_id = hi.house_seq_id
+                     left join usr_info ui on hhb.cust_id = ui.cust_id
+                     left join house_usr_info hui on hhb.cust_id = hui.cust_id and hhb.hu_seq_id = hui.hu_seq_id
+                where hhb.hgj_open_id = #{hgjOpenId}
+        <if test="custId != null and custId != ''">
+            <choose>
+                <when test="custId.startswith('(')">
+                    and hhb.cust_id in ${custId}
+                </when>
+                <otherwise>
+                    and hhb.cust_id = #{custId}
+                </otherwise>
+            </choose>
+        </if>
+        and hui.stat not in ('C', 'D')
+        and hi.stat != 'C'
+        and hhb.stat = 'N'
+        and ui.usr_stat = 'N'
+    </select>
+</mapper>

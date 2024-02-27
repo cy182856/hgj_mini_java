@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ej.hgj.dao.bill.PaymentRecordDaoMapper">
+
+    <resultMap id="BaseMap" type="com.ej.hgj.entity.bill.PaymentRecord">
+        <result column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="order_no" jdbcType="VARCHAR" property="orderNo"/>
+        <result column="prepay_id" jdbcType="VARCHAR" property="prepayId"/>
+        <result column="transaction_id" jdbcType="VARCHAR" property="transactionId"/>
+        <result column="trade_type" jdbcType="VARCHAR" property="tradeType"/>
+        <result column="trade_state" jdbcType="VARCHAR" property="tradeState"/>
+        <result column="trade_state_desc" jdbcType="VARCHAR" property="tradeStateDesc"/>
+        <result column="bank_type" jdbcType="VARCHAR" property="bankType"/>
+        <result column="success_time" jdbcType="VARCHAR" property="successTime"/>
+        <result column="pro_num" jdbcType="VARCHAR" property="proNum"/>
+        <result column="wx_open_id" jdbcType="VARCHAR" property="wxOpenId"/>
+        <result column="cst_code" jdbcType="VARCHAR" property="cstCode"/>
+        <result column="amount_total" jdbcType="INTEGER" property="amountTotal"/>
+        <result column="pri_rev" jdbcType="DECIMAL" property="priRev"/>
+        <result column="pri_paid" jdbcType="DECIMAL" property="priPaid"/>
+        <result column="ip_item_name" jdbcType="VARCHAR" property="ipItemName"/>
+        <result column="payment_status" jdbcType="INTEGER" property="paymentStatus"/>
+        <result column="create_by" jdbcType="VARCHAR" property="createBy"/>
+        <result column="update_by" jdbcType="VARCHAR" property="updateBy"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
+    </resultMap>
+    <sql id="Base_Column_List" >
+        id, order_no, prepay_id, transaction_id, trade_type, trade_state, trade_state_desc,
+        bank_type, success_time, pro_num, wx_open_id, cst_code, amount_total,pri_rev, pri_paid, ip_item_name,
+        payment_status, create_time, update_time, create_by, update_by, delete_flag
+    </sql>
+
+    <!-- 根据订单号与付款状态查询-->
+    <select id="getPaymentRecord" resultMap="BaseMap" parameterType="com.ej.hgj.vo.bill.RequestPaymentStatusVo" >
+        select
+        <include refid="Base_Column_List" />
+        from t_payment_record
+        where delete_flag = 0
+        and order_no = #{orderNo,jdbcType=VARCHAR}
+        and payment_status in
+        <foreach collection="paymentStatusList" item="paymentStatus" index="index" open="(" close=")" separator=",">
+            #{paymentStatus,jdbcType=INTEGER}
+        </foreach>
+    </select>
+
+    <!-- 根据付款状态同步状态查询-->
+    <select id="getPaymentRecordList" resultMap="BaseMap" parameterType="com.ej.hgj.vo.bill.RequestPaymentStatusVo" >
+        select
+        <include refid="Base_Column_List" />
+        from t_payment_record
+        where delete_flag = 0
+        <if test="syPayStatusList != null and syPayStatusList.size() > 0">
+        and sy_pay_status in
+        <foreach collection="syPayStatusList" item="syPayStatus" index="index" open="(" close=")" separator=",">
+            #{syPayStatus,jdbcType=INTEGER}
+        </foreach>
+        </if>
+        and payment_status in
+        <foreach collection="paymentStatusList" item="paymentStatus" index="index" open="(" close=")" separator=",">
+            #{paymentStatus,jdbcType=INTEGER}
+        </foreach>
+    </select>
+
+    <!-- 查询10分钟前支付中订单-->
+    <select id="getOrderList_1" resultMap="BaseMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from t_payment_record
+        where delete_flag = 0
+        and payment_status = 1
+        and DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s' ) &lt;= #{beForTenMin,jdbcType=VARCHAR}
+ </select>
+
+ <!-- 查询列表-->
+    <select id="getList"  resultMap="BaseMap"  parameterType="com.ej.hgj.entity.bill.PaymentRecord">
+        select
+        <include refid="Base_Column_List" />
+        from t_payment_record
+        where delete_flag = 0
+        <if test="repYears != null">
+            AND rep_years = #{repYears,jdbcType=VARCHAR}
+        </if>
+        <if test="proNum != null">
+            AND pro_num = #{proNum,jdbcType=VARCHAR}
+        </if>
+        <if test="cstCode != null">
+            AND cst_code = #{cstCode,jdbcType=VARCHAR}
+        </if>
+        <if test="wxOpenId != null">
+            AND wx_open_id = #{wxOpenId,jdbcType=VARCHAR}
+        </if>
+        <if test="payNo != null">
+            AND pay_no = #{payNo,jdbcType=VARCHAR}
+        </if>
+        order by update_time desc
+    </select>
+
+    <!-- 根据订单号批量查询-->
+    <select id="getListByOrderNo" resultMap="BaseMap"  parameterType="java.lang.String">
+        select
+        <include refid="Base_Column_List" />
+        from t_payment_record
+        where delete_flag = 0
+        and payment_status not in (2,9)
+        and order_no in
+        <foreach collection="orderNoList" item="orderNo" index="index" open="(" close=")" separator=",">
+            #{orderNo}
+        </foreach>
+        order by update_time desc
+    </select>
+
+    <!-- 保存-->
+    <insert id="save" parameterType="com.ej.hgj.entity.bill.PaymentRecord" >
+        insert into  t_payment_record(
+        <if test="id != null">
+            id,
+        </if>
+        <if test="orderNo != null">
+            order_no,
+        </if>
+        <if test="prepayId != null" >
+            prepay_id,
+        </if>
+        <if test="transactionId != null" >
+            transaction_id,
+        </if>
+        <if test="tradeType != null" >
+            trade_type,
+        </if>
+        <if test="tradeState != null" >
+            trade_state,
+        </if>
+        <if test="tradeStateDesc != null" >
+            trade_state_desc,
+        </if>
+        <if test="bankType != null" >
+            bank_type,
+        </if>
+        <if test="successTime != null" >
+            success_time,
+        </if>
+        <if test="proNum != null">
+            pro_num,
+        </if>
+        <if test="wxOpenId != null">
+            wx_open_id,
+        </if>
+        <if test="cstCode != null">
+            cst_code,
+        </if>
+        <if test="amountTotal != null">
+            amount_total,
+        </if>
+        <if test="priRev != null">
+            pri_rev,
+        </if>
+        <if test="priPaid != null">
+            pri_paid,
+        </if>
+        <if test="ipItemName != null">
+            ip_item_name,
+        </if>
+        <if test="paymentStatus != null">
+            payment_status,
+        </if>
+        <if test="createTime != null">
+            create_time,
+        </if>
+        <if test="createBy != null">
+            create_by,
+        </if>
+        <if test="updateTime != null">
+            update_time,
+        </if>
+        <if test="updateBy != null">
+            update_by,
+        </if>
+        <if test="deleteFlag != null">
+            delete_flag
+        </if>
+        )
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=VARCHAR},
+            </if>
+            <if test="orderNo != null" >
+                #{orderNo,jdbcType=VARCHAR},
+            </if>
+            <if test="prepayId != null" >
+                #{prepayId,jdbcType=VARCHAR},
+            </if>
+            <if test="transactionId != null" >
+                #{transactionId,jdbcType=VARCHAR},
+            </if>
+            <if test="tradeType != null" >
+                #{tradeType,jdbcType=VARCHAR},
+            </if>
+            <if test="tradeState != null" >
+                #{tradeState,jdbcType=VARCHAR},
+            </if>
+            <if test="tradeStateDesc != null" >
+                #{tradeStateDesc,jdbcType=VARCHAR},
+            </if>
+            <if test="bankType != null" >
+                #{bankType,jdbcType=VARCHAR},
+            </if>
+            <if test="successTime != null" >
+                #{successTime,jdbcType=VARCHAR},
+            </if>
+            <if test="proNum != null" >
+                #{proNum,jdbcType=VARCHAR},
+            </if>
+            <if test="wxOpenId != null" >
+                #{wxOpenId,jdbcType=VARCHAR},
+            </if>
+            <if test="cstCode != null" >
+                #{cstCode,jdbcType=VARCHAR},
+            </if>
+            <if test="amountTotal != null" >
+                #{amountTotal,jdbcType=INTEGER},
+            </if>
+            <if test="priRev != null" >
+                #{priRev,jdbcType=DECIMAL},
+            </if>
+            <if test="priPaid != null" >
+                #{priPaid,jdbcType=DECIMAL},
+            </if>
+            <if test="ipItemName != null" >
+                #{ipItemName,jdbcType=VARCHAR},
+            </if>
+            <if test="paymentStatus != null" >
+                #{paymentStatus,jdbcType=INTEGER},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createBy != null">
+                #{createBy,jdbcType=VARCHAR},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateBy != null">
+                #{updateBy,jdbcType=VARCHAR},
+            </if>
+            <if test="deleteFlag != null">
+                #{deleteFlag,jdbcType=INTEGER}
+            </if>
+        </trim>
+    </insert>
+
+    <!-- 更新-->
+    <update id="update" parameterType="com.ej.hgj.entity.bill.PaymentRecord" >
+        update
+        t_payment_record
+        <set>
+            <if test="transactionId != null">
+                transaction_id = #{transactionId,jdbcType=VARCHAR},
+            </if>
+            <if test="tradeType != null">
+                trade_type = #{tradeType,jdbcType=VARCHAR},
+            </if>
+            <if test="tradeState != null">
+                trade_state = #{tradeState,jdbcType=VARCHAR},
+            </if>
+            <if test="tradeStateDesc != null">
+                trade_state_desc = #{tradeStateDesc,jdbcType=VARCHAR},
+            </if>
+            <if test="bankType != null">
+                bank_type = #{bankType,jdbcType=VARCHAR},
+            </if>
+            <if test="successTime != null">
+                success_time = #{successTime,jdbcType=VARCHAR},
+            </if>
+            <if test="paymentStatus != null">
+                payment_status = #{paymentStatus,jdbcType=INTEGER},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where id = #{id,jdbcType=VARCHAR}
+    </update>
+
+    <!-- 更新支付记录状态为支付中-->
+    <update id="updatePayRecord" parameterType="com.ej.hgj.entity.bill.PaymentRecord" >
+        update
+        t_payment_record
+        <set>
+            <if test="paymentStatus != null">
+                payment_status = #{paymentStatus,jdbcType=INTEGER},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where id = #{id,jdbcType=VARCHAR} and payment_status = 0
+    </update>
+
+</mapper>
