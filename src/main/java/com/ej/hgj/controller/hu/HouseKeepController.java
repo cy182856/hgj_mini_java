@@ -89,7 +89,7 @@ public class HouseKeepController extends BaseController {
 				user.setIsWorkTime(1);
 			}else {
 				user.setIsWorkTime(0);
-				List<UserDutyPhone> userDutyPhoneListFilter = userDutyPhoneList.stream().filter(dutyPhone -> dutyPhone.getMobile().equals(user.getMobile())).collect(Collectors.toList());
+				List<UserDutyPhone> userDutyPhoneListFilter = userDutyPhoneList.stream().filter(dutyPhone -> dutyPhone.getMobile().equals(user.getUserId())).collect(Collectors.toList());
 				if(!userDutyPhoneListFilter.isEmpty()){
 					user.setMobile(userDutyPhoneListFilter.get(0).getPhone());
 				}else {

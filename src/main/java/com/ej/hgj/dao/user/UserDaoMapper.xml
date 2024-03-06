@@ -54,7 +54,7 @@
             u.*
         FROM
             t_user_build b
-                LEFT JOIN t_user u ON u.mobile = b.mobile
+                LEFT JOIN t_user u ON u.user_id = b.mobile
         WHERE
                 b.bud_id IN (
                 SELECT
