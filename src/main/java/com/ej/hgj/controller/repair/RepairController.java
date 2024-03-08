@@ -24,6 +24,7 @@ import com.ej.hgj.entity.workord.WorkOrd;
 import com.ej.hgj.entity.workord.WorkPos;
 import com.ej.hgj.enums.JiasvBasicRespCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
+import com.ej.hgj.sy.dao.house.SyHouseDaoMapper;
 import com.ej.hgj.sy.dao.workord.MaterialDaoMapper;
 import com.ej.hgj.sy.dao.workord.ReturnVisitDaoMapper;
 import com.ej.hgj.sy.dao.workord.WorkOrdDaoMapper;
@@ -69,6 +70,9 @@ public class RepairController extends BaseController {
 
 	@Autowired
 	private HgjHouseDaoMapper hgjHouseDaoMapper;
+
+	@Autowired
+	private SyHouseDaoMapper syHouseDaoMapper;
 
 	@Autowired
 	private ProConfDaoMapper proConfDaoMapper;
@@ -195,7 +199,8 @@ public class RepairController extends BaseController {
 			quesTypeName = p_repairConfig.getQuesTypeName();
 			HgjHouse hgjHouseParm = new HgjHouse();
 			hgjHouseParm.setCstCode(cstCode);
-			List<HgjHouse> list = hgjHouseDaoMapper.getListByCstCode(hgjHouseParm);
+			//List<HgjHouse> list = hgjHouseDaoMapper.getListByCstCode(hgjHouseParm);
+			List<HgjHouse> list = syHouseDaoMapper.getListByCstCode(hgjHouseParm);
 			if(!list.isEmpty()){
 				HgjHouse house = list.get(0);
 				houseId = house.getId();
@@ -471,7 +476,8 @@ public class RepairController extends BaseController {
 		HgjHouse hgjHouse = new HgjHouse();
 		hgjHouse.setCstCode(cstCode);
 		hgjHouse.setHouseIdList(houseIdList);
-		List<HgjHouse> list = hgjHouseDaoMapper.getListByCstCode(hgjHouse);
+		// List<HgjHouse> list = hgjHouseDaoMapper.getListByCstCode(hgjHouse);
+		List<HgjHouse> list = syHouseDaoMapper.getListByCstCode(hgjHouse);
 		if(!list.isEmpty()){
 			// 获取房屋业主
 			CstInto cs = new CstInto();
