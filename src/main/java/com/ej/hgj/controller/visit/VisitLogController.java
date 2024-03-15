@@ -1,11 +1,14 @@
 package com.ej.hgj.controller.visit;
 
 import com.alibaba.fastjson.JSONObject;
+import com.ej.hgj.constant.Constant;
 import com.ej.hgj.controller.base.BaseController;
+import com.ej.hgj.dao.config.ConstantConfDaoMapper;
 import com.ej.hgj.dao.cst.HgjCstDaoMapper;
 import com.ej.hgj.dao.hu.HgjHouseDaoMapper;
 import com.ej.hgj.dao.visit.VisitLogDaoMapper;
 import com.ej.hgj.dao.visit.VisitPassDaoMapper;
+import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.cst.HgjCst;
 import com.ej.hgj.entity.hu.HgjHouse;
 import com.ej.hgj.entity.repair.RepairLog;
@@ -60,6 +63,9 @@ public class VisitLogController extends BaseController {
 
 	@Autowired
 	private HgjHouseDaoMapper hgjHouseDaoMapper;
+
+	@Autowired
+	private ConstantConfDaoMapper constantConfDaoMapper;
 
 	@RequestMapping("/visitinfo/addVisitQrCode.do")
 	@ResponseBody
@@ -171,7 +177,24 @@ public class VisitLogController extends BaseController {
 		jsonObject.put("randomNum", randomNum);
 		return jsonObject;
 	}
-	
+
+	/**
+	 * 获取通行码说明文字
+	 * @param visitLogVo
+	 * @return
+	 */
+	@RequestMapping("/visitinfo/queryVisitExplain.do")
+	@ResponseBody
+	public JSONObject queryVisitExplain(@RequestBody VisitLogVo visitLogVo) {
+		JSONObject jsonObject = new JSONObject();
+		ConstantConfig visitorCode = constantConfDaoMapper.getByKey(Constant.VISITOR_CODE);
+		ConstantConfig quickAccessCode = constantConfDaoMapper.getByKey(Constant.QUICK_ACCESS_CODE);
+		jsonObject.put("respCode", "000");
+		jsonObject.put("visitorCode", visitorCode.getConfigValue());
+		jsonObject.put("quickAccessCode", quickAccessCode.getConfigValue());
+		return jsonObject;
+	}
+
 //	@RequestMapping("/visitinfo/showVisitInfoDetail.do")
 //	@ResponseBody
 //	public JSONObject showVisitInfoDetail(HttpServletRequest request, @RequestBody VisitLogVo visitLogVo) {

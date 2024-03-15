@@ -121,4 +121,10 @@ public class Constant<https> {
     // 入住角色 1-已入住
     public static Integer INTO_STATUS_Y = 1;
 
+    //访客二维码说明文字
+    public static String VISITOR_CODE = "visitor_code";
+
+    //快速通行码说明文字
+    public static String QUICK_ACCESS_CODE = "quick_access_code";
+
 }

@@ -64,6 +64,7 @@ public class GonggaoController extends BaseController {
 			typeIds.add(gonggaoType.getId());
 		}
 		Gonggao gonggao = new Gonggao();
+		gonggao.setProNum(gonggaoTypeVo.getProNum());
 		gonggao.setGonggaoTypeList(typeIds);
 		List<Gonggao> gonggaoList = gonggaoDaoMapper.getList(gonggao);
 		for (GonggaoType gonggaoType : list){
@@ -74,7 +75,11 @@ public class GonggaoController extends BaseController {
 		}
 		logger.info("list返回记录数");
 		logger.info(list != null ? list.size() + "":0 + "");
-		gonggaoTypeVo.setList(list);
+		if(gonggaoList.isEmpty()){
+			gonggaoTypeVo.setList(null);
+		}else {
+			gonggaoTypeVo.setList(list);
+		}
 		gonggaoTypeVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
 		return gonggaoTypeVo;
 	}
@@ -94,6 +99,7 @@ public class GonggaoController extends BaseController {
 			typeIds.add(gonggaoType.getId());
 		}
 		Gonggao gonggao = new Gonggao();
+		gonggao.setProNum(gonggaoTypeVo.getProNum());
 		gonggao.setGonggaoTypeList(typeIds);
 		List<Gonggao> gonggaoList = gonggaoDaoMapper.getList(gonggao);
 		for (GonggaoType gonggaoType : list){
@@ -126,6 +132,7 @@ public class GonggaoController extends BaseController {
 		PageHelper.offsetPage((gonggaoVo.getPageNum()-1) * gonggaoVo.getPageSize(),gonggaoVo.getPageSize());
 		Gonggao gonggao = new Gonggao();
 		gonggao.setType(gonggaoVo.getTypeId());
+		gonggao.setProNum(gonggaoVo.getProNum());
 		List<Gonggao> list = gonggaoDaoMapper.getList(gonggao);
 		PageInfo<Gonggao> pageInfo = new PageInfo<>(list);
 		int pageNumTotal = (int) Math.ceil((double)pageInfo.getTotal()/(double)gonggaoVo.getPageSize());
