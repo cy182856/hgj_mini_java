@@ -55,6 +55,8 @@
         FROM
             t_user_build b
                 LEFT JOIN t_user u ON u.user_id = b.mobile
+                LEFT JOIN t_user_role ur on ur.staff_id = u.user_id
+                LEFT JOIN t_role r on r.id = ur.role_id
         WHERE
                 b.bud_id IN (
                 SELECT
@@ -66,6 +68,7 @@
                 WHERE
                     c.`code` = #{cstCode}
             )
+          and r.role_name = '管家'
     </select>
 
     <insert id="insertList" parameterType="java.util.List">

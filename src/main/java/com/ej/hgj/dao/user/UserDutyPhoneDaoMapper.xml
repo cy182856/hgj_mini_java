@@ -28,16 +28,18 @@
     <!-- 查询列表-->
     <select id="getList" resultMap="BaseMap"  parameterType="com.ej.hgj.entity.user.UserDutyPhone">
         select
-        <include refid="Base_Column_List" />
-        from t_user_duty_phone
-        where delete_flag = 0
+        p.*
+        from t_user_duty_phone p
+        LEFT JOIN t_user_role ur on ur.staff_id = p.mobile
+        LEFT JOIN t_role r on r.id = ur.role_id
+        where p.delete_flag = 0 and r.role_name = '管家'
         <if test="mobile != null">
-            and mobile = #{mobile,jdbcType=VARCHAR}
+            and p.mobile = #{mobile,jdbcType=VARCHAR}
         </if>
         <if test="phone != null">
-            and phone = #{phone,jdbcType=VARCHAR}
+            and p.phone = #{phone,jdbcType=VARCHAR}
         </if>
-        order by update_time desc
+        order by p.update_time desc
     </select>
 
     <!-- 保存-->
