@@ -40,13 +40,17 @@ public class Constant<https> {
     public static final String MINI_PROGRAM_APP_EJ_ZHSQ = "mini_program_app_ej_zhsq";
     // 微信租户平台公众号
     public static final String WECHAT_PUB_APP = "wechat_pub_app";
-    // 服务商户号
+    // 服务商户号-凡享服务商
     public static final String SP_MCH_ID = "sp_mch_id";
-    // 子服务商户号
+    // 子服务商户号-东方渔人码头
     public static final String SUB_MCH_ID = "sub_mch_id";
+    // 服务商户号-宜悦网络服务商
+    public static final String SP_MCH_ID_YY = "sp_mch_id_yy";
+    // 子服务商户号-凡享
+    public static final String SUB_MCH_ID_FX = "sub_mch_id_fx";
     // 直连商户号
     public static final String MCH_ID = "mch_id";
-    // 东方渔人码头服务商证书序列号
+    // 服务商证书序列号
     public static final String SERIAL_NO = "serial_no";
     // 小程序秘钥
     public static final String MINI_PROGRAM_APP_SECRET = "mini_program_app_secret";
@@ -113,18 +117,62 @@ public class Constant<https> {
     public static String S_REPAIR_NUM = "s_repair_num";
 
     // 入住角色 0-房主
-    public static Integer INTO_ROLE_OWNER = 0;
+    //public static Integer INTO_ROLE_OWNER = 0;
     // 入住角色 1-租户
-    public static Integer INTO_ROLE_TENANT = 1;
+    //public static Integer INTO_ROLE_TENANT = 1;
+    // 入住角色 1-客户
+    public static Integer INTO_ROLE_CST = 0;
+    // 入住角色 2-委托人
+    public static Integer INTO_ROLE_ENTRUST = 1;
+    // 入住角色 3-产权人
+    public static Integer INTO_ROLE_PROPERTY_OWNER = 2;
+    // 入住角色 4-住户
+    public static Integer INTO_ROLE_HOUSEHOLD = 3;
     // 入住状态 0-未入住
     public static Integer INTO_STATUS_N = 0;
     // 入住角色 1-已入住
     public static Integer INTO_STATUS_Y = 1;
+    // 入住状态 2-已解绑
+    public static Integer INTO_STATUS_U = 2;
+    // 入住状态 3-待审核
+    public static Integer INTO_STATUS_A = 3;
 
-    //访客二维码说明文字
+    // 访客二维码说明文字
     public static String VISITOR_CODE = "visitor_code";
 
-    //快速通行码说明文字
+    // 快速通行码说明文字
     public static String QUICK_ACCESS_CODE = "quick_access_code";
+
+    // token
+    public static final String TOKEN = "hgj20230719";
+    // 微信公众号orgId
+    public static String WE_CHAT_PUB_ORG_ID = "wechat_pub_org_id";
+    public static final String RESP_MESSAGE_TYPE_TEXT = "text";
+    /**上海朴由科技有限公司  菜单C1点击事件返回**/
+    public static final String PY_CLICK_TEXT = "感谢您的关注！\n" +
+            "\n" +
+            "联系方式：\n" +
+            "139 1672 9765  Allen庞\n" +
+            "133 8601 8090  Bob王\n" +
+            "\n" +
+            "联系地址：\n" +
+            "上海市长宁区凯旋路1398弄IM长宁国际4号楼3楼";
+    /**绑定页面-房主**/
+    public static final String BIND_PAGE_OWNER = "pages/hu/hubind/hubind";
+    // 消息模板id
+    //public static final String TEMP_LATE_ID = "x8uO5Kg9FcgzgeA9HUaLIFFGngQJiZ2uTcG4r4YTENE";
+    public static final String TEMP_LATE_ID = "temp_late_id";
+
+    public static final String MD5SALT = "pzucp57mn7j9183ppww4bm7omje47449";
+    // 微信公众号
+    public static String WE_CHAT_PUB_APP = "wechat_pub_app";
+    /**绑定页面-租户**/
+    public static final String BIND_PAGE_TENANT = "pages/hu/hubindTenant/hubindTenant";
+    /** 匿名投诉建议表扬主页 **/
+    public static final String ADVICE_PAGE = "pages/anonymityMain/anonymityMain";
+
+    /**客户入住页面**/
+    public static final String BIND_PAGE = "pages/hu/hubind/hubind";
+
 
 }

@@ -151,7 +151,7 @@ public class LoginController extends BaseController {
         List<CstInto> cstIntos = cstIntoMapper.getList(cstInto);
         if(!cstIntos.isEmpty()){
             for (CstInto cst : cstIntos){
-                if(StringUtils.isNotBlank(cst.getHouseId()) && cst.getIntoRole() == Constant.INTO_ROLE_TENANT && cst.getIntoStatus() == Constant.INTO_STATUS_Y){
+                if(StringUtils.isNotBlank(cst.getHouseId()) && cst.getIntoRole() == Constant.INTO_ROLE_ENTRUST && cst.getIntoStatus() == Constant.INTO_STATUS_Y){
                     houseIdList.add(cst.getHouseId());
                 }
             }

@@ -11,6 +11,8 @@ import java.util.List;
 @Component
 public interface HgjCstDaoMapper {
 
+    HgjCst findByCstCode(String cstCode);
+
     HgjCst getByCstCode(String cstCode);
 
     void delete();

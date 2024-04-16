@@ -12,6 +12,7 @@ import com.ej.hgj.dao.config.ConstantConfDaoMapper;
 import com.ej.hgj.dao.config.ProConfDaoMapper;
 import com.ej.hgj.dao.cst.CstPayPerDaoMapper;
 import com.ej.hgj.dao.cst.HgjCstDaoMapper;
+import com.ej.hgj.dao.hu.CstIntoHouseDaoMapper;
 import com.ej.hgj.dao.hu.CstIntoMapper;
 import com.ej.hgj.entity.bill.*;
 import com.ej.hgj.entity.config.ConstantConfig;
@@ -19,6 +20,7 @@ import com.ej.hgj.entity.config.ProConfig;
 import com.ej.hgj.entity.cst.CstPayPer;
 import com.ej.hgj.entity.cst.HgjCst;
 import com.ej.hgj.entity.hu.CstInto;
+import com.ej.hgj.entity.hu.CstIntoHouse;
 import com.ej.hgj.entity.visit.VisitPass;
 import com.ej.hgj.enums.JiasvBasicRespCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
@@ -64,6 +66,9 @@ public class BillController extends BaseController {
 	@Value("${private.key}")
 	private String privateKey;
 
+	@Value("${private.key.fx}")
+	private String privateKeyFx;
+
 	@Value("${private.key.bus}")
 	private String privateKeyBus;
 
@@ -106,6 +111,9 @@ public class BillController extends BaseController {
 	@Autowired
 	private HgjBillItemDaoMapper hgjBillItemDaoMapper;
 
+	@Autowired
+	private CstIntoHouseDaoMapper cstIntoHouseDaoMapper;
+
 	/**
 	 * 查询客户欠费总金额
 	 */
@@ -120,6 +128,8 @@ public class BillController extends BaseController {
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
 		billRequestVo.setCstId(hgjCst.getId());
 		List<String> houseIdList = new ArrayList<>();
+		// 获取当前客户入住房屋
+		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCode(billRequestVo.getCstCode());
 		// 查询租户入住的房屋
 		CstInto cstInto = new CstInto();
 		cstInto.setCstCode(cstCode);
@@ -127,8 +137,11 @@ public class BillController extends BaseController {
 		List<CstInto> cstIntos = cstIntoMapper.getList(cstInto);
 		if(!cstIntos.isEmpty()){
 			for (CstInto cst : cstIntos){
-				if(StringUtils.isNotBlank(cst.getHouseId()) && cst.getIntoRole() == Constant.INTO_ROLE_TENANT && cst.getIntoStatus() == Constant.INTO_STATUS_Y){
-					houseIdList.add(cst.getHouseId());
+				if((cst.getIntoRole() == Constant.INTO_ROLE_ENTRUST || cst.getIntoRole() == Constant.INTO_ROLE_HOUSEHOLD) && (cst.getIntoStatus() == Constant.INTO_STATUS_Y)){
+					List<CstIntoHouse> cstIntoHouseListFilter = cstIntoHouseList.stream().filter(cstIntoHouse -> cst.getId().equals(cstIntoHouse.getCstIntoId())).collect(Collectors.toList());
+					for(CstIntoHouse cstIntoHouse : cstIntoHouseListFilter){
+						houseIdList.add(cstIntoHouse.getHouseId());
+					}
 				}
 			}
 		}
@@ -175,6 +188,8 @@ public class BillController extends BaseController {
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
 		billRequestVo.setCstId(hgjCst.getId());
 		List<String> houseIdList = new ArrayList<>();
+		// 获取当前客户入住房屋
+		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCode(cstCode);
 		// 查询租户入住的房屋
 		CstInto cstInto = new CstInto();
 		cstInto.setCstCode(cstCode);
@@ -182,8 +197,11 @@ public class BillController extends BaseController {
 		List<CstInto> cstIntos = cstIntoMapper.getList(cstInto);
 		if(!cstIntos.isEmpty()){
 			for (CstInto cst : cstIntos){
-				if(StringUtils.isNotBlank(cst.getHouseId()) && cst.getIntoRole() == Constant.INTO_ROLE_TENANT && cst.getIntoStatus() == Constant.INTO_STATUS_Y){
-					houseIdList.add(cst.getHouseId());
+				if((cst.getIntoRole() == Constant.INTO_ROLE_ENTRUST || cst.getIntoRole() == Constant.INTO_ROLE_HOUSEHOLD) && (cst.getIntoStatus() == Constant.INTO_STATUS_Y)){
+					List<CstIntoHouse> cstIntoHouseListFilter = cstIntoHouseList.stream().filter(cstIntoHouse -> cst.getId().equals(cstIntoHouse.getCstIntoId())).collect(Collectors.toList());
+					for(CstIntoHouse cstIntoHouse : cstIntoHouseListFilter){
+						houseIdList.add(cstIntoHouse.getHouseId());
+					}
 				}
 			}
 		}
@@ -396,6 +414,8 @@ public class BillController extends BaseController {
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
 		billRequestVo.setCstId(hgjCst.getId());
 		List<String> houseIdList = new ArrayList<>();
+		// 获取当前客户入住房屋
+		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCode(cstCode);
 		// 查询租户入住的房屋
 		CstInto cstInto = new CstInto();
 		cstInto.setCstCode(cstCode);
@@ -403,8 +423,11 @@ public class BillController extends BaseController {
 		List<CstInto> cstIntos = cstIntoMapper.getList(cstInto);
 		if(!cstIntos.isEmpty()){
 			for (CstInto cst : cstIntos){
-				if(StringUtils.isNotBlank(cst.getHouseId()) && cst.getIntoRole() == Constant.INTO_ROLE_TENANT && cst.getIntoStatus() == Constant.INTO_STATUS_Y){
-					houseIdList.add(cst.getHouseId());
+				if((cst.getIntoRole() == Constant.INTO_ROLE_ENTRUST || cst.getIntoRole() == Constant.INTO_ROLE_HOUSEHOLD) && (cst.getIntoStatus() == Constant.INTO_STATUS_Y)){
+					List<CstIntoHouse> cstIntoHouseListFilter = cstIntoHouseList.stream().filter(cstIntoHouse -> cst.getId().equals(cstIntoHouse.getCstIntoId())).collect(Collectors.toList());
+					for(CstIntoHouse cstIntoHouse : cstIntoHouseListFilter){
+						houseIdList.add(cstIntoHouse.getHouseId());
+					}
 				}
 			}
 		}
@@ -664,43 +687,48 @@ public class BillController extends BaseController {
 			// --------------------根据项目号选择商户号--------------
 			// 服务商模式-东方渔人码头
 			if("10000".equals(proNum)){
-				// 服务商户号
-				ConstantConfig spMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SP_MCH_ID);
+				// 服务商户号-宜悦
+				ConstantConfig spMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SP_MCH_ID_YY);
 				signInfo.setSpMchId(spMchId.getConfigValue());
-				// 子服务商户号
+				// 子服务商户号-东方渔人码头
 				ConstantConfig subMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SUB_MCH_ID);
 				signInfo.setSubMchId(subMchId.getConfigValue());
 			// 直连商户模式-大连路项目
-			}else if("10001".equals(proNum)){
-				// 直连商户号
-				ConstantConfig mchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.MCH_ID);
-				signInfo.setMchId(mchId.getConfigValue());
-			}
-			// 服务商模式-大连路项目
 //			}else if("10001".equals(proNum)){
-//				// 服务商户号
-//				ConstantConfig spMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SP_MCH_ID);
-//				signInfo.setSpMchId(spMchId.getConfigValue());
-//				// 子服务商户号
-//				ConstantConfig subMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SUB_MCH_ID);
-//				signInfo.setSubMchId(subMchId.getConfigValue());
+//				// 直连商户号
+//				ConstantConfig mchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.MCH_ID);
+//				signInfo.setMchId(mchId.getConfigValue());
 //			}
+			// 服务商模式-大连路项目
+			}else if("10001".equals(proNum)){
+				// 服务商户号-宜悦
+				ConstantConfig spMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SP_MCH_ID_YY);
+				signInfo.setSpMchId(spMchId.getConfigValue());
+				// 子服务商户号-凡享
+				ConstantConfig subMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SUB_MCH_ID_FX);
+				signInfo.setSubMchId(subMchId.getConfigValue());
+			}
 			// 证书序列号
 			ConstantConfig serialNo = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SERIAL_NO);
 			signInfo.setSerialNo(serialNo.getConfigValue());
 			String params = "";
 			String prePayUrl = "";
-			if("10000".equals(proNum)){
-				prePayUrl = Constant.PREPAY_URL;
-				params = buildPlaceOrder(signInfo.getAppId(), signInfo.getSpMchId(),
-						signInfo.getSubMchId(), billRequestVo.getIpItemName(), orderNo,
-						Constant.CALLBACK_URL, intTotalAmount, billRequestVo.getWxOpenId());
-			}else if("10001".equals(proNum)){
-				prePayUrl = Constant.PREPAY_URL_BUS;
-				params = buildPlaceOrderBus(signInfo.getMchId(), orderNo,
-						signInfo.getAppId(), billRequestVo.getIpItemName(),
-						Constant.CALLBACK_URL_BUS, intTotalAmount, billRequestVo.getWxOpenId());
-			}
+//			if("10000".equals(proNum)){
+//				prePayUrl = Constant.PREPAY_URL;
+//				params = buildPlaceOrder(signInfo.getAppId(), signInfo.getSpMchId(),
+//						signInfo.getSubMchId(), billRequestVo.getIpItemName(), orderNo,
+//						Constant.CALLBACK_URL, intTotalAmount, billRequestVo.getWxOpenId());
+//			}else if("10001".equals(proNum)){
+//				prePayUrl = Constant.PREPAY_URL_BUS;
+//				params = buildPlaceOrderBus(signInfo.getMchId(), orderNo,
+//						signInfo.getAppId(), billRequestVo.getIpItemName(),
+//						Constant.CALLBACK_URL_BUS, intTotalAmount, billRequestVo.getWxOpenId());
+//			}
+			prePayUrl = Constant.PREPAY_URL;
+			params = buildPlaceOrder(signInfo.getAppId(), signInfo.getSpMchId(),
+					signInfo.getSubMchId(), billRequestVo.getIpItemName(), orderNo,
+					Constant.CALLBACK_URL, intTotalAmount, billRequestVo.getWxOpenId());
+
 			HttpUrl httpurl = HttpUrl.parse(prePayUrl);
 			// 获取证书token
 			String authorization = billService.getToken("POST", httpurl, params, signInfo, proNum);
@@ -777,10 +805,10 @@ public class BillController extends BaseController {
 			billResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_PRO_NUM_NULL.getRespDesc());
 			return billResponseVo;
 		}
-
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
-
 		List<String> houseIdList = new ArrayList<>();
+		// 获取当前客户入住房屋
+		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCode(cstCode);
 		// 查询租户入住的房屋
 		CstInto cstInto = new CstInto();
 		cstInto.setCstCode(cstCode);
@@ -788,8 +816,11 @@ public class BillController extends BaseController {
 		List<CstInto> cstIntos = cstIntoMapper.getList(cstInto);
 		if(!cstIntos.isEmpty()){
 			for (CstInto cst : cstIntos){
-				if(StringUtils.isNotBlank(cst.getHouseId()) && cst.getIntoRole() == Constant.INTO_ROLE_TENANT && cst.getIntoStatus() == Constant.INTO_STATUS_Y){
-					houseIdList.add(cst.getHouseId());
+				if((cst.getIntoRole() == Constant.INTO_ROLE_ENTRUST || cst.getIntoRole() == Constant.INTO_ROLE_HOUSEHOLD) && (cst.getIntoStatus() == Constant.INTO_STATUS_Y)){
+					List<CstIntoHouse> cstIntoHouseListFilter = cstIntoHouseList.stream().filter(cstIntoHouse -> cst.getId().equals(cstIntoHouse.getCstIntoId())).collect(Collectors.toList());
+					for(CstIntoHouse cstIntoHouse : cstIntoHouseListFilter){
+						houseIdList.add(cstIntoHouse.getHouseId());
+					}
 				}
 			}
 		}
@@ -997,7 +1028,8 @@ public class BillController extends BaseController {
 			if("10000".equals(proNum)){
 				sign.initSign(MyPrivatekey.getPrivateKey(privateKey));
 			}else if("10001".equals(proNum)){
-				sign.initSign(MyPrivatekey.getPrivateKey(privateKeyBus));
+				//sign.initSign(MyPrivatekey.getPrivateKey(privateKeyBus));
+				sign.initSign(MyPrivatekey.getPrivateKey(privateKeyFx));
 			}
 			sign.update(signatureStr.getBytes(StandardCharsets.UTF_8));
 			return Base64.getEncoder().encodeToString(sign.sign());

@@ -17,9 +17,15 @@ public interface CstIntoMapper {
 
     List<CstInto> getByCstCode(String cstCode);
 
-    List<CstInto> getListByWxOpenId(String wxOpenId);
+    CstInto getByWxOpenIdAndStatus_1_3(String wxOpenId);
+
+    CstInto getByWxOpenIdAndStatus_1(String wxOpenId);
 
     List<CstInto> getList(CstInto cstInto);
+
+    List<CstInto> getListByHouseId(String houseId);
+
+    List<CstInto> getByCstCodeAndIntoRole(String cstCode);
 
     void save(CstInto cstInto);
 

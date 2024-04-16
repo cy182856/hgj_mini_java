@@ -10,9 +10,13 @@ import java.util.List;
 @Component
 public interface HgjHouseDaoMapper {
 
+    HgjHouse findById(String id);
+
     HgjHouse getById(String id);
 
     List<HgjHouse> getList(HgjHouse hgjHouse);
+
+    List<HgjHouse> getByCstIntoId(String cstIntoId);
 
    // List<HgjHouse> getListByCstCode(HgjHouse hgjHouse);
 

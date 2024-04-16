@@ -21,7 +21,11 @@
     <sql id="Base_Column_List" >
         id, org_id, code, cst_name, cst_type, cst_level, is_affect, contract_character, cer_type, cer_no, lic_no, mobile, create_time, update_time
     </sql>
-
+    <select id="findByCstCode" resultMap="BaseMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from s_cst where code=#{cstCode}
+    </select>
     <!-- 根据客户编号-->
     <select id="getByCstCode" resultMap="BaseMap" parameterType="java.lang.String" >
         select

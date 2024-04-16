@@ -13,4 +13,6 @@ public class HuCheckInRequest {
 
     private String houseId;
 
+    private String cstIntoId;
+
 }

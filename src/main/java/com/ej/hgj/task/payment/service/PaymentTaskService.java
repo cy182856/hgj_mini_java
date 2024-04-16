@@ -100,30 +100,43 @@ public class PaymentTaskService {
                     String subMchId = "";
                     String mchId = "";
                     if("10000".equals(proNum)){
-                        // 服务商户号
-                        ConstantConfig spMchIdCon = constantConfDaoMapper.getByProNumAndKey(paymentRecord.getProNum(), Constant.SP_MCH_ID);
+                        // 服务商户号-宜悦
+                        ConstantConfig spMchIdCon = constantConfDaoMapper.getByProNumAndKey(paymentRecord.getProNum(), Constant.SP_MCH_ID_YY);
                         spMchId = spMchIdCon.getConfigValue();
-                        // 子服务商户号
+                        // 子服务商户号-东方渔人码头
                         ConstantConfig subMchIdCon = constantConfDaoMapper.getByProNumAndKey(paymentRecord.getProNum(), Constant.SUB_MCH_ID);
                         subMchId = subMchIdCon.getConfigValue();
                         signInfo.setSpMchId(spMchId);
                         // 子服务商户号
                         signInfo.setSubMchId(subMchId);
+//                    }else if("10001".equals(proNum)){
+//                        // 直连商户号
+//                        ConstantConfig mchIdCon = constantConfDaoMapper.getByProNumAndKey(paymentRecord.getProNum(), Constant.MCH_ID);
+//                        mchId = mchIdCon.getConfigValue();
+//                        signInfo.setMchId(mchId);
+//                    }
                     }else if("10001".equals(proNum)){
-                        // 直连商户号
-                        ConstantConfig mchIdCon = constantConfDaoMapper.getByProNumAndKey(paymentRecord.getProNum(), Constant.MCH_ID);
-                        mchId = mchIdCon.getConfigValue();
-                        signInfo.setMchId(mchId);
+                        // 服务商户号-宜悦
+                        ConstantConfig spMchIdCon = constantConfDaoMapper.getByProNumAndKey(paymentRecord.getProNum(), Constant.SP_MCH_ID_YY);
+                        spMchId = spMchIdCon.getConfigValue();
+                        // 子服务商户号-凡享
+                        ConstantConfig subMchIdCon = constantConfDaoMapper.getByProNumAndKey(paymentRecord.getProNum(), Constant.SUB_MCH_ID_FX);
+                        subMchId = subMchIdCon.getConfigValue();
+                        signInfo.setSpMchId(spMchId);
+                        // 子服务商户号
+                        signInfo.setSubMchId(subMchId);
                     }
-                    // 证书序列号
+                    // 证书序列号 10000-东方渔人码头 10001-凡享
                     ConstantConfig serialNo = constantConfDaoMapper.getByProNumAndKey(paymentRecord.getProNum(), Constant.SERIAL_NO);
                     signInfo.setSerialNo(serialNo.getConfigValue());
                     String url = "";
-                    if("10000".equals(proNum)){
-                        url = Constant.QUERY_ORDER_URL + "/" + outTradeNo + "?sp_mchid=" + spMchId + "&sub_mchid=" + subMchId + "";
-                    }else if("10001".equals(proNum)){
-                        url = Constant.QUERY_ORDER_URL_BUS + "/" + outTradeNo + "?mchid=" + mchId + "";
-                    }
+//                    if("10000".equals(proNum)){
+//                        url = Constant.QUERY_ORDER_URL + "/" + outTradeNo + "?sp_mchid=" + spMchId + "&sub_mchid=" + subMchId + "";
+//                    }else if("10001".equals(proNum)){
+//                        url = Constant.QUERY_ORDER_URL_BUS + "/" + outTradeNo + "?mchid=" + mchId + "";
+//                    }
+                    url = Constant.QUERY_ORDER_URL + "/" + outTradeNo + "?sp_mchid=" + spMchId + "&sub_mchid=" + subMchId + "";
+
                     HttpUrl httpurl = HttpUrl.parse(url);
                     // 获取证书token
                     String authorization = billService.getToken("GET", httpurl, "", signInfo, proNum);

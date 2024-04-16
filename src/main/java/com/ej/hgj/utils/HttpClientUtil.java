@@ -1,5 +1,7 @@
 package com.ej.hgj.utils;
 
+import cn.hutool.http.HttpRequest;
+import com.alibaba.fastjson.JSONObject;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
@@ -8,6 +10,8 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HttpClientUtil {
 
@@ -44,5 +48,36 @@ public class HttpClientUtil {
         }
         return srtResult;
 
+    }
+
+    public static JSONObject sendPost(String url, String jsonMenu){
+        cn.hutool.http.HttpResponse httpResponse = null;
+        try {
+            // 设置请求头
+            Map<String, String > heads = new HashMap<String, String>();
+            heads.put("Content-Type", "application/json;charset=UTF-8");
+            httpResponse =  HttpRequest.post(url) // url
+                    .body(jsonMenu) // json参数
+                    .timeout(5 * 60 * 1000) // 超时
+                    .execute(); // 请求
+            if(httpResponse.getStatus() == 200){
+                //成功后响应数据
+                String result = httpResponse.body();
+                JSONObject jsonResult = JSONObject.parseObject(result);
+                return jsonResult;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally{
+            try {
+                //释放连接
+                if(httpResponse != null){
+                    httpResponse.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return new JSONObject();
     }
 }

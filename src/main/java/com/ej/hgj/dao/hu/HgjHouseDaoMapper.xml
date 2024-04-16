@@ -65,6 +65,12 @@
             update_time
     </sql>
 
+    <select id="findById" resultMap="BaseMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from s_house where id=#{id}
+    </select>
+
     <!-- 根据主键查询-->
     <select id="getById" resultMap="BaseMap" parameterType="java.lang.String" >
         select
@@ -84,6 +90,15 @@
         <if test="unitNo != null">
             and unit_no like CONCAT('%', #{unitNo,jdbcType=VARCHAR},'%') ESCAPE '/'
         </if>
+    </select>
+
+    <!-- 查询入住ID查询列表-->
+    <select id="getByCstIntoId" resultMap="BaseMap"  parameterType="java.lang.String">
+        select
+        h.*
+        from s_house h inner join t_cst_into_house i on i.house_id = h.id
+        where i.delete_flag = 0 and i.into_status = 0 and i.cst_into_id = #{cstIntoId}
+
     </select>
 
     <!-- 根据客户编号查询房屋列表-->

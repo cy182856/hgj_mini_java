@@ -1,4 +1,4 @@
-package com.ej.hgj.entity.hu;
+package com.ej.hgj.entity.cst;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -7,28 +7,30 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.util.Date;
 
 @Data
-public class CstInto {
+public class SyCst {
     private String id;
 
-    private String projectNum;
+    private String orgId;
 
-    private String wxOpenId;
+    private String code;
 
-    private String userName;
+    private String cstName;
 
-    private String cstCode;
+    private String cstType;
 
-    private String houseId;
+    private String cstLevel;
 
-    private Integer intoRole;
+    private String isAffect;
 
-    private Integer intoStatus;
+    private String contractCharacter;
 
-    private String createBy;
+    private String cerType;
 
-    private String updateBy;
+    private String cerNo;
 
-    private Integer deleteFlag;
+    private String licNo;
+
+    private String mobile;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -37,10 +39,5 @@ public class CstInto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
-
-
-    private String cstIntoHouseId;
-
-    private Integer houseIntoStatus;
 
 }

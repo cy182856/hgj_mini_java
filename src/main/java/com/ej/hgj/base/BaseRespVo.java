@@ -2,6 +2,8 @@ package com.ej.hgj.base;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class BaseRespVo {
 
@@ -46,6 +48,8 @@ public class BaseRespVo {
      * 房屋名称
      */
     private String houseName;
+
+    private List<String> houseList;
 
 
 }

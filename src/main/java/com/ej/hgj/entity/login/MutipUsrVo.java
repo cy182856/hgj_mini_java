@@ -19,4 +19,7 @@ public class MutipUsrVo {
      */
     private String houseId;
 
+    // 入住ID
+    private String cstIntoId;
+
 }

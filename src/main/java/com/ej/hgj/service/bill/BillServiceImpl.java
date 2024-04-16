@@ -50,6 +50,9 @@ public class BillServiceImpl implements BillService {
     @Value("${private.key}")
     private String privateKey;
 
+    @Value("${private.key.fx}")
+    private String privateKeyFx;
+
     @Value("${private.key.bus}")
     private String privateKeyBus;
 
@@ -379,11 +382,13 @@ public class BillServiceImpl implements BillService {
             e.printStackTrace();
         }
         String mchId = "";
-        if("10000".equals(proNum)){
-            mchId = signInfoVo.getSpMchId();
-        }else if("10001".equals(proNum)){
-            mchId = signInfoVo.getMchId();
-        }
+//        if("10000".equals(proNum)){
+//            mchId = signInfoVo.getSpMchId();
+//        }else if("10001".equals(proNum)){
+//            mchId = signInfoVo.getMchId();
+//        }
+        mchId = signInfoVo.getSpMchId();
+
         String serialNo = signInfoVo.getSerialNo();
         return "mchid=\"" + mchId + "\","
                 + "serial_no=\"" + serialNo + "\","
@@ -398,7 +403,8 @@ public class BillServiceImpl implements BillService {
         if("10000".equals(proNum)){
             key = privateKey;
         }else if("10001".equals(proNum)){
-            key = privateKeyBus;
+            //key = privateKeyBus;
+            key = privateKeyFx;
         }
         try {
             sign.initSign(MyPrivatekey.getPrivateKey(key));
