@@ -128,22 +128,10 @@ public class BillController extends BaseController {
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
 		billRequestVo.setCstId(hgjCst.getId());
 		List<String> houseIdList = new ArrayList<>();
-		// 获取当前客户入住房屋
-		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCode(billRequestVo.getCstCode());
-		// 查询租户入住的房屋
-		CstInto cstInto = new CstInto();
-		cstInto.setCstCode(cstCode);
-		cstInto.setWxOpenId(billRequestVo.getWxOpenId());
-		List<CstInto> cstIntos = cstIntoMapper.getList(cstInto);
-		if(!cstIntos.isEmpty()){
-			for (CstInto cst : cstIntos){
-				if((cst.getIntoRole() == Constant.INTO_ROLE_ENTRUST || cst.getIntoRole() == Constant.INTO_ROLE_HOUSEHOLD) && (cst.getIntoStatus() == Constant.INTO_STATUS_Y)){
-					List<CstIntoHouse> cstIntoHouseListFilter = cstIntoHouseList.stream().filter(cstIntoHouse -> cst.getId().equals(cstIntoHouse.getCstIntoId())).collect(Collectors.toList());
-					for(CstIntoHouse cstIntoHouse : cstIntoHouseListFilter){
-						houseIdList.add(cstIntoHouse.getHouseId());
-					}
-				}
-			}
+		// 查询委托人、住户已入住房间
+		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCodeAndWxOpenId(billRequestVo.getCstCode(), billRequestVo.getWxOpenId());
+		for(CstIntoHouse cstIntoHouse : cstIntoHouseList){
+			houseIdList.add(cstIntoHouse.getHouseId());
 		}
 		billRequestVo.setHouseIdList(houseIdList);
 
@@ -184,26 +172,13 @@ public class BillController extends BaseController {
 		BillResponseVo billResponseVo = new BillResponseVo();
 		String cstCode = billRequestVo.getCstCode();
 		String proNum = billRequestVo.getProNum();
-		String wxOpenId = billRequestVo.getWxOpenId();
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
 		billRequestVo.setCstId(hgjCst.getId());
 		List<String> houseIdList = new ArrayList<>();
-		// 获取当前客户入住房屋
-		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCode(cstCode);
-		// 查询租户入住的房屋
-		CstInto cstInto = new CstInto();
-		cstInto.setCstCode(cstCode);
-		cstInto.setWxOpenId(wxOpenId);
-		List<CstInto> cstIntos = cstIntoMapper.getList(cstInto);
-		if(!cstIntos.isEmpty()){
-			for (CstInto cst : cstIntos){
-				if((cst.getIntoRole() == Constant.INTO_ROLE_ENTRUST || cst.getIntoRole() == Constant.INTO_ROLE_HOUSEHOLD) && (cst.getIntoStatus() == Constant.INTO_STATUS_Y)){
-					List<CstIntoHouse> cstIntoHouseListFilter = cstIntoHouseList.stream().filter(cstIntoHouse -> cst.getId().equals(cstIntoHouse.getCstIntoId())).collect(Collectors.toList());
-					for(CstIntoHouse cstIntoHouse : cstIntoHouseListFilter){
-						houseIdList.add(cstIntoHouse.getHouseId());
-					}
-				}
-			}
+		// 查询委托人、住户已入住房间
+		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCodeAndWxOpenId(billRequestVo.getCstCode(), billRequestVo.getWxOpenId());
+		for(CstIntoHouse cstIntoHouse : cstIntoHouseList){
+			houseIdList.add(cstIntoHouse.getHouseId());
 		}
 		billRequestVo.setHouseIdList(houseIdList);
 
@@ -414,22 +389,10 @@ public class BillController extends BaseController {
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
 		billRequestVo.setCstId(hgjCst.getId());
 		List<String> houseIdList = new ArrayList<>();
-		// 获取当前客户入住房屋
-		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCode(cstCode);
-		// 查询租户入住的房屋
-		CstInto cstInto = new CstInto();
-		cstInto.setCstCode(cstCode);
-		cstInto.setWxOpenId(wxOpenId);
-		List<CstInto> cstIntos = cstIntoMapper.getList(cstInto);
-		if(!cstIntos.isEmpty()){
-			for (CstInto cst : cstIntos){
-				if((cst.getIntoRole() == Constant.INTO_ROLE_ENTRUST || cst.getIntoRole() == Constant.INTO_ROLE_HOUSEHOLD) && (cst.getIntoStatus() == Constant.INTO_STATUS_Y)){
-					List<CstIntoHouse> cstIntoHouseListFilter = cstIntoHouseList.stream().filter(cstIntoHouse -> cst.getId().equals(cstIntoHouse.getCstIntoId())).collect(Collectors.toList());
-					for(CstIntoHouse cstIntoHouse : cstIntoHouseListFilter){
-						houseIdList.add(cstIntoHouse.getHouseId());
-					}
-				}
-			}
+		// 查询委托人、住户已入住房间
+		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCodeAndWxOpenId(billRequestVo.getCstCode(), billRequestVo.getWxOpenId());
+		for(CstIntoHouse cstIntoHouse : cstIntoHouseList){
+			houseIdList.add(cstIntoHouse.getHouseId());
 		}
 		billRequestVo.setHouseIdList(houseIdList);
 
@@ -807,22 +770,10 @@ public class BillController extends BaseController {
 		}
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
 		List<String> houseIdList = new ArrayList<>();
-		// 获取当前客户入住房屋
-		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCode(cstCode);
-		// 查询租户入住的房屋
-		CstInto cstInto = new CstInto();
-		cstInto.setCstCode(cstCode);
-		cstInto.setWxOpenId(wxOpenId);
-		List<CstInto> cstIntos = cstIntoMapper.getList(cstInto);
-		if(!cstIntos.isEmpty()){
-			for (CstInto cst : cstIntos){
-				if((cst.getIntoRole() == Constant.INTO_ROLE_ENTRUST || cst.getIntoRole() == Constant.INTO_ROLE_HOUSEHOLD) && (cst.getIntoStatus() == Constant.INTO_STATUS_Y)){
-					List<CstIntoHouse> cstIntoHouseListFilter = cstIntoHouseList.stream().filter(cstIntoHouse -> cst.getId().equals(cstIntoHouse.getCstIntoId())).collect(Collectors.toList());
-					for(CstIntoHouse cstIntoHouse : cstIntoHouseListFilter){
-						houseIdList.add(cstIntoHouse.getHouseId());
-					}
-				}
-			}
+		// 查询委托人、住户已入住房间
+		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCodeAndWxOpenId(billRequestVo.getCstCode(), billRequestVo.getWxOpenId());
+		for(CstIntoHouse cstIntoHouse : cstIntoHouseList){
+			houseIdList.add(cstIntoHouse.getHouseId());
 		}
 		billRequestVo.setHouseIdList(houseIdList);
 

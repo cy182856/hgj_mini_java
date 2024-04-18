@@ -30,7 +30,7 @@ public interface CstIntoHouseDaoMapper {
 
     List<CstIntoHouse> getByWxOpenId(String wxOpenId);
 
-    List<CstIntoHouse> getByCstCode(String cstCode);
+    List<CstIntoHouse> getByCstCodeAndWxOpenId(String cstCode, String wxOpenId);
 
     void insertList(@Param("list") List<CstIntoHouse> cstIntoHouseList);
 

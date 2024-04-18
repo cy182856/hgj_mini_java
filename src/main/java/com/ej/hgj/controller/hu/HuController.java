@@ -25,6 +25,7 @@ import com.ej.hgj.enums.JiasvBasicRespCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
 import com.ej.hgj.request.hu.HuCheckInRequest;
 import com.ej.hgj.service.hu.HuService;
+import com.ej.hgj.sy.dao.house.SyHouseDaoMapper;
 import com.ej.hgj.utils.WechatMiniProUtils;
 import com.ej.hgj.utils.bill.TimestampGenerator;
 import com.ej.hgj.utils.exception.BusinessException;
@@ -75,6 +76,9 @@ public class HuController extends BaseController {
 
     @Autowired
     private CstIntoHouseDaoMapper cstIntoHouseDaoMapper;
+
+    @Autowired
+    private SyHouseDaoMapper syHouseDaoMapper;
 
     @Autowired
     private HuService huService;
@@ -141,13 +145,23 @@ public class HuController extends BaseController {
             String cstIntoId = mutipUsrVo.getCstIntoId();
             if(StringUtils.isNotBlank(cstIntoId)){
                 CstInto cstIntoInfo = cstIntoMapper.getById(cstIntoId);
-                List<HgjHouse> hgjHouseList = hgjHouseDaoMapper.getByCstIntoId(cstIntoId);
                 List<String> houseList = new ArrayList<>();
-                if(cstIntoInfo != null && !hgjHouseList.isEmpty()){
+                if(cstIntoInfo != null){
                     if(cstIntoInfo.getIntoRole() == Constant.INTO_ROLE_ENTRUST || cstIntoInfo.getIntoRole() == Constant.INTO_ROLE_HOUSEHOLD){
+                        List<HgjHouse> hgjHouseList = hgjHouseDaoMapper.getByCstIntoId(cstIntoId);
                         if(!hgjHouseList.isEmpty()){
                             for(HgjHouse hgjHouse : hgjHouseList){
                                 houseList.add(hgjHouse.getResName());
+                            }
+                        }
+                    // 当入住角色 是委托人-1,住户-3 是查询入住房屋列表
+                    }else {
+                        HgjHouse hgjHouse = new HgjHouse();
+                        hgjHouse.setCstCode(cstCode);
+                        List<HgjHouse> list = syHouseDaoMapper.getListByCstCode(hgjHouse);
+                        if(!list.isEmpty()){
+                            for(HgjHouse house : list){
+                                houseList.add(house.getResName());
                             }
                         }
                     }

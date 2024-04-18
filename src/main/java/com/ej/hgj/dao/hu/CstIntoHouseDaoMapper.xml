@@ -55,7 +55,7 @@
     </select>
 
     <!-- 根据客户号查询-->
-    <select id="getByCstCode" resultMap="BaseMap" parameterType="java.lang.String" >
+    <select id="getByCstCodeAndWxOpenId" resultMap="BaseMap" parameterType="java.lang.String" >
         select
         h.*
         from t_cst_into_house h inner join t_cst_into c on h.cst_into_id = c.id
@@ -63,7 +63,8 @@
         and c.delete_flag = 0
         and c.into_status in(1)
         and h.into_status in(1)
-        and c.cst_Code = #{CstCode}
+        and c.into_role in(1,3)
+        and c.cst_Code = #{cstCode} and c.wx_open_id = #{wxOpenId}
     </select>
 
     <!-- 查询列表-->

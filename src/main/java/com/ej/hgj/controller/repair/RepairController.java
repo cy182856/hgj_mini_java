@@ -461,26 +461,18 @@ public class RepairController extends BaseController {
 		List<String> houseIdList = new ArrayList<>();
 		String cstCode = repairRequestVo.getCstCode();
 		String wxOpenId = repairRequestVo.getWxOpenId();
-		// 获取当前客户入住列表
+		// 获取当前客户房间列表
 		CstInto cstInto = new CstInto();
 		cstInto.setCstCode(cstCode);
 		List<CstInto> cstIntos = cstIntoMapper.getList(cstInto);
-		// 获取当前客户入住房屋
-		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCode(cstCode);
 		// 判断登录人是否是客户、业主,条件cstCode,wxOpenId,intoRole=客户、业主
 		List<CstInto> cstIntoFilter = cstIntos.stream().filter(into -> (into.getIntoRole() == Constant.INTO_ROLE_CST || into.getIntoRole() == Constant.INTO_ROLE_PROPERTY_OWNER) && into.getWxOpenId().equals(wxOpenId)).collect(Collectors.toList());
 		// 如果不是房主才会查询委托人、住户的房屋
 		if(cstIntoFilter.isEmpty()){
-			// 委托人、住户需要查询其房间号
-			if(!cstIntos.isEmpty()){
-				for (CstInto cst : cstIntos){
-					if((cst.getIntoRole() == Constant.INTO_ROLE_ENTRUST || cst.getIntoRole() == Constant.INTO_ROLE_HOUSEHOLD) && (cst.getIntoStatus() == Constant.INTO_STATUS_Y)){
-						List<CstIntoHouse> cstIntoHouseListFilter = cstIntoHouseList.stream().filter(cstIntoHouse -> cst.getId().equals(cstIntoHouse.getCstIntoId())).collect(Collectors.toList());
-						for(CstIntoHouse cstIntoHouse : cstIntoHouseListFilter){
-							houseIdList.add(cstIntoHouse.getHouseId());
-						}
-					}
-				}
+			// 查询委托人、住户已入住房间
+			List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCodeAndWxOpenId(cstCode, wxOpenId);
+			for(CstIntoHouse cstIntoHouse : cstIntoHouseList){
+				houseIdList.add(cstIntoHouse.getHouseId());
 			}
 		}else {
 			ownerFlag = 1;
@@ -501,7 +493,7 @@ public class RepairController extends BaseController {
 				// 排序
 				cstIntoList = cstIntoList.stream().sorted(Comparator.comparing(CstInto::getIntoRole)).collect(Collectors.toList());
 				// 过滤掉未入住的
-				//cstIntoList = cstIntoList.stream().filter(c -> (c.getIntoStatus() == Constant.INTO_STATUS_Y || c.getIntoStatus() == Constant.INTO_STATUS_A) && (c.getHouseIntoStatus() == Constant.INTO_STATUS_Y || c.getHouseIntoStatus() == Constant.INTO_STATUS_A)).collect(Collectors.toList());
+				//cstIntoList = cstIntoList.stream().filter(c -> c.getIntoStatus() == Constant.INTO_STATUS_Y && c.getHouseIntoStatus() == Constant.INTO_STATUS_Y).collect(Collectors.toList());
 
 				house.setCstIntoList(cstIntoList);
 			}
@@ -590,22 +582,10 @@ public class RepairController extends BaseController {
 		repairLog.setWxOpenId(repairRequestVo.getWxOpenId());
 		repairLog.setRepairNum(repairNum);
 		List<String> houseIdList = new ArrayList<>();
-		// 获取当前客户入住房屋
-		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCode(repairRequestVo.getCstCode());
-		// 查询租户入住的房屋
-		CstInto cstInto = new CstInto();
-		cstInto.setCstCode(repairRequestVo.getCstCode());
-		cstInto.setWxOpenId(repairRequestVo.getWxOpenId());
-		List<CstInto> cstIntos = cstIntoMapper.getList(cstInto);
-		if(!cstIntos.isEmpty()){
-			for (CstInto cst : cstIntos){
-				if((cst.getIntoRole() == Constant.INTO_ROLE_ENTRUST || cst.getIntoRole() == Constant.INTO_ROLE_HOUSEHOLD) && (cst.getIntoStatus() == Constant.INTO_STATUS_Y)){
-					List<CstIntoHouse> cstIntoHouseListFilter = cstIntoHouseList.stream().filter(cstIntoHouse -> cst.getId().equals(cstIntoHouse.getCstIntoId())).collect(Collectors.toList());
-					for(CstIntoHouse cstIntoHouse : cstIntoHouseListFilter){
-						houseIdList.add(cstIntoHouse.getHouseId());
-					}
-				}
-			}
+		// 查询委托人、住户已入住房间
+		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCodeAndWxOpenId(repairRequestVo.getCstCode(), repairRequestVo.getWxOpenId());
+		for(CstIntoHouse cstIntoHouse : cstIntoHouseList){
+			houseIdList.add(cstIntoHouse.getHouseId());
 		}
 		repairLog.setHouseIdList(houseIdList);
 		PageHelper.offsetPage((repairRequestVo.getPageNum()-1) * repairRequestVo.getPageSize(),repairRequestVo.getPageSize());
