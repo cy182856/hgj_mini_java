@@ -74,4 +74,6 @@ public class RepairRequestVo implements Serializable {
 
 	private String satisFaction;
 
+	private String cstPhone;
+
 }

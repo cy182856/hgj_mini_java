@@ -118,6 +118,7 @@ public class RepairController extends BaseController {
 		String wxOpenId = repairRequestVo.getWxOpenId();
 		// 项目号
 		String orgId = repairRequestVo.getProNum();
+
 		if(StringUtils.isBlank(repairType) || StringUtils.isBlank(cstCode)
 				|| StringUtils.isBlank(wxOpenId) || StringUtils.isBlank(orgId)){
 			repairResponseVo.setRespCode(MonsterBasicRespCode.REQ_DATA_NULL.getReturnCode());
@@ -128,7 +129,8 @@ public class RepairController extends BaseController {
 		// 客户其他信息
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
 		// 客户手机号
-		String phone = hgjCst.getMobile();
+		//String phone = hgjCst.getMobile();
+		String phone = repairRequestVo.getCstPhone();;
 		// 客户id
 		String cstId = hgjCst.getId();
 		// 客户名称
