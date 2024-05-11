@@ -36,8 +36,10 @@ public class Constant<https> {
     public static final int COOKIE_MAX_AGE = 1800;
     // 微信小程序智慧管家
     //public static final String MINI_PROGRAM_APP = "mini_program_app";
-    // 微信小程序智慧社区
+    // 微信小程序智慧社区-智慧凡享-凡享小程序
     public static final String MINI_PROGRAM_APP_EJ_ZHSQ = "mini_program_app_ej_zhsq";
+    // 微信小程序ej物业管家-智慧凡享-宜悦小程序
+    public static final String MINI_PROGRAM_APP_EJ_WYGJ = "mini_program_app_ej_wygj";
     // 微信租户平台公众号
     public static final String WECHAT_PUB_APP = "wechat_pub_app";
     // 服务商户号-凡享服务商
@@ -52,6 +54,8 @@ public class Constant<https> {
     public static final String MCH_ID = "mch_id";
     // 服务商证书序列号
     public static final String SERIAL_NO = "serial_no";
+    // 服务商宜悦证书序列号
+    public static final String SERIAL_NO_YY = "serial_no_yy";
     // 小程序秘钥
     public static final String MINI_PROGRAM_APP_SECRET = "mini_program_app_secret";
     // 获取商户平台证书的URL
@@ -175,4 +179,8 @@ public class Constant<https> {
     public static final String BIND_PAGE = "pages/hu/hubind/hubind";
 
 
+    // 缴费付款标签编号
+    public static String PAY_TAG_ID = "pay_tag_id";
+    // 缴费开票标签编号
+    public static String INV_TAG_ID = "inv_tag_id";
 }

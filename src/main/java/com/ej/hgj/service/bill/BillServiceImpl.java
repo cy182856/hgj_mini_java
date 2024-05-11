@@ -50,6 +50,9 @@ public class BillServiceImpl implements BillService {
     @Value("${private.key}")
     private String privateKey;
 
+    @Value("${private.key.yy}")
+    private String privateKeyYy;
+
     @Value("${private.key.fx}")
     private String privateKeyFx;
 
@@ -404,7 +407,7 @@ public class BillServiceImpl implements BillService {
             key = privateKey;
         }else if("10001".equals(proNum)){
             //key = privateKeyBus;
-            key = privateKeyFx;
+            key = privateKeyYy;
         }
         try {
             sign.initSign(MyPrivatekey.getPrivateKey(key));

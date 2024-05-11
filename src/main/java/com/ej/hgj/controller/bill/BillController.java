@@ -14,6 +14,7 @@ import com.ej.hgj.dao.cst.CstPayPerDaoMapper;
 import com.ej.hgj.dao.cst.HgjCstDaoMapper;
 import com.ej.hgj.dao.hu.CstIntoHouseDaoMapper;
 import com.ej.hgj.dao.hu.CstIntoMapper;
+import com.ej.hgj.dao.tag.TagCstDaoMapper;
 import com.ej.hgj.entity.bill.*;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.config.ProConfig;
@@ -21,6 +22,7 @@ import com.ej.hgj.entity.cst.CstPayPer;
 import com.ej.hgj.entity.cst.HgjCst;
 import com.ej.hgj.entity.hu.CstInto;
 import com.ej.hgj.entity.hu.CstIntoHouse;
+import com.ej.hgj.entity.tag.TagCst;
 import com.ej.hgj.entity.visit.VisitPass;
 import com.ej.hgj.enums.JiasvBasicRespCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
@@ -65,6 +67,9 @@ public class BillController extends BaseController {
 
 	@Value("${private.key}")
 	private String privateKey;
+
+	@Value("${private.key.yy}")
+	private String privateKeyYy;
 
 	@Value("${private.key.fx}")
 	private String privateKeyFx;
@@ -113,6 +118,9 @@ public class BillController extends BaseController {
 
 	@Autowired
 	private CstIntoHouseDaoMapper cstIntoHouseDaoMapper;
+
+	@Autowired
+	private TagCstDaoMapper tagCstDaoMapper;
 
 	/**
 	 * 查询客户欠费总金额
@@ -290,16 +298,34 @@ public class BillController extends BaseController {
 		// 查询客户是否有缴费开票权限
 		Integer isPayment = 0;
 		Integer isInvoice = 0;
-		List<CstPayPer> cstPayPerList = cstPayPerDaoMapper.findByCstCode(cstCode);
-		if(!cstPayPerList.isEmpty()){
-			List<CstPayPer> cstPayPerListPayFilter = cstPayPerList.stream().filter(cstPayPer -> 1 == cstPayPer.getFunctionId()).collect(Collectors.toList());
-			if(!cstPayPerListPayFilter.isEmpty()){
-				isPayment = 1;
-			}
-			List<CstPayPer> cstPayPerListInvFilter = cstPayPerList.stream().filter(cstPayPer -> 2 == cstPayPer.getFunctionId()).collect(Collectors.toList());
-			if(!cstPayPerListInvFilter.isEmpty()){
-				isInvoice = 1;
-			}
+//		List<CstPayPer> cstPayPerList = cstPayPerDaoMapper.findByCstCode(cstCode);
+//		if(!cstPayPerList.isEmpty()){
+//			List<CstPayPer> cstPayPerListPayFilter = cstPayPerList.stream().filter(cstPayPer -> 1 == cstPayPer.getFunctionId()).collect(Collectors.toList());
+//			if(!cstPayPerListPayFilter.isEmpty()){
+//				isPayment = 1;
+//			}
+//			List<CstPayPer> cstPayPerListInvFilter = cstPayPerList.stream().filter(cstPayPer -> 2 == cstPayPer.getFunctionId()).collect(Collectors.toList());
+//			if(!cstPayPerListInvFilter.isEmpty()){
+//				isInvoice = 1;
+//			}
+//		}
+		// 查询缴费付款标签编号
+		ConstantConfig payByKey = constantConfDaoMapper.getByKey(Constant.PAY_TAG_ID);
+		TagCst tagCst = new TagCst();
+		tagCst.setTagId(payByKey.getConfigValue());
+		tagCst.setCstCode(cstCode);
+		// 通过缴费编号查询客户是否有缴费标签
+		List<TagCst> tagCstListPay = tagCstDaoMapper.getList(tagCst);
+		if(!tagCstListPay.isEmpty()){
+			isPayment = 1;
+		}
+		// 查询缴费开票标签编号
+		ConstantConfig invByKey = constantConfDaoMapper.getByKey(Constant.INV_TAG_ID);
+		// 通过缴费编号查询客户是否有开票标签
+		tagCst.setTagId(invByKey.getConfigValue());
+		List<TagCst> tagCstListInv= tagCstDaoMapper.getList(tagCst);
+		if(!tagCstListInv.isEmpty()){
+			isInvoice = 1;
 		}
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
 		billRequestVo.setCstId(hgjCst.getId());
@@ -478,21 +504,36 @@ public class BillController extends BaseController {
 			return billResponseVo;
 		}
 		// 检查客户是否有缴费权限
-		List<CstPayPer> cstPayPerList = cstPayPerDaoMapper.findByCstCode(cstCode);
-		if(cstPayPerList.isEmpty()){
+//		List<CstPayPer> cstPayPerList = cstPayPerDaoMapper.findByCstCode(cstCode);
+//		if(cstPayPerList.isEmpty()){
+//			billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+//			billResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_CST_NOT_PAYMENT.getRespCode());
+//			billResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_CST_NOT_PAYMENT.getRespDesc());
+//			return billResponseVo;
+//		}
+
+		// 查询缴费付款标签编号
+		ConstantConfig payByKey = constantConfDaoMapper.getByKey(Constant.PAY_TAG_ID);
+		TagCst tagCst = new TagCst();
+		tagCst.setTagId(payByKey.getConfigValue());
+		tagCst.setCstCode(cstCode);
+		// 通过缴费编号查询客户是否有缴费标签
+		List<TagCst> tagCstListPay = tagCstDaoMapper.getList(tagCst);
+		if(tagCstListPay.isEmpty()){
 			billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
 			billResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_CST_NOT_PAYMENT.getRespCode());
 			billResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_CST_NOT_PAYMENT.getRespDesc());
 			return billResponseVo;
 		}
+
 		// 1-表示有缴费权限  2-表示开票权限
-		List<CstPayPer> cstPayPerListPayFilter = cstPayPerList.stream().filter(cstPayPer -> 1 == cstPayPer.getFunctionId()).collect(Collectors.toList());
-		if(cstPayPerListPayFilter.isEmpty()){
-			billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
-			billResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_CST_NOT_PAYMENT.getRespCode());
-			billResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_CST_NOT_PAYMENT.getRespDesc());
-			return billResponseVo;
-		}
+//		List<CstPayPer> cstPayPerListPayFilter = cstPayPerList.stream().filter(cstPayPer -> 1 == cstPayPer.getFunctionId()).collect(Collectors.toList());
+//		if(cstPayPerListPayFilter.isEmpty()){
+//			billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+//			billResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_CST_NOT_PAYMENT.getRespCode());
+//			billResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_CST_NOT_PAYMENT.getRespDesc());
+//			return billResponseVo;
+//		}
 		// 预支付交易会话标识,该值有效期为2小时
 		String prepayId = null;
 		// 预下单成功返回，签名用
@@ -627,11 +668,16 @@ public class BillController extends BaseController {
 		if(paymentRecord_0 != null){
 			prepayId = paymentRecord_0.getPrepayId();
 		}
-		ConstantConfig miniProgramApp = constantConfDaoMapper.getByKey(Constant.MINI_PROGRAM_APP_EJ_ZHSQ);
+		// 服务商小程appId
+		ConstantConfig spMiniProgramApp = constantConfDaoMapper.getByKey(Constant.MINI_PROGRAM_APP_EJ_WYGJ);
+		// 特约商户小程appId
+		ConstantConfig subMiniProgramApp = constantConfDaoMapper.getByKey(Constant.MINI_PROGRAM_APP_EJ_ZHSQ);
 		// 设置签名对象
 		SignInfoVo signInfo = new SignInfoVo();
-		// 微信小程序智慧管家appId
-		signInfo.setAppId(miniProgramApp.getAppId());
+		// 服务商小程序appId
+		signInfo.setSpAppId(spMiniProgramApp.getAppId());
+		// 特约商户小程序appId
+		signInfo.setSubAppId(subMiniProgramApp.getAppId());
 		// 时间戳
 		signInfo.setTimeStamp(String.valueOf(System.currentTimeMillis()/1000));
 		// 随机串
@@ -651,7 +697,7 @@ public class BillController extends BaseController {
 			// 服务商模式-东方渔人码头
 			if("10000".equals(proNum)){
 				// 服务商户号-宜悦
-				ConstantConfig spMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SP_MCH_ID_YY);
+				ConstantConfig spMchId = constantConfDaoMapper.getByKey(Constant.SP_MCH_ID_YY);
 				signInfo.setSpMchId(spMchId.getConfigValue());
 				// 子服务商户号-东方渔人码头
 				ConstantConfig subMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SUB_MCH_ID);
@@ -665,14 +711,14 @@ public class BillController extends BaseController {
 			// 服务商模式-大连路项目
 			}else if("10001".equals(proNum)){
 				// 服务商户号-宜悦
-				ConstantConfig spMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SP_MCH_ID_YY);
+				ConstantConfig spMchId = constantConfDaoMapper.getByKey(Constant.SP_MCH_ID_YY);
 				signInfo.setSpMchId(spMchId.getConfigValue());
 				// 子服务商户号-凡享
 				ConstantConfig subMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SUB_MCH_ID_FX);
 				signInfo.setSubMchId(subMchId.getConfigValue());
 			}
 			// 证书序列号
-			ConstantConfig serialNo = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SERIAL_NO);
+			ConstantConfig serialNo = constantConfDaoMapper.getByKey(Constant.SERIAL_NO_YY);
 			signInfo.setSerialNo(serialNo.getConfigValue());
 			String params = "";
 			String prePayUrl = "";
@@ -688,10 +734,10 @@ public class BillController extends BaseController {
 //						Constant.CALLBACK_URL_BUS, intTotalAmount, billRequestVo.getWxOpenId());
 //			}
 			prePayUrl = Constant.PREPAY_URL;
-			params = buildPlaceOrder(signInfo.getAppId(), signInfo.getSpMchId(),
+
+			params = buildPlaceOrder(signInfo.getSpAppId(), signInfo.getSubAppId(), signInfo.getSpMchId(),
 					signInfo.getSubMchId(), billRequestVo.getIpItemName(), orderNo,
 					Constant.CALLBACK_URL, intTotalAmount, billRequestVo.getWxOpenId());
-
 			HttpUrl httpurl = HttpUrl.parse(prePayUrl);
 			// 获取证书token
 			String authorization = billService.getToken("POST", httpurl, params, signInfo, proNum);
@@ -934,21 +980,37 @@ public class BillController extends BaseController {
 		return billResponseVo;
 	}
 
-	// 组装参数下单参数-服务商
-	public String buildPlaceOrder(String sp_appid, String sp_mchid, String sub_mchid,
+	// 组装参数下单参数-服务商  小程序主体是服务商
+//	public String buildPlaceOrder(String sp_appid, String sp_mchid, String sub_mchid,
+//								  String description,String out_trade_no,
+//								  String notify_url,int total, String sp_openid
+//								   ){
+//		String spAppid = "{ \"sp_appid\":\"" + sp_appid + "\",";
+//		String spMchid = "\"sp_mchid\":\"" + sp_mchid + "\",";
+//		String subMchid = "\"sub_mchid\":\""+sub_mchid+"\",";
+//		String desc = "\"description\":\"" + description + "\",";
+//		String outTradeNo = "\"out_trade_no\":\"" + out_trade_no + "\",";
+//		String notifyUrl = "\"notify_url\":\"" + notify_url + "\",";
+//		String amount = "\"amount\":{ \"total\":"+ total +",\"currency\":\"CNY\"},";
+//		String spOpenid = "\"payer\":{ \"sp_openid\":\"" +sp_openid + "\"}}";
+//		return spAppid + spMchid + subMchid + desc  + outTradeNo + notifyUrl + amount + spOpenid;
+//	}
+
+	// 组装参数下单参数-服务商  小程序主体是特约商户
+	public String buildPlaceOrder(String sp_appid, String sub_appid, String sp_mchid, String sub_mchid,
 								  String description,String out_trade_no,
-								  String notify_url,int total, String sp_openid
-								   ){
+								  String notify_url,int total, String sub_openid
+	){
 		String spAppid = "{ \"sp_appid\":\"" + sp_appid + "\",";
+		String subAppid = "\"sub_appid\":\""+sub_appid+"\",";
 		String spMchid = "\"sp_mchid\":\"" + sp_mchid + "\",";
 		String subMchid = "\"sub_mchid\":\""+sub_mchid+"\",";
 		String desc = "\"description\":\"" + description + "\",";
 		String outTradeNo = "\"out_trade_no\":\"" + out_trade_no + "\",";
 		String notifyUrl = "\"notify_url\":\"" + notify_url + "\",";
 		String amount = "\"amount\":{ \"total\":"+ total +",\"currency\":\"CNY\"},";
-		String spOpenid = "\"payer\":{ \"sp_openid\":\"" +sp_openid + "\"}}";
-		return spAppid + spMchid + subMchid + desc  + outTradeNo + notifyUrl + amount + spOpenid;
-
+		String subOpenid = "\"payer\":{ \"sub_openid\":\"" +sub_openid + "\"}}";
+		return spAppid + subAppid + spMchid + subMchid + desc  + outTradeNo + notifyUrl + amount + subOpenid;
 	}
 
 	// 组装参数下单参数-直联商户
@@ -969,7 +1031,7 @@ public class BillController extends BaseController {
 	//使用私钥对数据进行SHA256withRSA加密，并且进行Base64编码。
 	public String getPaySign(SignInfoVo signInfoVo, String sinPrepayId, String proNum)  {
 		//从下往上依次生成
-		String signatureStr  = buildSignatureStr(signInfoVo.getAppId(), signInfoVo.getTimeStamp(),
+		String signatureStr  = buildSignatureStr(signInfoVo.getSubAppId(), signInfoVo.getTimeStamp(),
 				signInfoVo.getNonceStr(), signInfoVo.getRepayId());
 		//签名方式
 		Signature sign = null;
@@ -980,7 +1042,7 @@ public class BillController extends BaseController {
 				sign.initSign(MyPrivatekey.getPrivateKey(privateKey));
 			}else if("10001".equals(proNum)){
 				//sign.initSign(MyPrivatekey.getPrivateKey(privateKeyBus));
-				sign.initSign(MyPrivatekey.getPrivateKey(privateKeyFx));
+				sign.initSign(MyPrivatekey.getPrivateKey(privateKeyYy));
 			}
 			sign.update(signatureStr.getBytes(StandardCharsets.UTF_8));
 			return Base64.getEncoder().encodeToString(sign.sign());
@@ -1057,7 +1119,8 @@ public class BillController extends BaseController {
 		String method = Thread.currentThread().getStackTrace()[1].getMethodName();
 		try {
 			//登录微信商户平台，进入【账户中心 > API安全 】目录，设置APIV3密钥
-			String key = "mqr5afng3sqvhpp4rycmg2fzx2dabncq";
+			//String key = "mqr5afng3sqvhpp4rycmg2fzx2dabncq";
+			String key = "hree2eu34o9m4j0soc6pstbzb8y6580h";
 			String json = jsonObject.toString();
 			String associated_data = (String) JSONUtil.getByPath(JSONUtil.parse(json), "resource.associated_data");
 			String ciphertext = (String) JSONUtil.getByPath(JSONUtil.parse(json), "resource.ciphertext");

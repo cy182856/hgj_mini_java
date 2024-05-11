@@ -10,8 +10,10 @@ import lombok.Data;
 @Data
 public class SignInfoVo {
 
-	// 小程序appId
-	private String appId;
+	// 服务商小程序appId
+	private String spAppId;
+	// 特约商户小程序appId
+	private String subAppId;
 	// 时间戳
 	private String timeStamp;
 	// 随机字符串，不长于32位

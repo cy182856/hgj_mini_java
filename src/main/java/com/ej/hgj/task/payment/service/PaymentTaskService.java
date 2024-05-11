@@ -85,11 +85,11 @@ public class PaymentTaskService {
                 // 根据订单号查询微信接口获取状态
                 String result = null;
                 try {
-                    ConstantConfig miniProgramApp = constantConfDaoMapper.getByKey(Constant.MINI_PROGRAM_APP_EJ_ZHSQ);
+                    ConstantConfig subMiniProgramApp = constantConfDaoMapper.getByKey(Constant.MINI_PROGRAM_APP_EJ_ZHSQ);
                     // 设置签名对象
                     SignInfoVo signInfo = new SignInfoVo();
                     // 微信小程序智慧管家appId
-                    signInfo.setAppId(miniProgramApp.getAppId());
+                    signInfo.setSubAppId(subMiniProgramApp.getAppId());
                     // 时间戳
                     signInfo.setTimeStamp(String.valueOf(System.currentTimeMillis()/1000));
                     // 随机串
@@ -117,7 +117,7 @@ public class PaymentTaskService {
 //                    }
                     }else if("10001".equals(proNum)){
                         // 服务商户号-宜悦
-                        ConstantConfig spMchIdCon = constantConfDaoMapper.getByProNumAndKey(paymentRecord.getProNum(), Constant.SP_MCH_ID_YY);
+                        ConstantConfig spMchIdCon = constantConfDaoMapper.getByKey(Constant.SP_MCH_ID_YY);
                         spMchId = spMchIdCon.getConfigValue();
                         // 子服务商户号-凡享
                         ConstantConfig subMchIdCon = constantConfDaoMapper.getByProNumAndKey(paymentRecord.getProNum(), Constant.SUB_MCH_ID_FX);
@@ -127,7 +127,7 @@ public class PaymentTaskService {
                         signInfo.setSubMchId(subMchId);
                     }
                     // 证书序列号 10000-东方渔人码头 10001-凡享
-                    ConstantConfig serialNo = constantConfDaoMapper.getByProNumAndKey(paymentRecord.getProNum(), Constant.SERIAL_NO);
+                    ConstantConfig serialNo = constantConfDaoMapper.getByKey(Constant.SERIAL_NO_YY);
                     signInfo.setSerialNo(serialNo.getConfigValue());
                     String url = "";
 //                    if("10000".equals(proNum)){
