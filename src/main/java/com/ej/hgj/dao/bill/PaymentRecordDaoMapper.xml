@@ -15,6 +15,7 @@
         <result column="pro_num" jdbcType="VARCHAR" property="proNum"/>
         <result column="wx_open_id" jdbcType="VARCHAR" property="wxOpenId"/>
         <result column="cst_code" jdbcType="VARCHAR" property="cstCode"/>
+        <result column="cst_name" jdbcType="VARCHAR" property="cstName"/>
         <result column="amount_total" jdbcType="INTEGER" property="amountTotal"/>
         <result column="pri_rev" jdbcType="DECIMAL" property="priRev"/>
         <result column="pri_paid" jdbcType="DECIMAL" property="priPaid"/>
@@ -28,7 +29,7 @@
     </resultMap>
     <sql id="Base_Column_List" >
         id, order_no, prepay_id, transaction_id, trade_type, trade_state, trade_state_desc,
-        bank_type, success_time, pro_num, wx_open_id, cst_code, amount_total,pri_rev, pri_paid, ip_item_name,
+        bank_type, success_time, pro_num, wx_open_id, cst_code, cst_name, amount_total,pri_rev, pri_paid, ip_item_name,
         payment_status, create_time, update_time, create_by, update_by, delete_flag
     </sql>
 
@@ -150,6 +151,9 @@
         <if test="cstCode != null">
             cst_code,
         </if>
+        <if test="cstName != null">
+            cst_name,
+        </if>
         <if test="amountTotal != null">
             amount_total,
         </if>
@@ -217,6 +221,9 @@
             </if>
             <if test="cstCode != null" >
                 #{cstCode,jdbcType=VARCHAR},
+            </if>
+            <if test="cstName != null" >
+                #{cstName,jdbcType=VARCHAR},
             </if>
             <if test="amountTotal != null" >
                 #{amountTotal,jdbcType=INTEGER},

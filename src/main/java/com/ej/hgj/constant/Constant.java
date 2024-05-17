@@ -68,7 +68,7 @@ public class Constant<https> {
     // 支付回调
     //public static String CALLBACK_URL =  "https://hgj.shofw.com/jiasv/callBack";
     // 服务商回调地址
-    public static String CALLBACK_URL =  "https://zhgj.shofw.com/wx/callBack";
+    public static String CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/callBack";
     // 直连商户回调地址
     public static String CALLBACK_URL_BUS =  "https://zhgj.shofw.com/wx/callBackBus";
 

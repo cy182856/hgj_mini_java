@@ -45,6 +45,9 @@ public class PaymentRecord {
     // 客户编号
     private String cstCode;
 
+    // 客户名称
+    private String cstName;
+
     // 金额
     private Integer amountTotal;
 

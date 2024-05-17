@@ -1068,6 +1068,7 @@ public class BillController extends BaseController {
 	}
 
 	public void savePayment(BillRequestVo billRequestVo, String sinPrepayId){
+		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(billRequestVo.getCstCode());
 		PaymentRecord paymentRecord = new PaymentRecord();
 		paymentRecord.setId(TimestampGenerator.generateSerialNumber());
 		paymentRecord.setOrderNo(billRequestVo.getId());
@@ -1075,6 +1076,7 @@ public class BillController extends BaseController {
 		paymentRecord.setProNum(billRequestVo.getProNum());
 		paymentRecord.setWxOpenId(billRequestVo.getWxOpenId());
 		paymentRecord.setCstCode(billRequestVo.getCstCode());
+		paymentRecord.setCstName(hgjCst.getCstName());
 		BigDecimal multiply = billRequestVo.getPriRev().multiply(new BigDecimal("100"));
 		paymentRecord.setAmountTotal(multiply.intValue());
 		paymentRecord.setPriRev(billRequestVo.getPriRev());
