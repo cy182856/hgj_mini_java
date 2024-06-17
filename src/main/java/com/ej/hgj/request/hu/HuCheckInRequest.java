@@ -11,6 +11,8 @@ public class HuCheckInRequest {
 
     private String userName;
 
+    private String phone;
+
     private String houseId;
 
     private String cstIntoId;

@@ -466,6 +466,7 @@ public class RepairController extends BaseController {
 		// 获取当前客户房间列表
 		CstInto cstInto = new CstInto();
 		cstInto.setCstCode(cstCode);
+		cstInto.setIntoStatus(Constant.INTO_STATUS_Y);
 		List<CstInto> cstIntos = cstIntoMapper.getList(cstInto);
 		// 判断登录人是否是客户、业主,条件cstCode,wxOpenId,intoRole=客户、业主
 		List<CstInto> cstIntoFilter = cstIntos.stream().filter(into -> (into.getIntoRole() == Constant.INTO_ROLE_CST || into.getIntoRole() == Constant.INTO_ROLE_PROPERTY_OWNER) && into.getWxOpenId().equals(wxOpenId)).collect(Collectors.toList());
@@ -674,7 +675,7 @@ public class RepairController extends BaseController {
 	@RequestMapping("/repair/addRepairMsg.do")
 	public RepairResponseVo addRepairMsg(@RequestBody RepairRequestVo repairRequestVo) {
 		RepairResponseVo repairResponseVo = new RepairResponseVo();
-		// 根据单号查询保修单ID
+		// 根据单号查询报修单ID
 		WorkOrd workOrd = workOrdDaoMapper.getCsWorkOrd(repairRequestVo.getRepairNum(),"WOSta_Finish");
 		if(workOrd == null){
 			workOrd = workOrdDaoMapper.getCsWorkOrd(repairRequestVo.getRepairNum(),"WOSta_Visit");

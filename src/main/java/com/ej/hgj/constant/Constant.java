@@ -179,8 +179,6 @@ public class Constant<https> {
     public static final String BIND_PAGE = "pages/hu/hubind/hubind";
 
 
-    // 缴费付款标签编号
+    // 付款开票标签编号
     public static String PAY_TAG_ID = "pay_tag_id";
-    // 缴费开票标签编号
-    public static String INV_TAG_ID = "inv_tag_id";
 }

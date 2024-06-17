@@ -309,8 +309,8 @@ public class BillController extends BaseController {
 //				isInvoice = 1;
 //			}
 //		}
-		// 查询缴费付款标签编号
-		ConstantConfig payByKey = constantConfDaoMapper.getByKey(Constant.PAY_TAG_ID);
+		// 查询付款开票标签编号
+		ConstantConfig payByKey = constantConfDaoMapper.getByProNumAndKey(billRequestVo.getProNum(), Constant.PAY_TAG_ID);
 		TagCst tagCst = new TagCst();
 		tagCst.setTagId(payByKey.getConfigValue());
 		tagCst.setCstCode(cstCode);
@@ -318,14 +318,6 @@ public class BillController extends BaseController {
 		List<TagCst> tagCstListPay = tagCstDaoMapper.getList(tagCst);
 		if(!tagCstListPay.isEmpty()){
 			isPayment = 1;
-		}
-		// 查询缴费开票标签编号
-		ConstantConfig invByKey = constantConfDaoMapper.getByKey(Constant.INV_TAG_ID);
-		// 通过缴费编号查询客户是否有开票标签
-		tagCst.setTagId(invByKey.getConfigValue());
-		List<TagCst> tagCstListInv= tagCstDaoMapper.getList(tagCst);
-		if(!tagCstListInv.isEmpty()){
-			isInvoice = 1;
 		}
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
 		billRequestVo.setCstId(hgjCst.getId());
@@ -512,8 +504,8 @@ public class BillController extends BaseController {
 //			return billResponseVo;
 //		}
 
-		// 查询缴费付款标签编号
-		ConstantConfig payByKey = constantConfDaoMapper.getByKey(Constant.PAY_TAG_ID);
+		// 查询付款开票标签编号
+		ConstantConfig payByKey = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.PAY_TAG_ID);
 		TagCst tagCst = new TagCst();
 		tagCst.setTagId(payByKey.getConfigValue());
 		tagCst.setCstCode(cstCode);

@@ -7,6 +7,7 @@
         <result column="project_num" jdbcType="VARCHAR" property="projectNum"/>
         <result column="wx_open_id" jdbcType="VARCHAR" property="wxOpenId"/>
         <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+        <result column="phone" jdbcType="VARCHAR" property="phone"/>
         <result column="cst_code" jdbcType="VARCHAR" property="cstCode"/>
         <result column="house_id" jdbcType="VARCHAR" property="houseId"/>
         <result column="into_role" jdbcType="INTEGER" property="intoRole"/>
@@ -24,7 +25,7 @@
 
     </resultMap>
     <sql id="Base_Column_List" >
-        id, project_num, wx_open_id, user_name, cst_code, house_id, into_role, into_status, create_time, update_time, create_by,
+        id, project_num, wx_open_id, user_name, phone, cst_code, house_id, into_role, into_status, create_time, update_time, create_by,
         update_by, delete_flag
     </sql>
 
@@ -60,6 +61,14 @@
         where delete_flag = 0 and into_status in(1) and wx_open_id = #{wxOpenId}
     </select>
 
+    <!-- 查询个人资料-->
+    <select id="queryPersonData" resultMap="BaseMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from t_cst_into
+        where delete_flag = 0 and into_status = 1 and wx_open_id = #{wxOpenId} and cst_code = #{cstCode} and project_num = #{proNum}
+    </select>
+
     <!-- 查询房屋业主-->
     <select id="getByCstCodeAndIntoRole" resultMap="BaseMap" parameterType="java.lang.String" >
         select
@@ -76,6 +85,9 @@
         where delete_flag = 0
         <if test="cstCode != null">
             and cst_code = #{cstCode,jdbcType=VARCHAR}
+        </if>
+        <if test="projectNum != null">
+            and project_num = #{projectNum,jdbcType=VARCHAR}
         </if>
         <if test="houseId != null">
             and house_id = #{houseId,jdbcType=VARCHAR}
@@ -115,6 +127,9 @@
         </if>
         <if test="userName != null">
             `user_name`,
+        </if>
+        <if test="phone != null">
+            `phone`,
         </if>
         <if test="cstCode != null">
             `cst_code`,
@@ -156,6 +171,9 @@
             </if>
             <if test="userName != null" >
                 #{userName,jdbcType=VARCHAR},
+            </if>
+            <if test="phone != null" >
+                #{phone,jdbcType=VARCHAR},
             </if>
             <if test="cstCode != null" >
                 #{cstCode,jdbcType=VARCHAR},
@@ -200,6 +218,9 @@
             </if>
             <if test="userName != null">
                 user_name = #{userName,jdbcType=VARCHAR},
+            </if>
+            <if test="phone != null">
+                phone = #{phone,jdbcType=VARCHAR},
             </if>
             <if test="cstCode != null">
                 cst_code = #{cstCode,jdbcType=VARCHAR},

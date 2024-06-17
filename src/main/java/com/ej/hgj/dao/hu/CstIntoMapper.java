@@ -17,6 +17,8 @@ public interface CstIntoMapper {
 
     List<CstInto> getByCstCode(String cstCode);
 
+    CstInto queryPersonData(String wxOpenId, String cstCode, String proNum);
+
     CstInto getByWxOpenIdAndStatus_1_3(String wxOpenId);
 
     CstInto getByWxOpenIdAndStatus_1(String wxOpenId);

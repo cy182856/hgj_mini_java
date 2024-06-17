@@ -51,5 +51,8 @@ public class BaseRespVo {
 
     private List<String> houseList;
 
+    private String phone;
+
+
 
 }

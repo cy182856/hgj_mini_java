@@ -16,6 +16,8 @@ public class CstInto {
 
     private String userName;
 
+    private String phone;
+
     private String cstCode;
 
     private String houseId;

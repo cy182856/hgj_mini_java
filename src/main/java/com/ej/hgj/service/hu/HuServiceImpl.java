@@ -46,6 +46,7 @@ public class HuServiceImpl implements HuService {
                 cInto.setId(huCheckInRequest.getCstIntoId());
                 cInto.setWxOpenId(huCheckInRequest.getWxOpenId());
                 cInto.setUserName(huCheckInRequest.getUserName());
+                cInto.setPhone(huCheckInRequest.getPhone());
                 cInto.setIntoStatus(Constant.INTO_STATUS_Y);
                 cInto.setUpdateTime(new Date());
                 cstIntoMapper.update(cInto);
@@ -58,6 +59,7 @@ public class HuServiceImpl implements HuService {
                 cInto.setId(huCheckInRequest.getCstIntoId());
                 cInto.setWxOpenId(huCheckInRequest.getWxOpenId());
                 cInto.setUserName(huCheckInRequest.getUserName());
+                cInto.setPhone(huCheckInRequest.getPhone());
                 cInto.setIntoStatus(Constant.INTO_STATUS_A);
                 cInto.setUpdateTime(new Date());
                 cstIntoMapper.update(cInto);

@@ -40,6 +40,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -85,7 +88,7 @@ public class HuController extends BaseController {
 
     @ResponseBody
     @RequestMapping({"/queryMutipUsr","/queryMutipUsr.do"})
-    public BaseRespVo queryMutip(@RequestBody MutipUsrVo mutipUsrVo) {
+    public BaseRespVo queryMutip(@RequestBody MutipUsrVo mutipUsrVo) throws NoSuchAlgorithmException, IOException, KeyManagementException {
         logger.info("-----------------获取用户信息--------------------");
         MutipUserVo mutipUserVoResponse = new MutipUserVo();
         String cstCode = mutipUsrVo.getCstCode();
@@ -96,104 +99,97 @@ public class HuController extends BaseController {
         if (isBank(wxOpenId) && isBank(code)) {
             logger.info("用户信息缺失");
         }
-        try {
-            if (isNotBank(code) && isBank(wxOpenId)) {
-                ConstantConfig constantConfig = constantConfDaoMapper.getByKey(Constant.MINI_PROGRAM_APP_EJ_ZHSQ);
-                wxOpenId = WechatMiniProUtils.jscode2session(constantConfig.getAppId(), constantConfig.getAppSecret(), code).getOpenid();
-                CstInto cstInto = cstIntoMapper.getByWxOpenIdAndStatus_1(wxOpenId);
-                if(cstInto == null && StringUtils.isBlank(cstCode)){
-                    mutipUserVoResponse.setErrCode("01012012");
-                    mutipUserVoResponse.setErrDesc("账户未开通");
-                    return mutipUserVoResponse;
-                }
-
-                // 1.客户编号为空或者客户编号不为空但是与入住的客户编号不一致时，都取入住的客户编号
-                if(StringUtils.isBlank(cstCode) ||
-                        (StringUtils.isNotBlank(cstCode) && cstInto != null
-                                && !cstCode.equals(cstInto.getCstCode()))){
-                    cstCode = cstInto.getCstCode();
-                }
-                logger.info("利用换取wxOpenId,code:" + code + "||wxOpenId:" + wxOpenId);
-            }
-            if(StringUtils.isBlank(wxOpenId)){
-                mutipUserVoResponse.setRespCode(MonsterBasicRespCode.WX_OPENID_FAILED.getReturnCode());
-                mutipUserVoResponse.setErrDesc(MonsterBasicRespCode.WX_OPENID_FAILED.getCodeDesc());
+        if (isNotBank(code) && isBank(wxOpenId)) {
+            ConstantConfig constantConfig = constantConfDaoMapper.getByKey(Constant.MINI_PROGRAM_APP_EJ_ZHSQ);
+            wxOpenId = WechatMiniProUtils.jscode2session(constantConfig.getAppId(), constantConfig.getAppSecret(), code).getOpenid();
+            CstInto cstInto = cstIntoMapper.getByWxOpenIdAndStatus_1(wxOpenId);
+            if(cstInto == null && StringUtils.isBlank(cstCode)){
+                mutipUserVoResponse.setErrCode("01012012");
+                mutipUserVoResponse.setErrDesc("账户未开通");
                 return mutipUserVoResponse;
             }
 
-            // 获取项目号、客户名称
-            HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
-            String proNum = hgjCst.getOrgId();
-            String cstName = hgjCst.getCstName();
-
-            // 获取项目名
-            ProConfig proConfig = proConfDaoMapper.getByProjectNum(proNum);
-            String proName = proConfig.getProjectName();
-
-            // 检查是否入住
-            CstInto cstInto = new CstInto();
-            cstInto.setCstCode(cstCode);
-            cstInto.setWxOpenId(wxOpenId);
-            cstInto.setIntoStatus(Constant.INTO_STATUS_Y);
-            List<CstInto> cstIntoList = cstIntoMapper.getList(cstInto);
-            if(!cstIntoList.isEmpty()){
-                isCHeck = "Y";
-                userName = cstIntoList.get(0).getUserName();
-                //houseId = cstIntoList.get(0).getHouseId();
+            // 1.客户编号为空或者客户编号不为空但是与入住的客户编号不一致时，都取入住的客户编号
+            if(StringUtils.isBlank(cstCode) ||
+                    (StringUtils.isNotBlank(cstCode) && cstInto != null
+                            && !cstCode.equals(cstInto.getCstCode()))){
+                cstCode = cstInto.getCstCode();
             }
-            // 当入住角色 是委托人-1,住户-3 是查询入住房屋列表
-            String cstIntoId = mutipUsrVo.getCstIntoId();
-            if(StringUtils.isNotBlank(cstIntoId)){
-                CstInto cstIntoInfo = cstIntoMapper.getById(cstIntoId);
-                List<String> houseList = new ArrayList<>();
-                if(cstIntoInfo != null){
-                    if(cstIntoInfo.getIntoRole() == Constant.INTO_ROLE_ENTRUST || cstIntoInfo.getIntoRole() == Constant.INTO_ROLE_HOUSEHOLD){
-                        List<HgjHouse> hgjHouseList = hgjHouseDaoMapper.getByCstIntoId(cstIntoId);
-                        if(!hgjHouseList.isEmpty()){
-                            for(HgjHouse hgjHouse : hgjHouseList){
-                                houseList.add(hgjHouse.getResName());
-                            }
-                        }
-                    // 当入住角色 是委托人-1,住户-3 是查询入住房屋列表
-                    }else {
-                        HgjHouse hgjHouse = new HgjHouse();
-                        hgjHouse.setCstCode(cstCode);
-                        List<HgjHouse> list = syHouseDaoMapper.getListByCstCode(hgjHouse);
-                        if(!list.isEmpty()){
-                            for(HgjHouse house : list){
-                                houseList.add(house.getResName());
-                            }
+            logger.info("利用换取wxOpenId,code:" + code + "||wxOpenId:" + wxOpenId);
+        }
+        if(StringUtils.isBlank(wxOpenId)){
+            mutipUserVoResponse.setRespCode(MonsterBasicRespCode.WX_OPENID_FAILED.getReturnCode());
+            mutipUserVoResponse.setErrDesc(MonsterBasicRespCode.WX_OPENID_FAILED.getCodeDesc());
+            return mutipUserVoResponse;
+        }
+
+        // 获取项目号、客户名称
+        HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
+        String proNum = hgjCst.getOrgId();
+        String cstName = hgjCst.getCstName();
+
+        // 获取项目名
+        ProConfig proConfig = proConfDaoMapper.getByProjectNum(proNum);
+        String proName = proConfig.getProjectName();
+
+        // 检查是否入住
+        CstInto cstInto = new CstInto();
+        cstInto.setCstCode(cstCode);
+        cstInto.setWxOpenId(wxOpenId);
+        cstInto.setIntoStatus(Constant.INTO_STATUS_Y);
+        List<CstInto> cstIntoList = cstIntoMapper.getList(cstInto);
+        if(!cstIntoList.isEmpty()){
+            isCHeck = "Y";
+            userName = cstIntoList.get(0).getUserName();
+            //houseId = cstIntoList.get(0).getHouseId();
+        }
+        // 当入住角色 是委托人-1,住户-3 是查询入住房屋列表
+        String cstIntoId = mutipUsrVo.getCstIntoId();
+        if(StringUtils.isNotBlank(cstIntoId)){
+            CstInto cstIntoInfo = cstIntoMapper.getById(cstIntoId);
+            List<String> houseList = new ArrayList<>();
+            if(cstIntoInfo != null){
+                if(cstIntoInfo.getIntoRole() == Constant.INTO_ROLE_ENTRUST || cstIntoInfo.getIntoRole() == Constant.INTO_ROLE_HOUSEHOLD){
+                    List<HgjHouse> hgjHouseList = hgjHouseDaoMapper.getByCstIntoId(cstIntoId);
+                    if(!hgjHouseList.isEmpty()){
+                        for(HgjHouse hgjHouse : hgjHouseList){
+                            houseList.add(hgjHouse.getResName());
                         }
                     }
-                    mutipUserVoResponse.setHouseList(houseList);
+                    // 当入住角色 是委托人-1,住户-3 是查询入住房屋列表
+                }else {
+                    HgjHouse hgjHouse = new HgjHouse();
+                    hgjHouse.setCstCode(cstCode);
+                    List<HgjHouse> list = syHouseDaoMapper.getListByCstCode(hgjHouse);
+                    if(!list.isEmpty()){
+                        for(HgjHouse house : list){
+                            houseList.add(house.getResName());
+                        }
+                    }
                 }
+                mutipUserVoResponse.setHouseList(houseList);
             }
-            // 获取房屋名称列表
+        }
+        // 获取房屋名称列表
 //            if(StringUtils.isNotBlank(houseId)){
 //               HgjHouse hgjHouse = hgjHouseDaoMapper.getById(houseId);
 //                houseName = hgjHouse.getResName();
 //            }
-            // 获取项目名称
-            mutipUserVoResponse.setCstCode(cstCode);
-            mutipUserVoResponse.setCstName(cstName);
-            mutipUserVoResponse.setWxOpenId(wxOpenId);
-            mutipUserVoResponse.setProNum(proNum);
-            mutipUserVoResponse.setProName(proName);
-            mutipUserVoResponse.setIsCHeck(isCHeck);
-            mutipUserVoResponse.setUserName(userName);
+        // 获取项目名称
+        mutipUserVoResponse.setCstCode(cstCode);
+        mutipUserVoResponse.setCstName(cstName);
+        mutipUserVoResponse.setWxOpenId(wxOpenId);
+        mutipUserVoResponse.setProNum(proNum);
+        mutipUserVoResponse.setProName(proName);
+        mutipUserVoResponse.setIsCHeck(isCHeck);
+        mutipUserVoResponse.setUserName(userName);
 
-            // mutipUserVoResponse.setHouseId(houseId);
-            // mutipUserVoResponse.setHouseName(houseName);
-            mutipUserVoResponse.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
-            return mutipUserVoResponse;
-        } catch (BusinessException e) {
-            logger.info("获取用户信息失败");
-            e.getMessage();
-        } catch (Exception e) {
-            logger.info("获取用户信息系统异常");
-            e.getMessage();
-        }
-        return null;
+        // mutipUserVoResponse.setHouseId(houseId);
+        // mutipUserVoResponse.setHouseName(houseName);
+        mutipUserVoResponse.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
+        return mutipUserVoResponse;
+
+
     }
 
     /**
@@ -218,6 +214,11 @@ public class HuController extends BaseController {
         if(StringUtils.isBlank(huCheckInRequest.getUserName())){
             jsonObject.put("respCode", Constant.FAIL_RESULT_CODE);
             jsonObject.put("errDesc", "用户名为空!");
+            return jsonObject;
+        }
+        if(StringUtils.isBlank(huCheckInRequest.getPhone())){
+            jsonObject.put("respCode", Constant.FAIL_RESULT_CODE);
+            jsonObject.put("errDesc", "手机号为空!");
             return jsonObject;
         }
         CstInto cstInto = cstIntoMapper.getById(huCheckInRequest.getCstIntoId());
