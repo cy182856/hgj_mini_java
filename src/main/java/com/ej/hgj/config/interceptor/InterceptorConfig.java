@@ -13,10 +13,16 @@ public class InterceptorConfig extends WebMvcConfigurerAdapter {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-//        registry.addInterceptor(jwtInterceptor)
-//                .addPathPatterns("/**")    //拦截所有请求 通过判断token是否合法来决定是否登陆
-//                .excludePathPatterns("/doLogin"); //放行接口
-//        super.addInterceptors(registry);
+        registry.addInterceptor(jwtInterceptor)
+                .addPathPatterns("/**")    //拦截所有请求 通过判断token是否合法来决定是否登陆
+                .excludePathPatterns("/**/doLogin/**",
+                        "/**/queryMutipUsr/**",
+                        "/**/queryMutipUsr.do/**",
+                        "/**/queryImgUrl/**",
+                        "/**/wechatPub/**",
+                        "/**/callBack/**"
+                ); //放行接口
+        super.addInterceptors(registry);
     }
 
 }

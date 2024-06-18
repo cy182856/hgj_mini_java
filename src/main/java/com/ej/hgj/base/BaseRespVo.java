@@ -53,6 +53,8 @@ public class BaseRespVo {
 
     private String phone;
 
+    private String token;
+
 
 
 }

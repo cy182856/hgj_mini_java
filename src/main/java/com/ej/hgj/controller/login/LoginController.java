@@ -24,6 +24,7 @@ import com.ej.hgj.entity.login.LoginInfo;
 import com.ej.hgj.sy.dao.bill.BillDaoMapper;
 import com.ej.hgj.sy.dao.bill.item.BillItemDaoMapper;
 import com.ej.hgj.utils.CookieUtil;
+import com.ej.hgj.utils.TokenUtils;
 import com.ej.hgj.vo.bill.BillRequestVo;
 import com.ej.hgj.vo.bill.BillResponseVo;
 import org.apache.commons.lang3.StringUtils;
@@ -132,6 +133,8 @@ public class LoginController extends BaseController {
 //            jsonArray.add(jsonObject);
 //        }
         logger.info("---------------------------------登录成功-----------------------------------");
+        String token = TokenUtils.getToken(loginInfo.getWxOpenId(), loginInfo.getWxOpenId());
+        loginInfo.setToken(token);
         return loginInfo;
     }
 

@@ -101,12 +101,12 @@ public class LoginInfo extends BaseRespVo {
      * 预期时间修改次数
      */
     private String repairTimeCnt;
-    
+
     /**
      * 物业类型 R：住宅，B：商业
      */
     private String propType;
-    
+
     /**
      * 功能模块位图
      */
@@ -150,7 +150,7 @@ public class LoginInfo extends BaseRespVo {
     private JSONArray qpadBitmapList;
 
     private String isRepairTime;
-    
+
     /**
      * 提前缴纳车辆费用月份
      */
@@ -168,6 +168,8 @@ public class LoginInfo extends BaseRespVo {
 
 
     private List<MenuMini> funList;
+
+    private String token;
 
 
 }

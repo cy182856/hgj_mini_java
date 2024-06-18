@@ -26,6 +26,7 @@ import com.ej.hgj.enums.MonsterBasicRespCode;
 import com.ej.hgj.request.hu.HuCheckInRequest;
 import com.ej.hgj.service.hu.HuService;
 import com.ej.hgj.sy.dao.house.SyHouseDaoMapper;
+import com.ej.hgj.utils.TokenUtils;
 import com.ej.hgj.utils.WechatMiniProUtils;
 import com.ej.hgj.utils.bill.TimestampGenerator;
 import com.ej.hgj.utils.exception.BusinessException;
@@ -186,6 +187,8 @@ public class HuController extends BaseController {
 
         // mutipUserVoResponse.setHouseId(houseId);
         // mutipUserVoResponse.setHouseName(houseName);
+        String token = TokenUtils.getToken(wxOpenId, wxOpenId);
+        mutipUserVoResponse.setToken(token);
         mutipUserVoResponse.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
         return mutipUserVoResponse;
 
