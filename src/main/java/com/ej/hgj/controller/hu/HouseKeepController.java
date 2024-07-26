@@ -26,6 +26,7 @@ import com.ej.hgj.vo.hu.HouseInfoVO;
 import com.ej.hgj.vo.user.UserInfoVo;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,9 +35,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.imageio.ImageIO;
 import javax.xml.crypto.Data;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -95,6 +100,20 @@ public class HouseKeepController extends BaseController {
 				}else {
 					user.setMobile(null);
 				}
+			}
+			// 企微二维码转换
+			if(StringUtils.isNotBlank(user.getQrCode())){
+				String base64Image = "";
+				try {
+					BufferedImage image = ImageIO.read(new File(user.getQrCode()));
+					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+					ImageIO.write(image, "png", baos);
+					byte[] imageBytes = baos.toByteArray();
+					base64Image = Base64.getEncoder().encodeToString(imageBytes);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				user.setQrCode(base64Image);
 			}
 		}
 		userInfoVo.setUserList(list);

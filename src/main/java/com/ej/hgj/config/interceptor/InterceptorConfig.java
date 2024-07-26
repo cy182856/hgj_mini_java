@@ -20,7 +20,8 @@ public class InterceptorConfig extends WebMvcConfigurerAdapter {
                         "/**/queryMutipUsr.do/**",
                         "/**/queryImgUrl/**",
                         "/**/wechatPub/**",
-                        "/**/callBack/**"
+                        "/**/callBack/**",
+                        "/**/hu/**"
                 ); //放行接口
         super.addInterceptors(registry);
     }

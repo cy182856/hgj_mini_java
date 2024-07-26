@@ -17,6 +17,7 @@ public class GonggaoVo {
    private String wxOpenId;
    private String proNum;
 
+   private String id;
    private String typeId;
 
    private Integer pageNum = 1;//页数
@@ -24,6 +25,7 @@ public class GonggaoVo {
    private Integer totalNum;//总记录数
    private Integer pages;//总页数
    private List<Gonggao> gonggaoList;
+   private Gonggao gonggao;
    private String respCode;
 
 

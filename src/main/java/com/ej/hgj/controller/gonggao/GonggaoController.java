@@ -12,15 +12,23 @@ import com.ej.hgj.vo.gonggao.GonggaoVo;
 import com.ej.hgj.vo.gonggao.GonggaoTypeVo;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -85,7 +93,7 @@ public class GonggaoController extends BaseController {
 	}
 
 	/**
-	 * 查询公告类型
+	 * 查询分类
 	 * @param request
 	 * @return
 	 */
@@ -122,7 +130,7 @@ public class GonggaoController extends BaseController {
 	}
 
 	/**
-	 * 查询公告类型
+	 * 查询公告及分类
 	 * @param request
 	 * @return
 	 */
@@ -143,6 +151,25 @@ public class GonggaoController extends BaseController {
 		gonggaoVo.setTotalNum((int) pageInfo.getTotal());
 		gonggaoVo.setPageSize(gonggaoVo.getPageSize());
 		gonggaoVo.setGonggaoList(list);
+		gonggaoVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
+		return gonggaoVo;
+	}
+
+	/**
+	 * 查询公告内容
+	 * @return
+	 */
+	@RequestMapping("/gonggao/queryGonggaoContent.do")
+	@ResponseBody
+	public GonggaoVo queryGonggaoContent(@RequestBody GonggaoVo gonggaoVo) throws IOException {
+		Gonggao gonggao = gonggaoDaoMapper.getById(gonggaoVo.getId());
+		gonggaoVo.setGonggao(gonggao);
+		Path path = Paths.get(gonggao.getFilePath());
+		List<String> lines = Files.readAllLines(path);
+		String content = lines.toString();
+		content = content.replace("[","");
+		content = content.replace("]","");
+		gonggao.setContent(content);
 		gonggaoVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
 		return gonggaoVo;
 	}
