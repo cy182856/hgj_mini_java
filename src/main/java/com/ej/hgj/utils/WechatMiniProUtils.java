@@ -29,6 +29,7 @@ public class WechatMiniProUtils {
         MiniProSession miniProSession = new MiniProSession();
         miniProSession.setOpenid(jsonObject.getString("openid"));
         miniProSession.setSessionKey(jsonObject.getString("session_key"));
+        miniProSession.setUnionid(jsonObject.getString("unionid"));
         return miniProSession;
     }
 

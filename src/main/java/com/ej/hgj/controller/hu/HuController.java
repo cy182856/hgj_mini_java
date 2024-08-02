@@ -20,18 +20,21 @@ import com.ej.hgj.entity.hu.CstInto;
 import com.ej.hgj.entity.hu.CstIntoHouse;
 import com.ej.hgj.entity.hu.HgjHouse;
 import com.ej.hgj.entity.hu.MutipUserVo;
+import com.ej.hgj.entity.login.MiniProSession;
 import com.ej.hgj.entity.login.MutipUsrVo;
 import com.ej.hgj.enums.JiasvBasicRespCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
 import com.ej.hgj.request.hu.HuCheckInRequest;
 import com.ej.hgj.service.hu.HuService;
 import com.ej.hgj.sy.dao.house.SyHouseDaoMapper;
+import com.ej.hgj.utils.HttpClientUtil;
 import com.ej.hgj.utils.TokenUtils;
 import com.ej.hgj.utils.WechatMiniProUtils;
 import com.ej.hgj.utils.bill.TimestampGenerator;
 import com.ej.hgj.utils.exception.BusinessException;
 import com.ej.hgj.vo.bill.BillResponseVo;
 import com.ej.hgj.vo.hu.HouseInfoVO;
+import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +47,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -102,14 +103,22 @@ public class HuController extends BaseController {
         }
         if (isNotBank(code) && isBank(wxOpenId)) {
             ConstantConfig constantConfig = constantConfDaoMapper.getByKey(Constant.MINI_PROGRAM_APP_EJ_ZHSQ);
-            wxOpenId = WechatMiniProUtils.jscode2session(constantConfig.getAppId(), constantConfig.getAppSecret(), code).getOpenid();
+            MiniProSession miniProSession = WechatMiniProUtils.jscode2session(constantConfig.getAppId(), constantConfig.getAppSecret(), code);
+            wxOpenId = miniProSession.getOpenid();
             CstInto cstInto = cstIntoMapper.getByWxOpenIdAndStatus_1(wxOpenId);
             if(cstInto == null && StringUtils.isBlank(cstCode)){
                 mutipUserVoResponse.setErrCode("01012012");
                 mutipUserVoResponse.setErrDesc("账户未开通");
                 return mutipUserVoResponse;
             }
-
+            // 更新用户unionId
+            String unionId =  miniProSession.getUnionid();
+            if(cstInto != null && StringUtils.isBlank(cstInto.getUnionId())){
+                // 更新用户unionId
+                cstInto.setUpdateTime(new Date());
+                cstInto.setUnionId(unionId);
+                cstIntoMapper.update(cstInto);
+            }
             // 1.客户编号为空或者客户编号不为空但是与入住的客户编号不一致时，都取入住的客户编号
             if(StringUtils.isBlank(cstCode) ||
                     (StringUtils.isNotBlank(cstCode) && cstInto != null
@@ -157,7 +166,7 @@ public class HuController extends BaseController {
                             houseList.add(hgjHouse.getResName());
                         }
                     }
-                    // 当入住角色 是委托人-1,住户-3 是查询入住房屋列表
+                    // 当入住角色 是员工-1,住户-3 查询入住房屋列表
                 }else {
                     HgjHouse hgjHouse = new HgjHouse();
                     hgjHouse.setCstCode(cstCode);

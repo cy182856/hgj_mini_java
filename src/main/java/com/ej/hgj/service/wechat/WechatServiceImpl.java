@@ -9,6 +9,8 @@ import com.ej.hgj.dao.config.ConstantConfDaoMapper;
 import com.ej.hgj.dao.cst.HgjCstDaoMapper;
 import com.ej.hgj.dao.hu.CstIntoMapper;
 import com.ej.hgj.dao.hu.HgjHouseDaoMapper;
+import com.ej.hgj.dao.wechat.WechatPubDaoMapper;
+import com.ej.hgj.dao.wechat.WechatPubUserDaoMapper;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.cst.HgjCst;
 import com.ej.hgj.entity.hu.CstInto;
@@ -24,6 +26,7 @@ import com.ej.hgj.utils.DateUtils;
 import com.ej.hgj.utils.HttpClientUtil;
 import com.ej.hgj.utils.JsonUtils;
 import com.ej.hgj.utils.WxDateUtils;
+import com.ej.hgj.utils.bill.TimestampGenerator;
 import com.ej.hgj.utils.wechat.MessageUtil;
 import com.ej.hgj.utils.wechat.ModelMessage;
 import com.ej.hgj.utils.wechat.PubCommonUtil;
@@ -68,6 +71,12 @@ public class WechatServiceImpl implements WechatService{
 
     @Autowired
     private HgjSyCstDaoMapper hgjSyCstDaoMapper;
+
+    @Autowired
+    private WechatPubUserDaoMapper wechatPubUserDaoMapper;
+
+    @Autowired
+    private WechatPubDaoMapper wechatPubDaoMapper;
 
     @Override
     public String handleMessage(HttpServletRequest request) throws IOException, DocumentException, JAXBException {
@@ -128,12 +137,65 @@ public class WechatServiceImpl implements WechatService{
     private String handleSubscribeEvent(XmlToObject xmlToObject, String cstCode) {
         String eventKey = xmlToObject.getEventKey();
         String wxOpenId = xmlToObject.getFromUserName();
-        if(!StringUtils.isBlank(eventKey)) {
-            logger.info("-------------------处理关注带参数事件--------------------");
-            return handleScanEvent(xmlToObject, true);
+        String pubOrgId = xmlToObject.getToUserName();
+        logger.info("-----处理关注带参数事件------"+"eventKey="+eventKey+"||wxOpenId="+wxOpenId+"||pubOrgId="+pubOrgId);
+        // 根据公众号原始ID查询公众号信息
+        WechatPub wechatPub = wechatPubDaoMapper.getByOrgId(pubOrgId);
+        // 根据opeinId，orgId查询公众号用户
+        WechatPubUser getWechatPubUser = wechatPubUserDaoMapper.getByOrgIdAndOpenId(pubOrgId, wxOpenId);
+        if(getWechatPubUser == null && wechatPub != null){
+            // 获取unionId
+            String unionId = getUnionId(wechatPub,wxOpenId);
+            WechatPubUser wechatPubUser = new WechatPubUser();
+            wechatPubUser.setId(TimestampGenerator.generateSerialNumber());
+            wechatPubUser.setProNum(wechatPub.getProNum());
+            wechatPubUser.setProName(wechatPub.getProName());
+            wechatPubUser.setPubName(wechatPub.getName());
+            wechatPubUser.setOriginalId(wechatPub.getOriginalId());
+            wechatPubUser.setAppId(wechatPub.getAppId());
+            wechatPubUser.setOpenid(wxOpenId);
+            wechatPubUser.setUnionid(unionId);
+            wechatPubUser.setCreateBy("");
+            wechatPubUser.setCreateTime(new Date());
+            wechatPubUser.setUpdateBy("");
+            wechatPubUser.setDeleteFlag(Constant.DELETE_FLAG_NOT);
+            wechatPubUser.setUpdateTime(new Date());
+            wechatPubUserDaoMapper.save(wechatPubUser);
         }
-        sendSubTemp(cstCode, wxOpenId);
-        return respSubs(xmlToObject);
+
+//        if(!StringUtils.isBlank(eventKey)) {
+//            logger.info("-------------------处理关注带参数事件--------------------");
+//            return handleScanEvent(xmlToObject, true);
+//        }
+//        sendSubTemp(cstCode, wxOpenId);
+//        return respSubs(xmlToObject);
+        return "";
+    }
+
+    public String getUnionId(WechatPub wechatPub, String openId) {
+        String pubToken = null;
+        String unionId = null;
+        try {
+            pubToken = getPubToken(wechatPub.getAppId(),wechatPub.getAppSecret());
+            unionId = getUserInfo(pubToken,openId);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return unionId;
+    }
+    public String getPubToken(String appid, String secret) throws Exception {
+        String access_token_url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid="+appid+"&secret="+secret;
+        JSONObject jsonObject = JSONObject.parseObject(HttpClientUtil.doGet(access_token_url));
+        logger.info("获取token返回jsonObject" + jsonObject);
+        String access_token = jsonObject.getString("access_token");
+        return access_token;
+    }
+    public String getUserInfo(String pubToken, String openId) throws Exception {
+        String user_info_url = "https://api.weixin.qq.com/cgi-bin/user/info?access_token="+pubToken+"&openid="+openId+"&lang=zh_CN";
+        JSONObject jsonObject = JSONObject.parseObject(HttpClientUtil.doGet(user_info_url));
+        logger.info("获取用户信息返回jsonObject" + jsonObject);
+        String unionId = jsonObject.getString("unionid");
+        return unionId;
     }
 
     /**
@@ -175,7 +237,16 @@ public class WechatServiceImpl implements WechatService{
     }
 
     private String handleUnsubscribe(XmlToObject xmlToObject) {
-        logger.info(EventTypeEnum.UNSUBSCRIBE.getTypeDesc());
+        String eventKey = xmlToObject.getEventKey();
+        String wxOpenId = xmlToObject.getFromUserName();
+        String pubOrgId = xmlToObject.getToUserName();
+        logger.info("------处理取消关注带参数事件------"+"eventKey="+eventKey+"||wxOpenId="+wxOpenId+"||pubOrgId="+pubOrgId);
+        //logger.info(EventTypeEnum.UNSUBSCRIBE.getTypeDesc());
+        // 根据opeinId，orgId查询公众号用户
+        WechatPubUser wechatPubUser = wechatPubUserDaoMapper.getByOrgIdAndOpenId(pubOrgId, wxOpenId);
+        if(wechatPubUser != null){
+            wechatPubUserDaoMapper.deleteByOrgIdAndOpenId(pubOrgId, wxOpenId);
+        }
         return "";
     }
 
