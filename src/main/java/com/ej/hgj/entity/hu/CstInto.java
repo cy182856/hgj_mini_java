@@ -12,6 +12,8 @@ public class CstInto {
 
     private String projectNum;
 
+    private String unionId;
+
     private String wxOpenId;
 
     private String userName;
