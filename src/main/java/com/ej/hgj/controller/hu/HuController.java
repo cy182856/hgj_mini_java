@@ -153,7 +153,7 @@ public class HuController extends BaseController {
             userName = cstIntoList.get(0).getUserName();
             //houseId = cstIntoList.get(0).getHouseId();
         }
-        // 当入住角色 是委托人-1,住户-3 是查询入住房屋列表
+        // 当入住角色 是员工-1,住户-3 是查询入住房屋列表
         String cstIntoId = mutipUsrVo.getCstIntoId();
         if(StringUtils.isNotBlank(cstIntoId)){
             CstInto cstIntoInfo = cstIntoMapper.getById(cstIntoId);
@@ -166,7 +166,7 @@ public class HuController extends BaseController {
                             houseList.add(hgjHouse.getResName());
                         }
                     }
-                    // 当入住角色 是员工-1,住户-3 查询入住房屋列表
+                    // 当入住角色 是租户-0,产权人-2 查询入住房屋列表
                 }else {
                     HgjHouse hgjHouse = new HgjHouse();
                     hgjHouse.setCstCode(cstCode);
