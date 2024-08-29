@@ -181,4 +181,7 @@ public class Constant<https> {
 
     // 付款开票标签编号
     public static String PAY_TAG_ID = "pay_tag_id";
+
+    // 金数据门户地址
+    public static String QN_GATEWAY_URL = "qn_gateway_url";
 }

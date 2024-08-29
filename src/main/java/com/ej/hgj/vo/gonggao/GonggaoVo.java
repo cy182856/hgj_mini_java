@@ -24,9 +24,12 @@ public class GonggaoVo {
    private Integer pageSize = 10;//页大小
    private Integer totalNum;//总记录数
    private Integer pages;//总页数
-   private List<Gonggao> gonggaoList;
+   private List<Gonggao> list;
    private Gonggao gonggao;
    private String respCode;
+
+   // 未读公告数量
+   private Integer notReadNum;
 
 
 }

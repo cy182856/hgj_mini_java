@@ -1,5 +1,6 @@
 package com.ej.hgj.vo.gonggao;
 
+import com.ej.hgj.entity.gonggao.Gonggao;
 import com.ej.hgj.entity.gonggao.GonggaoType;
 import com.ej.hgj.entity.visit.VisitLog;
 import com.fasterxml.jackson.annotation.JsonFormat;

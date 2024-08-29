@@ -54,4 +54,7 @@ public class Gonggao {
 
     private String content;
 
+    // 公告阅读状态 0-未读 1-已读
+    private Integer readStatus;
+
 }
