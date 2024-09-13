@@ -2,18 +2,28 @@ package com.ej.hgj.utils;
 
 import cn.hutool.http.HttpRequest;
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class HttpClientUtil {
+
+    static Logger logger = LoggerFactory.getLogger(SyPostClient.class);
 
     public static String doGet(String url) {
         CloseableHttpClient httpCilent2 = HttpClients.createDefault();
@@ -77,6 +87,29 @@ public class HttpClientUtil {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+        return new JSONObject();
+    }
+
+    public static JSONObject doPost(String url, String jsonData){
+        try (CloseableHttpClient client = HttpClients.createDefault()) {
+            HttpPost post = new HttpPost(url);
+            // 设置请求的内容类型及字符编码
+            StringEntity entity = new StringEntity(jsonData, "UTF-8");
+            entity.setContentType("application/json; charset=UTF-8");
+            post.setEntity(entity);
+            // 发送请求并获取响应
+            CloseableHttpResponse response = client.execute(post);
+            try {
+                String responseBody = EntityUtils.toString(response.getEntity(), "UTF-8");
+                JSONObject jsonResult = JSONObject.parseObject(responseBody);
+               logger.info("响应结果: " + responseBody);
+               return jsonResult;
+            } finally {
+                response.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return new JSONObject();
     }

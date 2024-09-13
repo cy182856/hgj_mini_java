@@ -9,11 +9,15 @@ import com.ej.hgj.base.BaseRespVo;
 import com.ej.hgj.constant.Constant;
 import com.ej.hgj.controller.base.BaseController;
 import com.ej.hgj.dao.config.ConstantConfDaoMapper;
+import com.ej.hgj.dao.qn.QnDaoMapper;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.qn.FormData;
+import com.ej.hgj.entity.qn.Qn;
 import com.ej.hgj.enums.JiasvBasicRespCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
-import com.ej.hgj.vo.ResponseVo;
+import com.ej.hgj.vo.qn.QnVo;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 //@CrossOrigin
@@ -36,6 +41,30 @@ public class QnController extends BaseController {
 
     @Autowired
     private ConstantConfDaoMapper constantConfDaoMapper;
+
+    @Autowired
+    private QnDaoMapper qnDaoMapper;
+
+    @RequestMapping("/qn/query.do")
+    @ResponseBody
+    public QnVo queryVisitInfos(@RequestBody QnVo qnVo) {
+        PageHelper.offsetPage((qnVo.getPageNum()-1) * qnVo.getPageSize(),qnVo.getPageSize());
+        Qn qn = new Qn();
+        qn.setProNum(qnVo.getProNum());
+        qn.setMiniIsShow(1);
+        List<Qn> list = qnDaoMapper.getList(qn);
+        PageInfo<Qn> pageInfo = new PageInfo<>(list);
+        int pageNumTotal = (int) Math.ceil((double)pageInfo.getTotal()/(double)qnVo.getPageSize());
+        list = pageInfo.getList();
+        logger.info("list返回记录数");
+        logger.info(list != null ? list.size() + "":0 + "");
+        qnVo.setPages(pageNumTotal);
+        qnVo.setTotalNum((int) pageInfo.getTotal());
+        qnVo.setPageSize(qnVo.getPageSize());
+        qnVo.setList(list);
+        qnVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
+        return qnVo;
+    }
 
     @ResponseBody
     @RequestMapping("/queryQnGatewayUrl.do")

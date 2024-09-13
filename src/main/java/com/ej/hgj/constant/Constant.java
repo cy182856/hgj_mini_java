@@ -184,4 +184,10 @@ public class Constant<https> {
 
     // 金数据门户地址
     public static String QN_GATEWAY_URL = "qn_gateway_url";
+
+    // 有效访客通行二维码生成数量限制
+    public static String OPEN_DOOR_QR_CODE_CREATE_SIZE = "open_door_qr_code_create_size";
+
+    // 门禁二维码接口地址
+    public static String OPEN_DOOR_QR_CODE_URL = "open_door_qr_code_url";
 }
