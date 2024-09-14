@@ -49,7 +49,7 @@ public class OpenDoorCode {
 
     private String houseId;
 
-
+    private String resCode;
 
     // 访客姓名
     private String visitName;

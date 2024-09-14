@@ -94,7 +94,7 @@ public class OpenDoorController extends BaseController {
 		String cstCode = openDoorLogVo.getCstCode();
 		String wxOpenId = openDoorLogVo.getWxOpenId();
 		String proNum = openDoorLogVo.getProNum();
-		if(StringUtils.isBlank(expDate) || StringUtils.isBlank(cstCode) || StringUtils.isBlank(wxOpenId) || StringUtils.isBlank(proNum)){
+		if(StringUtils.isBlank(expDate) || StringUtils.isBlank(houseId) || StringUtils.isBlank(cstCode) || StringUtils.isBlank(wxOpenId) || StringUtils.isBlank(proNum)){
 			jsonObject.put("RESPCODE", "999");
 			jsonObject.put("ERRDESC", "请求参数错误");
 			return jsonObject;
@@ -194,6 +194,7 @@ public class OpenDoorController extends BaseController {
 			openDoorCode.setCstName(hgjCst.getCstName());
 			openDoorCode.setCstMobile(hgjCst.getMobile());
 			openDoorCode.setHouseId(houseId);
+			openDoorCode.setResCode(hgjHouse.getResCode());
 			// 1-有效 0-无效
 			openDoorCode.setIsExpire(1);
 			openDoorCode.setCreateTime(date);
@@ -231,34 +232,55 @@ public class OpenDoorController extends BaseController {
 	@ResponseBody
 	public JSONObject addVisitRandomNum(@RequestBody OpenDoorLogVo openDoorLogVo) {
 		JSONObject jsonObject = new JSONObject();
-		if(StringUtils.isBlank(openDoorLogVo.getCstCode())
-				|| StringUtils.isBlank(openDoorLogVo.getWxOpenId()) || StringUtils.isBlank(openDoorLogVo.getProNum())){
+		String houseId = openDoorLogVo.getHouseId();
+		String cstCode = openDoorLogVo.getCstCode();
+		String wxOpenId = openDoorLogVo.getWxOpenId();
+		String proNum = openDoorLogVo.getProNum();
+		if(StringUtils.isBlank(houseId) || StringUtils.isBlank(cstCode) || StringUtils.isBlank(wxOpenId) || StringUtils.isBlank(proNum)){
 			jsonObject.put("RESPCODE", "999");
 			jsonObject.put("ERRDESC", "请求参数错误");
 			return jsonObject;
 		}
 		Set<Integer> randomNum = RandomNumberGenerator.generateRandomNumbers(100000, 999999, 1);
+		// 根据已选择的房屋ID获取单元号
+		HgjHouse hgjHouse = hgjHouseDaoMapper.getById(houseId);
+		String unitNo = hgjHouse.getUnitNo();
+		// 房间号
+		String resCode = hgjHouse.getResCode();
+		// 截取房间号
+		String[] resCodeSplit = resCode.split("-");
+		String addressNumber = unitNo+resCodeSplit[2];
+		// 楼层
+		String floor = hgjHouse.getFloorNum().toString();
 		OpenDoorCode openDoorCode = new OpenDoorCode();
 		Date date = new Date();
-		String guid = TimestampGenerator.generateSerialNumber();
-		openDoorCode.setId(guid);
+		openDoorCode.setId(TimestampGenerator.generateSerialNumber());
 		openDoorCode.setProNum(openDoorLogVo.getProNum());
 		openDoorCode.setProName(openDoorLogVo.getProName());
+		// 1-二维码 2-快速码
 		openDoorCode.setType(2);
-		String randNum = null;
-		for(Integer integer : randomNum){
-			randNum = integer.toString();
-		}
-		openDoorCode.setRandNum(randNum);
+		openDoorCode.setExpDate(openDoorLogVo.getExpDate());
+		openDoorCode.setAddressNum(addressNumber);
+		openDoorCode.setUnitNum(unitNo);
+		openDoorCode.setFloors(floor);
 		openDoorCode.setWxOpenId(openDoorLogVo.getWxOpenId());
 		openDoorCode.setCstCode(openDoorLogVo.getCstCode());
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(openDoorLogVo.getCstCode());
 		openDoorCode.setCstName(hgjCst.getCstName());
 		openDoorCode.setCstMobile(hgjCst.getMobile());
-		openDoorCode.setIsExpire(0);
+		openDoorCode.setHouseId(houseId);
+		openDoorCode.setResCode(hgjHouse.getResCode());
+		openDoorCode.setType(2);
+		String randNum = null;
+		for(Integer integer : randomNum){
+			randNum = integer.toString();
+		}
+		// 1-有效 0-无效
+		openDoorCode.setIsExpire(1);
 		openDoorCode.setCreateTime(date);
 		openDoorCode.setUpdateTime(date);
-		openDoorCode.setDeleteFlag(0);
+		openDoorCode.setRandNum(randNum);
+		openDoorCode.setDeleteFlag(Constant.DELETE_FLAG_NOT);
 		openDoorCodeDaoMapper.save(openDoorCode);
 		jsonObject.put("RESPCODE", "000");
 		jsonObject.put("randomNum", randomNum);

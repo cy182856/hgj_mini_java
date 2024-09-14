@@ -24,6 +24,7 @@
         <result column="cst_name" jdbcType="VARCHAR" property="cstName"/>
         <result column="cst_mobile" jdbcType="VARCHAR" property="cstMobile"/>
         <result column="house_id" jdbcType="VARCHAR" property="houseId"/>
+        <result column="res_code" jdbcType="VARCHAR" property="resCode"/>
         <result column="visit_name" jdbcType="VARCHAR" property="visitName"/>
         <result column="car_num" jdbcType="VARCHAR" property="carNum"/>
         <result column="exp_num" jdbcType="INTEGER" property="expNum"/>
@@ -177,6 +178,9 @@
         <if test="houseId != null">
             house_id,
         </if>
+        <if test="resCode != null">
+            res_code,
+        </if>
         <if test="visitName != null">
             visit_name,
         </if>
@@ -271,6 +275,9 @@
             </if>
             <if test="houseId != null" >
                 #{houseId,jdbcType=VARCHAR},
+            </if>
+            <if test="resCode != null" >
+                #{resCode,jdbcType=VARCHAR},
             </if>
             <if test="visitName != null" >
                 #{visitName,jdbcType=VARCHAR},
