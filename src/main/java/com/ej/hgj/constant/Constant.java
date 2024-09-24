@@ -147,6 +147,12 @@ public class Constant<https> {
     // 快速通行码说明文字
     public static String QUICK_ACCESS_CODE = "quick_access_code";
 
+    // 访客二维码说明文字
+    public static String OPEN_DOOR_VISITOR_CODE = "open_door_visitor_code";
+
+    // 快速通行码说明文字
+    public static String OPEN_DOOR_QUICK_ACCESS_CODE = "open_door_quick_access_code";
+
     // token
     public static final String TOKEN = "hgj20230719";
     // 微信公众号orgId
@@ -187,6 +193,9 @@ public class Constant<https> {
 
     // 有效访客通行二维码生成数量限制
     public static String OPEN_DOOR_QR_CODE_CREATE_SIZE = "open_door_qr_code_create_size";
+
+    // 活动中心有效通行二维码生成数量限制
+    public static String COUPON_QR_CODE_CREATE_SIZE = "coupon_qr_code_create_size";
 
     // 门禁二维码接口地址
     public static String OPEN_DOOR_QR_CODE_URL = "open_door_qr_code_url";

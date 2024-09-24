@@ -25,6 +25,7 @@
         <result column="cst_name" jdbcType="VARCHAR" property="cstName"/>
         <result column="title" jdbcType="VARCHAR" property="title"/>
         <result column="type_name" jdbcType="VARCHAR" property="typeName"/>
+        <result column="desc" jdbcType="VARCHAR" property="desc"/>
     </resultMap>
     <sql id="Base_Column_List" >
         id, batch_id, coupon_id, tag_id, type_code, cou_num, exp_num, start_time, end_time, cst_code, wx_open_id, `range`, create_time, update_time, create_by,
@@ -42,14 +43,15 @@
     <!-- 查询列表-->
     <select id="getList" resultMap="BaseMap"  parameterType="com.ej.hgj.entity.coupon.CouponGrant">
         select
-        g.*,t.name as tag_name,c.cst_name,s.title,i.user_name,p.type_name
+        g.*,t.name as tag_name,c.cst_name,s.title,i.user_name,p.type_name,s.desc
         from t_coupon_grant g
         left join t_coupon s on s.id = g.coupon_id
         left join t_tag t on t.id = g.tag_id
         left join s_cst c on c.code = g.cst_code
         left join t_cst_into i on i.wx_open_id = g.wx_open_id and i.into_status = 1
         left join t_coupon_type p on p.type_code = g.type_code
-        where g.delete_flag = 0 and t.delete_flag = 0
+        where g.delete_flag = 0
+        and t.delete_flag = 0
         <if test="cstName != null">
             and c.cst_name like CONCAT('%', #{cstName,jdbcType=VARCHAR},'%') ESCAPE '/'
         </if>
@@ -70,6 +72,15 @@
         </if>
         <if test="wxOpenId != null and wxOpenId != ''">
             and g.wx_open_id = #{wxOpenId}
+        </if>
+        <if test="couponType != null and couponType == 1">
+            and g.exp_num > 0 and DATE(NOW()) >= g.start_time and g.end_time >= DATE(NOW())
+        </if>
+        <if test="couponType != null and couponType == 2">
+            and g.exp_num = 0 and DATE(NOW()) >= g.start_time and g.end_time >= DATE(NOW())
+        </if>
+        <if test="couponType != null and couponType == 3">
+            and g.exp_num > 0 and g.start_time > DATE(NOW())
         </if>
         order by g.update_time desc
     </select>

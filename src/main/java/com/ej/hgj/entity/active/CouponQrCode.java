@@ -1,4 +1,4 @@
-package com.ej.hgj.entity.opendoor;
+package com.ej.hgj.entity.active;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -7,15 +7,13 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.util.Date;
 
 @Data
-public class OpenDoorCode {
+public class CouponQrCode {
 
     private String id;
 
     private String proNum;
 
     private String proName;
-
-    private Integer type;
 
     private String expDate;
 
@@ -24,6 +22,8 @@ public class OpenDoorCode {
     private Long endTime;
 
     private String cardNo;
+
+    private String couponId;
 
     private String qrCodeContent;
 
@@ -41,9 +41,9 @@ public class OpenDoorCode {
 
     private String cstName;
 
-    private String houseId;
-
     private String resCode;
+
+    private Integer isExpire;
 
     private String createBy;
 

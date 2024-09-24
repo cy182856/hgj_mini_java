@@ -57,4 +57,11 @@ public class CouponGrant {
 
     private String title;
 
+    private String desc;
+
+    private Integer couponType;
+
+    // 1-可用 2-已用 3-未用
+    private Integer status;
+
 }

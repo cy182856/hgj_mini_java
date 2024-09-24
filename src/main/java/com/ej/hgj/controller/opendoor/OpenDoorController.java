@@ -1,6 +1,5 @@
 package com.ej.hgj.controller.opendoor;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ej.hgj.constant.Constant;
 import com.ej.hgj.controller.base.BaseController;
@@ -10,31 +9,27 @@ import com.ej.hgj.dao.cst.HgjCstDaoMapper;
 import com.ej.hgj.dao.hu.HgjHouseDaoMapper;
 import com.ej.hgj.dao.opendoor.OpenDoorCodeDaoMapper;
 import com.ej.hgj.dao.opendoor.OpenDoorLogDaoMapper;
+import com.ej.hgj.dao.opendoor.OpenDoorQuickCodeDaoMapper;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.config.ProNeighConfig;
 import com.ej.hgj.entity.cst.HgjCst;
 import com.ej.hgj.entity.hu.HgjHouse;
 import com.ej.hgj.entity.opendoor.OpenDoorCode;
 import com.ej.hgj.entity.opendoor.OpenDoorLog;
+import com.ej.hgj.entity.opendoor.OpenDoorQuickCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
 import com.ej.hgj.utils.DateUtils;
 import com.ej.hgj.utils.HttpClientUtil;
 import com.ej.hgj.utils.QrCodeUtil;
 import com.ej.hgj.utils.RandomNumberGenerator;
 import com.ej.hgj.utils.bill.TimestampGenerator;
-import com.ej.hgj.vo.opendoor.OpenDoorLogVo;
+import com.ej.hgj.vo.opendoor.OpenDoorCodeVo;
 import com.ej.hgj.vo.visit.VisitLogVo;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.SneakyThrows;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,18 +43,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Controller
 public class OpenDoorController extends BaseController {
@@ -84,10 +73,13 @@ public class OpenDoorController extends BaseController {
 	@Autowired
 	private ProNeighConfDaoMapper proNeighConfDaoMapper;
 
+	@Autowired
+	private OpenDoorQuickCodeDaoMapper openDoorQuickCodeDaoMapper;
+
 	@SneakyThrows
 	@RequestMapping("/opendoor/addOpenDoorQrCode.do")
 	@ResponseBody
-	public JSONObject addVisitQrCode(HttpServletResponse response, @RequestBody OpenDoorLogVo openDoorLogVo) {
+	public JSONObject addVisitQrCode(HttpServletResponse response, @RequestBody OpenDoorCodeVo openDoorLogVo) {
 		JSONObject jsonObject = new JSONObject();
 		String expDate = openDoorLogVo.getExpDate();
 		String houseId = openDoorLogVo.getHouseId();
@@ -118,7 +110,7 @@ public class OpenDoorController extends BaseController {
 		openDoorCodeParam2.setWxOpenId(wxOpenId);
 		openDoorCodeParam2.setType(1);
 		openDoorCodeParam2.setExpDate(expDate);
-		List<OpenDoorCode> qrCodeByExpDate2 = openDoorCodeDaoMapper.getQrCodeByExpDate2(openDoorCodeParam);
+		List<OpenDoorCode> qrCodeByExpDate2 = openDoorCodeDaoMapper.getQrCodeByExpDate2(openDoorCodeParam2);
 		if(!qrCodeByExpDate2.isEmpty()){
 			OpenDoorCode openDoorCode = qrCodeByExpDate2.get(0);
 			String qrCodeContent = openDoorCode.getQrCodeContent();
@@ -177,7 +169,7 @@ public class OpenDoorController extends BaseController {
 			openDoorCode.setId(TimestampGenerator.generateSerialNumber());
 			openDoorCode.setProNum(openDoorLogVo.getProNum());
 			openDoorCode.setProName(openDoorLogVo.getProName());
-			// 1-二维码 2-快速码
+			// 1-智慧管家二维码 2-客服直接创建的二维码
 			openDoorCode.setType(1);
 			openDoorCode.setExpDate(openDoorLogVo.getExpDate());
 			openDoorCode.setStartTime(startTime);
@@ -192,11 +184,8 @@ public class OpenDoorController extends BaseController {
 			openDoorCode.setCstCode(openDoorLogVo.getCstCode());
 			HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(openDoorLogVo.getCstCode());
 			openDoorCode.setCstName(hgjCst.getCstName());
-			openDoorCode.setCstMobile(hgjCst.getMobile());
 			openDoorCode.setHouseId(houseId);
 			openDoorCode.setResCode(hgjHouse.getResCode());
-			// 1-有效 0-无效
-			openDoorCode.setIsExpire(1);
 			openDoorCode.setCreateTime(date);
 			openDoorCode.setUpdateTime(date);
 			openDoorCode.setDeleteFlag(0);
@@ -230,7 +219,7 @@ public class OpenDoorController extends BaseController {
 
 	@RequestMapping("/opendoor/createQuickCode.do")
 	@ResponseBody
-	public JSONObject addVisitRandomNum(@RequestBody OpenDoorLogVo openDoorLogVo) {
+	public JSONObject addVisitRandomNum(@RequestBody OpenDoorCodeVo openDoorLogVo) {
 		JSONObject jsonObject = new JSONObject();
 		String houseId = openDoorLogVo.getHouseId();
 		String cstCode = openDoorLogVo.getCstCode();
@@ -252,43 +241,42 @@ public class OpenDoorController extends BaseController {
 		String addressNumber = unitNo+resCodeSplit[2];
 		// 楼层
 		String floor = hgjHouse.getFloorNum().toString();
-		OpenDoorCode openDoorCode = new OpenDoorCode();
+		OpenDoorQuickCode openDoorQuickCode = new OpenDoorQuickCode();
 		Date date = new Date();
-		openDoorCode.setId(TimestampGenerator.generateSerialNumber());
-		openDoorCode.setProNum(openDoorLogVo.getProNum());
-		openDoorCode.setProName(openDoorLogVo.getProName());
-		// 1-二维码 2-快速码
-		openDoorCode.setType(2);
-		openDoorCode.setExpDate(openDoorLogVo.getExpDate());
-		openDoorCode.setAddressNum(addressNumber);
-		openDoorCode.setUnitNum(unitNo);
-		openDoorCode.setFloors(floor);
-		openDoorCode.setWxOpenId(openDoorLogVo.getWxOpenId());
-		openDoorCode.setCstCode(openDoorLogVo.getCstCode());
+		openDoorQuickCode.setId(TimestampGenerator.generateSerialNumber());
+		openDoorQuickCode.setProNum(openDoorLogVo.getProNum());
+		openDoorQuickCode.setProName(openDoorLogVo.getProName());
+		// 当前时间年月日
+		openDoorQuickCode.setExpDate(DateUtils.strYmd(date));
+		ProNeighConfig byProjectNum = proNeighConfDaoMapper.getByProjectNum(proNum);
+		openDoorQuickCode.setNeighNo(byProjectNum.getNeighNo());
+		openDoorQuickCode.setAddressNum(addressNumber);
+		openDoorQuickCode.setUnitNum(unitNo);
+		openDoorQuickCode.setFloors(floor);
+		openDoorQuickCode.setWxOpenId(openDoorLogVo.getWxOpenId());
+		openDoorQuickCode.setCstCode(openDoorLogVo.getCstCode());
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(openDoorLogVo.getCstCode());
-		openDoorCode.setCstName(hgjCst.getCstName());
-		openDoorCode.setCstMobile(hgjCst.getMobile());
-		openDoorCode.setHouseId(houseId);
-		openDoorCode.setResCode(hgjHouse.getResCode());
-		openDoorCode.setType(2);
+		openDoorQuickCode.setCstName(hgjCst.getCstName());
+		openDoorQuickCode.setHouseId(houseId);
+		openDoorQuickCode.setResCode(hgjHouse.getResCode());
 		String randNum = null;
 		for(Integer integer : randomNum){
 			randNum = integer.toString();
 		}
 		// 1-有效 0-无效
-		openDoorCode.setIsExpire(1);
-		openDoorCode.setCreateTime(date);
-		openDoorCode.setUpdateTime(date);
-		openDoorCode.setRandNum(randNum);
-		openDoorCode.setDeleteFlag(Constant.DELETE_FLAG_NOT);
-		openDoorCodeDaoMapper.save(openDoorCode);
+		openDoorQuickCode.setIsExpire(1);
+		openDoorQuickCode.setCreateTime(date);
+		openDoorQuickCode.setUpdateTime(date);
+		openDoorQuickCode.setQuickCode(randNum);
+		openDoorQuickCode.setDeleteFlag(Constant.DELETE_FLAG_NOT);
+		openDoorQuickCodeDaoMapper.save(openDoorQuickCode);
 		jsonObject.put("RESPCODE", "000");
 		jsonObject.put("randomNum", randomNum);
 		return jsonObject;
 	}
 
 	/**
-	 * 获取通行码说明文字
+	 * 获取一周时间
 	 * @param openDoorLogVo
 	 * @return
 	 */
@@ -312,13 +300,20 @@ public class OpenDoorController extends BaseController {
 
 	@RequestMapping("/opendoor/queryOpenDoorLog.do")
 	@ResponseBody
-	public OpenDoorLogVo queryVisitInfos(HttpServletRequest request, @RequestBody OpenDoorLogVo openDoorLogVo) {
+	public OpenDoorCodeVo queryVisitInfos(HttpServletRequest request, @RequestBody OpenDoorCodeVo openDoorLogVo) {
 		PageHelper.offsetPage((openDoorLogVo.getPageNum()-1) * openDoorLogVo.getPageSize(),openDoorLogVo.getPageSize());
 		OpenDoorLog doorLog = new OpenDoorLog();
-		doorLog.setProNum(openDoorLogVo.getProNum());
+//		doorLog.setProNum(openDoorLogVo.getProNum());
 		doorLog.setWxOpenId(openDoorLogVo.getWxOpenId());
-		doorLog.setCstCode(openDoorLogVo.getCstCode());
+//		doorLog.setCstCode(openDoorLogVo.getCstCode());
 		List<OpenDoorLog> list = openDoorLogDaoMapper.getList(doorLog);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+		for(OpenDoorLog openDoorLog : list){
+			Long eventTime = openDoorLog.getEventTime();
+			Date date = new Date(eventTime);
+			String formattedDate = sdf.format(date);
+			openDoorLog.setOpenDoorTime(formattedDate);
+		}
 		PageInfo<OpenDoorLog> pageInfo = new PageInfo<>(list);
 		int pageNumTotal = (int) Math.ceil((double)pageInfo.getTotal()/(double)openDoorLogVo.getPageSize());
 		list = pageInfo.getList();
@@ -327,21 +322,26 @@ public class OpenDoorController extends BaseController {
 		openDoorLogVo.setPages(pageNumTotal);
 		openDoorLogVo.setTotalNum((int) pageInfo.getTotal());
 		openDoorLogVo.setPageSize(openDoorLogVo.getPageSize());
-
-		for(OpenDoorLog v : list){
-			// 前端显示数据
-			HgjHouse hgjHouse = hgjHouseDaoMapper.getById(v.getHouseId());
-			if(hgjHouse != null){
-				v.setHouseName(hgjHouse.getBudName()+"-"+hgjHouse.getResName());
-			}
-			v.setEffectuateDate(v.getCreateTime());
-		}
 		openDoorLogVo.setList(list);
 		openDoorLogVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
 		return openDoorLogVo;
 	}
 
-
+	/**
+	 * 获取通行码说明文字
+	 * @return
+	 */
+	@RequestMapping("/opendoor/queryVisitExplain.do")
+	@ResponseBody
+	public JSONObject queryVisitExplain() {
+		JSONObject jsonObject = new JSONObject();
+		ConstantConfig visitorCode = constantConfDaoMapper.getByKey(Constant.OPEN_DOOR_VISITOR_CODE);
+		ConstantConfig quickAccessCode = constantConfDaoMapper.getByKey(Constant.OPEN_DOOR_QUICK_ACCESS_CODE);
+		jsonObject.put("respCode", "000");
+		jsonObject.put("visitorCode", visitorCode.getConfigValue());
+		jsonObject.put("quickAccessCode", quickAccessCode.getConfigValue());
+		return jsonObject;
+	}
 
 
 	public static void main(String[] args) {

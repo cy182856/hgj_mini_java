@@ -19,6 +19,12 @@ public class ActiveRequestVo implements Serializable {
 
 	private String proNum;
 
+	private String proName;
+
 	private String wxOpenId;
+
+	private Integer couponType;
+
+	private String couponId;
 
 }

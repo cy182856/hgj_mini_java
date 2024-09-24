@@ -11,7 +11,7 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-public class OpenDoorLogVo implements Serializable{
+public class OpenDoorCodeVo implements Serializable{
 
 	/**
 	 *
@@ -29,6 +29,8 @@ public class OpenDoorLogVo implements Serializable{
     private String expDate;
 
     private String houseId;
+
+    private String couponId;
 
     private Integer pageNum = 1;//页数
     private Integer pageSize = 10;//页大小
