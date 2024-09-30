@@ -27,4 +27,6 @@ public class ActiveRequestVo implements Serializable {
 
 	private String couponId;
 
+	private Integer status;
+
 }

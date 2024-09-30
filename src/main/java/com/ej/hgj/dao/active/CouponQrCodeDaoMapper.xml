@@ -46,6 +46,9 @@
         <if test="expDate != null">
             and exp_date = #{expDate,jdbcType=VARCHAR}
         </if>
+        <if test="couponId != null">
+            and coupon_id = #{couponId,jdbcType=VARCHAR}
+        </if>
     </select>
 
     <!-- 保存-->

@@ -175,14 +175,16 @@ public class ActiveController extends BaseController {
 		String wxOpenId = activeRequestVo.getWxOpenId();
 		String proNum = activeRequestVo.getProNum();
 		String couponId = activeRequestVo.getCouponId();
+		Integer status = activeRequestVo.getStatus();
 		if(StringUtils.isBlank(cstCode) || StringUtils.isBlank(wxOpenId) ||
-				StringUtils.isBlank(proNum) || StringUtils.isBlank(couponId)){
+				StringUtils.isBlank(proNum) || StringUtils.isBlank(couponId) || status == null){
 			jsonObject.put("RESPCODE", "999");
 			jsonObject.put("ERRDESC", "请求参数错误");
 			return jsonObject;
 		}
+		// 可用券当有效次数用完不能再创建二维码
 		CouponGrant couponGrant = couponGrantDaoMapper.getById(couponId);{
-			if(couponGrant.getExpNum() == 0){
+			if(couponGrant.getExpNum() == 0 && status == 1){
 				jsonObject.put("RESPCODE", "999");
 				jsonObject.put("ERRDESC", "无可用次数");
 				return jsonObject;
@@ -201,6 +203,7 @@ public class ActiveController extends BaseController {
 			jsonObject.put("ERRDESC", "二维码生成次数已达到上限值");
 			return jsonObject;
 		}
+
 		// 根据有效日期券ID查询生成记录，如果有直接查询历史记录，反之再调用接口
 		if(!qrCodeByExpDate.isEmpty()){
 			List<CouponQrCode> qrCodeByExpDateFilter = qrCodeByExpDate.stream().filter(couponQrCode -> couponQrCode.getCouponId().equals(couponId)).collect(Collectors.toList());
@@ -212,6 +215,10 @@ public class ActiveController extends BaseController {
 				jsonObject.put("RESPCODE", "000");
 				jsonObject.put("couponQrCode", png_base64);
 				jsonObject.put("expDate",expDate);
+				return jsonObject;
+			}else {
+				jsonObject.put("RESPCODE", "999");
+				jsonObject.put("ERRDESC", "二维码已失效");
 				return jsonObject;
 			}
 		}
