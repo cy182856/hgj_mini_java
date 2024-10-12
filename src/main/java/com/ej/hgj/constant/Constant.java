@@ -132,6 +132,8 @@ public class Constant<https> {
     public static Integer INTO_ROLE_PROPERTY_OWNER = 2;
     // 入住角色 4-住户
     public static Integer INTO_ROLE_HOUSEHOLD = 3;
+    // 入住角色 5-同住人
+    public static Integer INTO_ROLE_COHABIT = 4;
     // 入住状态 0-未入住
     public static Integer INTO_STATUS_N = 0;
     // 入住角色 1-已入住
@@ -199,4 +201,7 @@ public class Constant<https> {
 
     // 门禁二维码接口地址
     public static String OPEN_DOOR_QR_CODE_URL = "open_door_qr_code_url";
+
+    // 活动中心游泳卡二维码当天开门次数限制
+    public static String CARD_QR_CODE_OPEN_DOOR_SIZE = "card_qr_code_open_door_size";
 }

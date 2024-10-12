@@ -1,5 +1,5 @@
 /**
- * 
+ *
  * 上海慧管信息技术服务有限公司
  * Copyright (c) 2020 YunCF,Inc.All Rights Reserved.
  */
@@ -10,7 +10,7 @@ import com.ej.hgj.enums.JiaSubsystem;
 
 public enum JiasvBasicRespCode {
 
-    SUCCESS("0000", "交易成功"),
+    SUCCESS("0000", "成功"),
     RESULT_FAILED("0101", "请求失败"),
     DATA_NULL("0001", "请求参数含有空数据"),
     DATA_LENGTH_ERROR("0002", "请求参数长度不正确"),
@@ -23,21 +23,21 @@ public enum JiasvBasicRespCode {
     QUERY_DATA_IS_NULL("0009", "查询信息为空"),
     KEY_DATA_MISSING("0010", "关键数据缺失"),
     RESULT_PROCESS("0011", "交易处理中"),
-    
+
     FLAWED_SUCCESS("0997", "有缺陷的成功"),
     NETWORK_EXCEPTION("0998", "网络异常，请稍后再试"),
     SYSTEM_EXCEPTION("0999", "系统异常"),
-    
+
     USR_STAT_NOT_IN_NORMAL("1001", "企业状态非正常"),
     USR_CONF_NOT_EXIST("1002", "企业配置数据不存在"),
     USR_WECHAT_PUB_CONF_NOT_EXIST("1003", "企业公众号配置不存在，请联系物业"),
-    
-    UPD_TYPE_IS_NULL("2001","上传文件类型为空"), 
-    UPD_IMAGES_IS_NULL("2002","上传文件未获取到"), 
+
+    UPD_TYPE_IS_NULL("2001","上传文件类型为空"),
+    UPD_IMAGES_IS_NULL("2002","上传文件未获取到"),
     GET_HEO_SEQ_ID_FAIL("2003","获取序列号失败"),
 
     CLOSE_OBJ("2004","标的已经失效"),
-    
+
     /**住户房屋绑定专用返回码范围 3001 ~ 3099 */
     THE_HOUSE_HAS_BEEN_CLAIMED_BY_OTHERS("3001", "房屋已经被其他人认领"),
     HOUSE_INFO_NOT_EXIST("3002", "住房信息不存在，请联系物业"),
@@ -49,7 +49,7 @@ public enum JiasvBasicRespCode {
     PROP_AREA_INFO_NOT_EXIST("3008", "区域信息未配置，请联系物业"),
     PROP_BUILDING_INFO_NOT_EXIST("3009", "楼号信息未配置，请联系物业"),
     HOUSE_CLOSE("3010", "房屋被关闭，请联系物业"),
-    
+
     /** 支付 4001 ~ 4999 */
     ORD_AMT_IS_ILLEGAL("4001", "订单金额不合法"),
     NO_SUPPORTED_BUSI_ID("4002", "不支持的业务类型"),
@@ -83,10 +83,10 @@ public enum JiasvBasicRespCode {
     /** */
     HU_CHARGED("6001", "暂不支持同一用户多辆车同时充电")
     ;
-    
+
     private String respCode;
     private String respDesc;
-    
+
     private JiasvBasicRespCode(String respCode, String respDesc) {
         this.respCode = respCode;
         this.respDesc = respDesc;

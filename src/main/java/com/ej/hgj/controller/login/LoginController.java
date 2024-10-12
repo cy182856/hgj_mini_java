@@ -98,6 +98,14 @@ public class LoginController extends BaseController {
             priRev = billResponseVo.getPriRevAmount();
         }
 
+        // 查询是否有入住审核
+        CstInto cstIntoPram = new CstInto();
+        cstIntoPram.setCstCode(loginInfo.getCstCode());
+        cstIntoPram.setIntoStatus(Constant.INTO_STATUS_A);
+        List<CstInto> cstIntoList = cstIntoMapper.getList(cstIntoPram);
+        // 查询登录角色
+        CstInto byWxOpenIdAndStatus_1 = cstIntoMapper.getByWxOpenIdAndStatus_1(loginInfo.getWxOpenId());
+
         // 判断客户是否已入住
         CstInto cstInto = new CstInto();
         cstInto.setWxOpenId(loginInfo.getWxOpenId());
@@ -108,8 +116,14 @@ public class LoginController extends BaseController {
             List<MenuMini> menuMinis = menuMiniDaoMapper.findMenuByCstCode(loginInfo.getCstCode());
             if(!menuMinis.isEmpty()){
                 for(MenuMini menuMini : menuMinis){
-                    if("物业缴费".equals(menuMini.getFunName()) && priRev.compareTo(BigDecimal.ZERO) > 0){
+                    // 5-物业缴费
+                    if(menuMini.getId() == 5 && priRev.compareTo(BigDecimal.ZERO) > 0){
                         // 欠费菜单显示小红点
+                        menuMini.setDot(true);
+                    }
+                    // 7-我的房屋
+                    if(menuMini.getId() == 7 && !cstIntoList.isEmpty() && byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 0 || byWxOpenIdAndStatus_1.getIntoRole() == 2)){
+                        // 有待审核的入住申请菜单显示小红点
                         menuMini.setDot(true);
                     }
                 }
@@ -118,6 +132,12 @@ public class LoginController extends BaseController {
         }else {
             loginInfo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
         }
+
+        // 首页我的 小红点提示
+        if(!cstIntoList.isEmpty() && byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 0 || byWxOpenIdAndStatus_1.getIntoRole() == 2)){
+            loginInfo.setHomeDot(true);
+        }
+
         //主页功能菜单
 //        JSONArray jsonArray = new JSONArray();
 //        for (MainModuleEnum moduleEnum : MainModuleEnum.values()) {

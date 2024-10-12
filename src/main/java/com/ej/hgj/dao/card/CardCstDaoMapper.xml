@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ej.hgj.dao.card.CardCstDaoMapper">
+
+    <resultMap id="BaseMap" type="com.ej.hgj.entity.card.CardCst">
+        <result column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="pro_num" jdbcType="VARCHAR" property="proNum"/>
+        <result column="card_id" jdbcType="VARCHAR" property="cardId"/>
+        <result column="card_code" jdbcType="VARCHAR" property="cardCode"/>
+        <result column="cst_code" jdbcType="VARCHAR" property="cstCode"/>
+        <result column="total_num" jdbcType="INTEGER" property="totalNum"/>
+        <result column="apply_num" jdbcType="INTEGER" property="applyNum"/>
+        <result column="start_time" jdbcType="VARCHAR" property="startTime"/>
+        <result column="end_time" jdbcType="VARCHAR" property="endTime"/>
+        <result column="is_exp" jdbcType="INTEGER" property="isExp"/>
+        <result column="create_by" jdbcType="VARCHAR" property="createBy"/>
+        <result column="update_by" jdbcType="VARCHAR" property="updateBy"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
+
+        <result column="pro_name" jdbcType="VARCHAR" property="proName"/>
+        <result column="cst_name" jdbcType="VARCHAR" property="cstName"/>
+        <result column="card_name" jdbcType="VARCHAR" property="cardName"/>
+        <result column="card_type_name" jdbcType="VARCHAR" property="cardTypeName"/>
+    </resultMap>
+    <sql id="Base_Column_List" >
+        id, pro_num, card_id, card_code, cst_code, total_num, apply_num, start_time, end_time, is_exp, create_time, update_time, create_by, update_by, delete_flag
+    </sql>
+
+    <!-- 根据主键查询-->
+    <select id="getById" resultMap="BaseMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from t_card_cst
+        where id = #{id}
+    </select>
+
+    <!-- 查询卡信息-->
+    <select id="getCardInfo" resultMap="BaseMap" parameterType="java.lang.String" >
+        select
+        a.*,s.cst_name, pc.project_name as pro_name, c.name as card_name, d.name as card_type_name
+        from t_card_cst a
+        left join s_cst s on s.`code` = a.cst_code
+        left join t_pro_config pc on pc.project_num = a.pro_num
+        left join t_card c on c.id = a.card_id
+        left join t_card_type d on d.id = c.type
+        where a.delete_flag = 0
+          and a.is_exp = 1
+          and a.pro_num = #{proNum}
+          and a.cst_code = #{cstCode}
+          and c.type = #{cardType}
+    </select>
+
+</mapper>

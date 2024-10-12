@@ -166,10 +166,10 @@ public class LoginInfo extends BaseRespVo {
      */
     private JSONArray ModuleValues;
 
-
     private List<MenuMini> funList;
 
     private String token;
 
-
+    // 首页我的 是否显示小红点
+    private Boolean homeDot;
 }

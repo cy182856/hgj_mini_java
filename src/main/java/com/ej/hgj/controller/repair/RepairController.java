@@ -457,7 +457,7 @@ public class RepairController extends BaseController {
 	@ResponseBody
 	public AjaxResult queryRepairList(@RequestBody RepairRequestVo repairRequestVo){
 		AjaxResult ajaxResult = new AjaxResult();
-		// 0-委托人、住户 1-客户、产权人
+		// 0-租户员工、租客、同住人  1-租户、产权人
 		Integer ownerFlag = 0;
 		HashMap map = new HashMap();
 		List<String> houseIdList = new ArrayList<>();
@@ -468,11 +468,11 @@ public class RepairController extends BaseController {
 		cstInto.setCstCode(cstCode);
 		cstInto.setIntoStatus(Constant.INTO_STATUS_Y);
 		List<CstInto> cstIntos = cstIntoMapper.getList(cstInto);
-		// 判断登录人是否是客户、业主,条件cstCode,wxOpenId,intoRole=客户、业主
+		// 判断登录人是否是租户、产权人,条件cstCode,wxOpenId,intoRole=租户、产权人
 		List<CstInto> cstIntoFilter = cstIntos.stream().filter(into -> (into.getIntoRole() == Constant.INTO_ROLE_CST || into.getIntoRole() == Constant.INTO_ROLE_PROPERTY_OWNER) && into.getWxOpenId().equals(wxOpenId)).collect(Collectors.toList());
-		// 如果不是房主才会查询委托人、住户的房屋
+		// 如果不是租户、产权人才会查询租户员工、租客、同住人的房屋
 		if(cstIntoFilter.isEmpty()){
-			// 查询委托人、住户已入住房间
+			// 查询租户员工、租客、同住人已入住房间
 			List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCodeAndWxOpenId(cstCode, wxOpenId);
 			for(CstIntoHouse cstIntoHouse : cstIntoHouseList){
 				houseIdList.add(cstIntoHouse.getHouseId());
@@ -489,7 +489,7 @@ public class RepairController extends BaseController {
 			List<CstInto> ownerList = cstIntoMapper.getByCstCodeAndIntoRole(cstCode);
 			// 查询每个房屋的租户
 			for(HgjHouse house : list){
-				// 租户集合
+				// 租客、同住人集合
 				List<CstInto> cstIntoList = cstIntoMapper.getListByHouseId(house.getId());
 				// 房主集合
 				cstIntoList.addAll(ownerList);

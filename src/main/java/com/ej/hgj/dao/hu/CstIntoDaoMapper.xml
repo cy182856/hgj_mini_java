@@ -110,7 +110,7 @@
         select
         c.*,h.id as cst_into_house_id, h.into_status as house_into_status
         from t_cst_into c inner join t_cst_into_house h on c.id=h.cst_into_id
-        where c.delete_flag = 0 and h.delete_flag = 0 and c.into_role in(1,3) and c.into_status in(1,3) and h.into_status in(1,3) and h.house_id = #{houseId}
+        where c.delete_flag = 0 and h.delete_flag = 0 and c.into_role in(1,3,4) and c.into_status in(1,3) and h.into_status in(1,3) and h.house_id = #{houseId}
         order by c.update_time desc
     </select>
 
