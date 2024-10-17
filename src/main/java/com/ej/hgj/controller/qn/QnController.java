@@ -10,9 +10,11 @@ import com.ej.hgj.constant.Constant;
 import com.ej.hgj.controller.base.BaseController;
 import com.ej.hgj.dao.config.ConstantConfDaoMapper;
 import com.ej.hgj.dao.qn.QnDaoMapper;
+import com.ej.hgj.dao.tag.TagCstDaoMapper;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.qn.FormData;
 import com.ej.hgj.entity.qn.Qn;
+import com.ej.hgj.entity.tag.TagCst;
 import com.ej.hgj.enums.JiasvBasicRespCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
 import com.ej.hgj.vo.qn.QnVo;
@@ -27,9 +29,11 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 //@CrossOrigin
 //@RestController
@@ -45,13 +49,18 @@ public class QnController extends BaseController {
     @Autowired
     private QnDaoMapper qnDaoMapper;
 
+    @Autowired
+    private TagCstDaoMapper tagCstDaoMapper;
+
     @RequestMapping("/qn/query.do")
     @ResponseBody
     public QnVo queryVisitInfos(@RequestBody QnVo qnVo) {
+        String wxOpenId = qnVo.getWxOpenId();
         PageHelper.offsetPage((qnVo.getPageNum()-1) * qnVo.getPageSize(),qnVo.getPageSize());
         Qn qn = new Qn();
         qn.setProNum(qnVo.getProNum());
         qn.setMiniIsShow(1);
+        qn.setWxOpenId(wxOpenId);
         List<Qn> list = qnDaoMapper.getList(qn);
         PageInfo<Qn> pageInfo = new PageInfo<>(list);
         int pageNumTotal = (int) Math.ceil((double)pageInfo.getTotal()/(double)qnVo.getPageSize());

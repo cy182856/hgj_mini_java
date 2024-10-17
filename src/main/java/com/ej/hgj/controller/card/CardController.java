@@ -96,8 +96,9 @@ public class CardController extends BaseController {
 		String proNum = baseReqVo.getProNum();
 		String cstCode = baseReqVo.getCstCode();
 		CardCst cardInfo = cardCstDaoMapper.getCardInfo(proNum, cstCode, "1");
-		// 查询登录角色
+		// 查询登录人身份
 		CstInto byWxOpenIdAndStatus_1 = cstIntoMapper.getByWxOpenIdAndStatus_1(baseReqVo.getWxOpenId());
+		// 身份是产权人、同住人才可以看到游泳卡
 		if(cardInfo != null && byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 2 || byWxOpenIdAndStatus_1.getIntoRole() == 4)){
 			cardResponseVo.setCardCstId(cardInfo.getId());
 			cardResponseVo.setCardCode(cardInfo.getCardCode());
@@ -209,19 +210,25 @@ public class CardController extends BaseController {
 		// 根据项目号获取小区号
 		ProNeighConfig byProjectNum = proNeighConfDaoMapper.getByProjectNum(proNum);
 		String neighNo = byProjectNum.getNeighNo();
+
 		// 根据已选择的房屋ID获取单元号
 		//HgjHouse hgjHouse = hgjHouseDaoMapper.getById(houseId);
 		//String unitNo = hgjHouse.getUnitNo();
-		String unitNo = "1";
+		// 楼层
+		//String floor = hgjHouse.getFloorNum().toString();
 		// 房间号
 		//String resCode = hgjHouse.getResCode();
-		String resCode = "4-1-0101";
+
+		// 从配置文件获取游泳池闸机的单元号，楼层号，房间号
+		ConstantConfig constantConfig = constantConfDaoMapper.getByKey(Constant.SWIM_POOL_GATE);
+		String swim_pool_gate = constantConfig.getConfigValue();
+		String[] gateInfo = swim_pool_gate.split(",");
+		String unitNo = gateInfo[0];
+		String floor = gateInfo[1];
+		String resCode = gateInfo[2];
 		// 截取房间号
 		String[] resCodeSplit = resCode.split("-");
 		String addressNumber = unitNo+resCodeSplit[2];
-		// 楼层
-		//String floor = hgjHouse.getFloorNum().toString();
-		String floor = "1";
 		// 调用获取二维码内容的接口-post请求
 		ConstantConfig constantConfigUrl = constantConfDaoMapper.getByKey(Constant.OPEN_DOOR_QR_CODE_URL);
 		String jsonData = "{  \"neighNo\": \"" + neighNo + "\",  \"addressNumber\": " + addressNumber + ",  \"startTime\": " +

@@ -117,13 +117,13 @@ public class LoginController extends BaseController {
             if(!menuMinis.isEmpty()){
                 for(MenuMini menuMini : menuMinis){
                     // 5-物业缴费
-                    if(menuMini.getId() == 5 && priRev.compareTo(BigDecimal.ZERO) > 0){
+                    if((menuMini.getId() == 5 || menuMini.getId() == 8) && priRev.compareTo(BigDecimal.ZERO) > 0){
                         // 欠费菜单显示小红点
                         menuMini.setDot(true);
                     }
                     // 7-我的房屋
                     if(menuMini.getId() == 7 && !cstIntoList.isEmpty() && byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 0 || byWxOpenIdAndStatus_1.getIntoRole() == 2)){
-                        // 有待审核的入住申请菜单显示小红点
+                        // 有待审核的入住申请菜单显示小红点， 仅限于业主租户、产权人
                         menuMini.setDot(true);
                     }
                 }
@@ -133,7 +133,7 @@ public class LoginController extends BaseController {
             loginInfo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
         }
 
-        // 首页我的 小红点提示
+        // 首页我的 有待审核的入住申请菜单小红点提示 , 仅限于业主租户、产权人
         if(!cstIntoList.isEmpty() && byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 0 || byWxOpenIdAndStatus_1.getIntoRole() == 2)){
             loginInfo.setHomeDot(true);
         }

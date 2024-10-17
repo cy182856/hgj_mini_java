@@ -27,4 +27,6 @@ public class QnVo implements Serializable{
     private List<Qn> list;
     private String respCode;
 
+    private String wxOpenId;
+
 }

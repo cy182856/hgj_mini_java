@@ -204,4 +204,7 @@ public class Constant<https> {
 
     // 活动中心游泳卡二维码当天开门次数限制
     public static String CARD_QR_CODE_OPEN_DOOR_SIZE = "card_qr_code_open_door_size";
+
+    // 活动中心游泳池闸机的 单元号，楼层号，房间号
+    public static String SWIM_POOL_GATE = "swim_pool_gate";
 }

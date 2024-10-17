@@ -14,7 +14,11 @@ public class TagCst {
 
     private String cstCode;
 
+    private String wxOpenId;
+
     private String cstName;
+
+    private Integer range;
 
     private String createBy;
 
@@ -29,5 +33,6 @@ public class TagCst {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
+
 
 }

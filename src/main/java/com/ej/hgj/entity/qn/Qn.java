@@ -5,6 +5,7 @@ import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class Qn {
@@ -27,6 +28,8 @@ public class Qn {
 
     private Integer pubMenuIsShow;
 
+    private String tagId;
+
     private String createBy;
 
     private String updateBy;
@@ -41,4 +44,5 @@ public class Qn {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date updateTime;
 
+    private String wxOpenId;
 }

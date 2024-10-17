@@ -7,6 +7,8 @@
         <result column="tag_id" jdbcType="VARCHAR" property="tagId"/>
         <result column="cst_code" jdbcType="INTEGER" property="cstCode"/>
         <result column="cst_name" jdbcType="INTEGER" property="cstName"/>
+        <result column="wx_open_id" jdbcType="INTEGER" property="wxOpenId"/>
+        <result column="range" jdbcType="INTEGER" property="range"/>
         <result column="create_by" jdbcType="VARCHAR" property="createBy"/>
         <result column="update_by" jdbcType="VARCHAR" property="updateBy"/>
         <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
@@ -14,57 +16,29 @@
         <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
     </resultMap>
     <sql id="Base_Column_List" >
-        id, tag_id, cst_code, create_time, update_time, create_by,
+        id, tag_id, cst_code, wx_open_id, `range`, create_time, update_time, create_by,
         update_by, delete_flag
     </sql>
 
     <!-- 查询列表-->
     <select id="getList" resultMap="BaseMap"  parameterType="com.ej.hgj.entity.tag.TagCst">
         select
-        a.*
-        from t_tag_cst a inner join s_cst b on a.cst_code = b.code
-        where a.delete_flag = 0
+        <include refid="Base_Column_List" />
+        from t_tag_cst
+        where delete_flag = 0
         <if test="tagId != null">
-            and a.tag_id = #{tagId,jdbcType=VARCHAR}
+            and tag_id = #{tagId,jdbcType=VARCHAR}
         </if>
         <if test="cstCode != null">
-            and a.cst_code = #{cstCode,jdbcType=VARCHAR}
+            and cst_code = #{cstCode,jdbcType=VARCHAR}
+        </if>
+        <if test="wxOpenId != null">
+            and wx_open_id = #{wxOpenId,jdbcType=VARCHAR}
+        </if>
+        <if test="range != null">
+            and `range` = #{range,jdbcType=INTEGER}
         </if>
     </select>
-
-    <!-- 根据标签查询客户列表-->
-    <select id="getCstByTagId" resultMap="BaseMap"  parameterType="java.lang.String">
-        select
-            c.code as cst_code,c.cst_name
-        from t_tag_cst t inner join s_cst c on t.cst_code = c.code
-        where t.delete_flag = 0 and t.tag_id = #{tagId}
-    </select>
-
-    <!-- 删除-->
-    <update id="delete" parameterType="java.lang.String" >
-        delete from t_tag_cst where tag_id=#{tagId}
-    </update>
-
-    <!-- 批量插入-->
-    <insert id="insertList" parameterType="java.util.List">
-        insert into t_tag_cst (
-        id, tag_id, cst_code, create_time, update_time, create_by,
-        update_by, delete_flag
-        )
-        VALUES
-        <foreach collection="list" item="item" separator=",">
-            (
-            #{item.id,jdbcType=VARCHAR},
-            #{item.tagId,jdbcType=VARCHAR},
-            #{item.cstCode,jdbcType=VARCHAR},
-            #{item.createTime,jdbcType=TIMESTAMP},
-            #{item.updateTime,jdbcType=TIMESTAMP},
-            #{item.createBy,jdbcType=VARCHAR},
-            #{item.updateBy,jdbcType=VARCHAR},
-            #{item.deleteFlag,jdbcType=INTEGER}
-            )
-        </foreach>
-    </insert>
 
 
 </mapper>

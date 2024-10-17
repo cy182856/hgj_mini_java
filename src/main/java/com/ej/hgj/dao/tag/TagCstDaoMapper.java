@@ -12,13 +12,6 @@ import java.util.List;
 @Component
 public interface TagCstDaoMapper {
 
-    void delete(String tagId);
-
-    void insertList(@Param("list") List<TagCst> tagCstList);
-
     List<TagCst> getList(TagCst tagCst);
-
-    List<HgjCst> getCstByTagId(String tagId);
-
 
 }
