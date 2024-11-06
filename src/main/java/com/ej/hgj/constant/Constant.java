@@ -207,4 +207,7 @@ public class Constant<https> {
 
     // 活动中心游泳池闸机的 单元号，楼层号，房间号
     public static String SWIM_POOL_GATE = "swim_pool_gate";
+
+    // 活动中心游泳池闸机扣次数的设备号
+    public static String SWIM_DEVICE_NO = "swim_device_no";
 }

@@ -126,6 +126,11 @@ public class LoginController extends BaseController {
                         // 有待审核的入住申请菜单显示小红点， 仅限于业主租户、产权人
                         menuMini.setDot(true);
                     }
+                    // 19-租客管理
+                    //if(menuMini.getId() == 19 && !cstIntoList.isEmpty() && byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 0 || byWxOpenIdAndStatus_1.getIntoRole() == 2)){
+                        // 有待审核的入住申请菜单显示小红点， 仅限于业主租户、产权人
+                        //menuMini.setDot(true);
+                    //}
                 }
             }
             loginInfo.setFunList(menuMinis);

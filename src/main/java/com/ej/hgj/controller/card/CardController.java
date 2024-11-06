@@ -1,28 +1,34 @@
 package com.ej.hgj.controller.card;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.ej.hgj.base.BaseReqVo;
 import com.ej.hgj.constant.Constant;
 import com.ej.hgj.controller.base.BaseController;
 import com.ej.hgj.dao.active.CouponQrCodeDaoMapper;
+import com.ej.hgj.dao.card.CardCstBatchDaoMapper;
 import com.ej.hgj.dao.card.CardCstDaoMapper;
 import com.ej.hgj.dao.card.CardQrCodeDaoMapper;
 import com.ej.hgj.dao.config.ConstantConfDaoMapper;
 import com.ej.hgj.dao.config.ProNeighConfDaoMapper;
 import com.ej.hgj.dao.coupon.CouponGrantDaoMapper;
 import com.ej.hgj.dao.cst.HgjCstDaoMapper;
+import com.ej.hgj.dao.hu.CstIntoCardMapper;
 import com.ej.hgj.dao.hu.CstIntoMapper;
 import com.ej.hgj.dao.hu.HgjHouseDaoMapper;
 import com.ej.hgj.dao.opendoor.OpenDoorCodeDaoMapper;
 import com.ej.hgj.dao.opendoor.OpenDoorLogDaoMapper;
 import com.ej.hgj.entity.active.CouponQrCode;
 import com.ej.hgj.entity.card.CardCst;
+import com.ej.hgj.entity.card.CardCstBatch;
 import com.ej.hgj.entity.card.CardQrCode;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.config.ProNeighConfig;
 import com.ej.hgj.entity.coupon.CouponGrant;
 import com.ej.hgj.entity.cst.HgjCst;
 import com.ej.hgj.entity.hu.CstInto;
+import com.ej.hgj.entity.hu.CstIntoCard;
 import com.ej.hgj.entity.opendoor.OpenDoorLog;
 import com.ej.hgj.enums.JiasvBasicRespCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
@@ -84,6 +90,12 @@ public class CardController extends BaseController {
 	@Autowired
 	private CstIntoMapper cstIntoMapper;
 
+	@Autowired
+	private CardCstBatchDaoMapper cardCstBatchDaoMapper;
+
+	@Autowired
+	private CstIntoCardMapper cstIntoCardMapper;
+
 	/**
 	 * 查询游泳卡信息
 	 * @param baseReqVo
@@ -95,17 +107,24 @@ public class CardController extends BaseController {
 		CardResponseVo cardResponseVo = new CardResponseVo();
 		String proNum = baseReqVo.getProNum();
 		String cstCode = baseReqVo.getCstCode();
-		CardCst cardInfo = cardCstDaoMapper.getCardInfo(proNum, cstCode, "1");
+		String wxOpenId = baseReqVo.getWxOpenId();
+		String expDate = DateUtils.strY(new Date());
+		String cardType = "1";
+		CardCst cardInfo = cardCstDaoMapper.getCardInfo(proNum, cstCode, cardType, expDate);
 		// 查询登录人身份
 		CstInto byWxOpenIdAndStatus_1 = cstIntoMapper.getByWxOpenIdAndStatus_1(baseReqVo.getWxOpenId());
-		// 身份是产权人、同住人才可以看到游泳卡
-		if(cardInfo != null && byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 2 || byWxOpenIdAndStatus_1.getIntoRole() == 4)){
-			cardResponseVo.setCardCstId(cardInfo.getId());
+		// 查询登录人游泳卡权限
+		CstIntoCard cstIntoCard = new CstIntoCard();
+		cstIntoCard.setWxOpenId(wxOpenId);
+		cstIntoCard.setCardId(1);
+		List<CstIntoCard> cstIntoCardList = cstIntoCardMapper.getList(cstIntoCard);
+		// 身份是产权人、亲属和有卡权限的才可以看到游泳卡
+		if(cardInfo != null && byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 2 || byWxOpenIdAndStatus_1.getIntoRole() == 4 || !cstIntoCardList.isEmpty())){
+			cardResponseVo.setCardCstBatchId(cardInfo.getCardCstBatchId());
 			cardResponseVo.setCardCode(cardInfo.getCardCode());
 			cardResponseVo.setCardName(cardInfo.getCardName());
 			cardResponseVo.setCardExpNum(cardInfo.getTotalNum() - cardInfo.getApplyNum());
-			cardResponseVo.setStartTime(cardInfo.getStartTime());
-			cardResponseVo.setEndTime(cardInfo.getEndTime());
+			cardResponseVo.setExpDate(cardInfo.getExpDate());
 		}
 		cardResponseVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
 		cardResponseVo.setErrCode(JiasvBasicRespCode.SUCCESS.getRespCode());
@@ -128,17 +147,19 @@ public class CardController extends BaseController {
 		String cstCode = cardRequestVo.getCstCode();
 		String wxOpenId = cardRequestVo.getWxOpenId();
 		String proNum = cardRequestVo.getProNum();
-		String cardCstId = cardRequestVo.getCardCstId();
+		String cardCstBatchId = cardRequestVo.getCardCstBatchId();
 		if(StringUtils.isBlank(cstCode) || StringUtils.isBlank(wxOpenId) ||
-				StringUtils.isBlank(proNum) || StringUtils.isBlank(cardCstId)){
+				StringUtils.isBlank(proNum) || StringUtils.isBlank(cardCstBatchId)){
 			jsonObject.put("RESPCODE", "999");
 			jsonObject.put("ERRDESC", "请求参数错误");
 			return jsonObject;
 		}
+		// 查询卡批次
+		CardCstBatch cardCstBatch = cardCstBatchDaoMapper.getById(cardCstBatchId);
 		// 卡信息查询
-		CardCst cardCst = cardCstDaoMapper.getById(cardCstId);
-		Integer totalNum = cardCst.getTotalNum();
-		Integer applyNum = cardCst.getApplyNum();
+		CardCst cardCst = cardCstDaoMapper.getByCardCode(cardCstBatch.getCardCode());
+		Integer totalNum = cardCstBatch.getTotalNum();
+		Integer applyNum = cardCstBatch.getApplyNum();
 		// 卡禁用校验
 		if(cardCst.getIsExp() == 0){
 			jsonObject.put("RESPCODE", "999");
@@ -146,10 +167,16 @@ public class CardController extends BaseController {
 			return jsonObject;
 		}
 		// 卡过期校验
-		Integer sysTimeInt = Integer.valueOf(DateUtils.strYmd());
-		Integer startTimeInt = Integer.valueOf(cardCst.getStartTime().replace("-",""));
-		Integer endTimeInt = Integer.valueOf(cardCst.getEndTime().replace("-",""));
-		if(sysTimeInt < startTimeInt || sysTimeInt > endTimeInt){
+//		Integer sysTimeInt = Integer.valueOf(DateUtils.strYmd());
+//		Integer startTimeInt = Integer.valueOf(cardCst.getStartTime().replace("-",""));
+//		Integer endTimeInt = Integer.valueOf(cardCst.getEndTime().replace("-",""));
+//		if(sysTimeInt < startTimeInt || sysTimeInt > endTimeInt){
+//			jsonObject.put("RESPCODE", "999");
+//			jsonObject.put("ERRDESC", "卡已过期");
+//			return jsonObject;
+//		}
+		String sysYear = DateUtils.strY(new Date());
+		if(!sysYear.equals(cardCstBatch.getExpDate())){
 			jsonObject.put("RESPCODE", "999");
 			jsonObject.put("ERRDESC", "卡已过期");
 			return jsonObject;
@@ -158,7 +185,7 @@ public class CardController extends BaseController {
 		CardQrCode cardQrCodePram = new CardQrCode();
 		cardQrCodePram.setExpDate(expDate);
 		cardQrCodePram.setCstCode(cstCode);
-		cardQrCodePram.setCardCstId(cardCstId);
+		cardQrCodePram.setCardCstBatchId(cardCstBatchId);
 		List<CardQrCode> qrCodeByExpDate = cardQrCodeDaoMapper.getQrCodeByExpDate(cardQrCodePram);
 		// 如果有直接查询历史记录，反之再调用接口
 		if(!qrCodeByExpDate.isEmpty()){
@@ -176,10 +203,12 @@ public class CardController extends BaseController {
 			jsonObject.put("cardQrCode", png_base64);
 			jsonObject.put("expDate",expDate);
 			// 总开门次数
-			ConstantConfig byKey = constantConfDaoMapper.getByKey(Constant.CARD_QR_CODE_OPEN_DOOR_SIZE);
-			jsonObject.put("openDoorTotalNum", byKey.getConfigValue());
+			ConstantConfig configOpenDoorSize = constantConfDaoMapper.getByKey(Constant.CARD_QR_CODE_OPEN_DOOR_SIZE);
+			jsonObject.put("openDoorTotalNum", configOpenDoorSize.getConfigValue());
+			// 需要扣次数的设备号
+			ConstantConfig configDeviceNo = constantConfDaoMapper.getByKey(Constant.SWIM_DEVICE_NO);
 			// 已开门次数
-			List<OpenDoorLog> byCardNoAndIsUnlock = openDoorLogDaoMapper.getByCardNoAndIsUnlock(qrCode.getCardNo());
+			List<OpenDoorLog> byCardNoAndIsUnlock = openDoorLogDaoMapper.getByCardNoAndIsUnlock(qrCode.getCardNo(),configDeviceNo.getConfigValue());
 			if(!byCardNoAndIsUnlock.isEmpty()) {
 				jsonObject.put("openDoorApplyNum", byCardNoAndIsUnlock.size());
 			}else {
@@ -211,16 +240,10 @@ public class CardController extends BaseController {
 		ProNeighConfig byProjectNum = proNeighConfDaoMapper.getByProjectNum(proNum);
 		String neighNo = byProjectNum.getNeighNo();
 
-		// 根据已选择的房屋ID获取单元号
-		//HgjHouse hgjHouse = hgjHouseDaoMapper.getById(houseId);
-		//String unitNo = hgjHouse.getUnitNo();
-		// 楼层
-		//String floor = hgjHouse.getFloorNum().toString();
-		// 房间号
-		//String resCode = hgjHouse.getResCode();
-
+		/**
 		// 从配置文件获取游泳池闸机的单元号，楼层号，房间号
 		ConstantConfig constantConfig = constantConfDaoMapper.getByKey(Constant.SWIM_POOL_GATE);
+		// 数据库配置示例：1,1,4-1-0101
 		String swim_pool_gate = constantConfig.getConfigValue();
 		String[] gateInfo = swim_pool_gate.split(",");
 		String unitNo = gateInfo[0];
@@ -233,6 +256,18 @@ public class CardController extends BaseController {
 		ConstantConfig constantConfigUrl = constantConfDaoMapper.getByKey(Constant.OPEN_DOOR_QR_CODE_URL);
 		String jsonData = "{  \"neighNo\": \"" + neighNo + "\",  \"addressNumber\": " + addressNumber + ",  \"startTime\": " +
 				startTime + ",  \"endTime\": " + endTime + ",  \"unitNumber\": " + unitNo + ",  \"floors\": " + floor + "}";
+		 **/
+
+		ConstantConfig constantConfig = constantConfDaoMapper.getByKey(Constant.SWIM_POOL_GATE);
+		String swimPoolGate = constantConfig.getConfigValue();
+		JSONArray jsonArray = JSON.parseArray(swimPoolGate);
+		String swimPoolGateJStr = JSONObject.toJSONString(jsonArray.get(0));
+		JSONObject swimPoolGateJson = JSONObject.parseObject(swimPoolGateJStr);
+		String unitNumber = swimPoolGateJson.getString("unitNumber");
+		//String floors = swimPoolGateJson.getString("floors");
+		ConstantConfig constantConfigUrl = constantConfDaoMapper.getByKey(Constant.OPEN_DOOR_QR_CODE_URL);
+		String jsonData = "{  \"neighNo\": \"" + neighNo + "\",  \"addressNumber\": " + unitNumber + ",  \"startTime\": " +
+				startTime + ",  \"endTime\": " + endTime + ",  \"unitInfos\": " + swimPoolGate + "}";
 		JSONObject resultJson = HttpClientUtil.sendPost(constantConfigUrl.getConfigValue(), jsonData);
 		String result = resultJson.get("result").toString();
 		String message = resultJson.getString("message");
@@ -255,15 +290,15 @@ public class CardController extends BaseController {
 			cardQrCode.setCardNo(cardNo);
 			cardQrCode.setQrCodeContent(qrCodeContent);
 			cardQrCode.setNeighNo(neighNo);
-			cardQrCode.setAddressNum(addressNumber);
-			cardQrCode.setUnitNum(unitNo);
-			cardQrCode.setFloors(floor);
+			//cardQrCode.setAddressNum(addressNumber);
+			cardQrCode.setUnitNum(unitNumber);
+			//cardQrCode.setFloors(floors);
 			cardQrCode.setWxOpenId(wxOpenId);
 			cardQrCode.setCstCode(cstCode);
 			HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
 			cardQrCode.setCstName(hgjCst.getCstName());
-			cardQrCode.setCardCstId(cardCstId);
-			cardQrCode.setResCode(resCode);
+			cardQrCode.setCardCstBatchId(cardCstBatchId);
+			//cardQrCode.setResCode(resCode);
 			// 1-有效 0-无效
 			cardQrCode.setIsExp(1);
 			cardQrCode.setCreateTime(date);
@@ -275,10 +310,12 @@ public class CardController extends BaseController {
 			jsonObject.put("expDate",expDate);
 
 			// 总开门次数
-			ConstantConfig byKey = constantConfDaoMapper.getByKey(Constant.CARD_QR_CODE_OPEN_DOOR_SIZE);
-			jsonObject.put("openDoorTotalNum", byKey.getConfigValue());
+			ConstantConfig configOpenDoorSize = constantConfDaoMapper.getByKey(Constant.CARD_QR_CODE_OPEN_DOOR_SIZE);
+			jsonObject.put("openDoorTotalNum", configOpenDoorSize.getConfigValue());
+			// 需要扣次数的设备号
+			ConstantConfig configDeviceNo = constantConfDaoMapper.getByKey(Constant.SWIM_DEVICE_NO);
 			// 已开门次数
-			List<OpenDoorLog> byCardNoAndIsUnlock = openDoorLogDaoMapper.getByCardNoAndIsUnlock(cardNo);
+			List<OpenDoorLog> byCardNoAndIsUnlock = openDoorLogDaoMapper.getByCardNoAndIsUnlock(cardNo,configDeviceNo.getConfigValue());
 			if(!byCardNoAndIsUnlock.isEmpty()) {
 				jsonObject.put("openDoorApplyNum", byCardNoAndIsUnlock.size());
 			}else {

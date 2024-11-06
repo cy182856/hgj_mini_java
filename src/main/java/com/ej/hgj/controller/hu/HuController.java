@@ -2,24 +2,19 @@ package com.ej.hgj.controller.hu;
 
 import com.alibaba.fastjson.JSONObject;
 import com.ej.hgj.base.BaseRespVo;
+import com.ej.hgj.constant.AjaxResult;
 import com.ej.hgj.constant.Constant;
 import com.ej.hgj.controller.base.BaseController;
 import com.ej.hgj.dao.config.ConstantConfDaoMapper;
 import com.ej.hgj.dao.config.ProConfDaoMapper;
 import com.ej.hgj.dao.cst.HgjCstDaoMapper;
-import com.ej.hgj.dao.hu.CstIntoHouseDaoMapper;
-import com.ej.hgj.dao.hu.CstIntoMapper;
-import com.ej.hgj.dao.hu.HgjHouseDaoMapper;
-import com.ej.hgj.dao.hu.HuHgjBindMapper;
+import com.ej.hgj.dao.hu.*;
 import com.ej.hgj.dao.user.UsrConfMapper;
 import com.ej.hgj.dao.wechat.WechatPubConfMapper;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.config.ProConfig;
 import com.ej.hgj.entity.cst.HgjCst;
-import com.ej.hgj.entity.hu.CstInto;
-import com.ej.hgj.entity.hu.CstIntoHouse;
-import com.ej.hgj.entity.hu.HgjHouse;
-import com.ej.hgj.entity.hu.MutipUserVo;
+import com.ej.hgj.entity.hu.*;
 import com.ej.hgj.entity.login.MiniProSession;
 import com.ej.hgj.entity.login.MutipUsrVo;
 import com.ej.hgj.enums.JiasvBasicRespCode;
@@ -33,7 +28,9 @@ import com.ej.hgj.utils.WechatMiniProUtils;
 import com.ej.hgj.utils.bill.TimestampGenerator;
 import com.ej.hgj.utils.exception.BusinessException;
 import com.ej.hgj.vo.bill.BillResponseVo;
+import com.ej.hgj.vo.hu.CardPermVo;
 import com.ej.hgj.vo.hu.HouseInfoVO;
+import com.ej.hgj.vo.repair.RepairRequestVo;
 import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -87,6 +84,9 @@ public class HuController extends BaseController {
 
     @Autowired
     private HuService huService;
+
+    @Autowired
+    private CstIntoCardMapper cstIntoCardMapper;
 
     @ResponseBody
     @RequestMapping({"/queryMutipUsr","/queryMutipUsr.do"})
@@ -246,14 +246,134 @@ public class HuController extends BaseController {
      * 同意，拒绝，移除
      */
     @ResponseBody
-    @RequestMapping("/cohabitOperate.do")
-    public BillResponseVo cohabitOperate(@RequestBody HouseInfoVO houseInfoVO) {
+    @RequestMapping("hu/operate")
+    public BillResponseVo operate(@RequestBody HouseInfoVO houseInfoVO) {
         BillResponseVo billResponseVo = new BillResponseVo();
         huService.updateStatus(houseInfoVO);
         billResponseVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
         billResponseVo.setErrCode(JiasvBasicRespCode.SUCCESS.getRespCode());
         billResponseVo.setErrDesc(JiasvBasicRespCode.SUCCESS.getRespDesc());
         return billResponseVo;
+    }
+
+    /**
+     * 卡权限设置
+     */
+    @ResponseBody
+    @RequestMapping("hu/cardPerm")
+    public AjaxResult cardPerm(@RequestBody CardPermVo cardPermVo) {
+       AjaxResult ajaxResult = new AjaxResult();
+       String proNum = cardPermVo.getProNum();
+       String wxOpenId = cardPermVo.getWxOpenId();
+       String tenantWxOpenId = cardPermVo.getTenantWxOpenId();
+       String cstCode = cardPermVo.getCstCode();
+       // 删除卡权限
+       cstIntoCardMapper.deleteCardPerm(proNum,cstCode,tenantWxOpenId);
+       // 新增卡权限
+       Integer[] cardIds = cardPermVo.getCardIds();
+       if(cardIds != null && cardIds.length > 0){
+           for(int i = 0; i<cardIds.length; i++){
+               CstIntoCard cstIntoCard = new CstIntoCard();
+               cstIntoCard.setId(TimestampGenerator.generateSerialNumber());
+               cstIntoCard.setProNum(proNum);
+               cstIntoCard.setCardId(cardIds[i]);
+               cstIntoCard.setWxOpenId(tenantWxOpenId);
+               cstIntoCard.setCstCode(cstCode);
+               cstIntoCard.setCreateBy(wxOpenId);
+               cstIntoCard.setUpdateBy(wxOpenId);
+               cstIntoCard.setCreateTime(new Date());
+               cstIntoCard.setUpdateTime(new Date());
+               cstIntoCard.setDeleteFlag(Constant.DELETE_FLAG_NOT);
+               cstIntoCardMapper.save(cstIntoCard);
+           }
+       }
+        ajaxResult.setRespCode(Constant.SUCCESS);
+        ajaxResult.setMessage(Constant.SUCCESS_RESULT_MESSAGE);
+        return ajaxResult;
+    }
+
+    /**
+     * 我的房屋列表
+     */
+    @RequestMapping("hu/list")
+    @ResponseBody
+    public AjaxResult queryRepairList(@RequestBody RepairRequestVo repairRequestVo){
+        AjaxResult ajaxResult = new AjaxResult();
+        Integer ownerFlag = 0;
+        HashMap map = new HashMap();
+
+        String cstCode = repairRequestVo.getCstCode();
+        String wxOpenId = repairRequestVo.getWxOpenId();
+        // 获取登录人身份
+        CstInto cstInto = cstIntoMapper.getByWxOpenIdAndStatus_1(wxOpenId);
+        // 0-租户 2-产权人
+        if(cstInto.getIntoRole() == 0 || cstInto.getIntoRole() == 2){
+            ownerFlag = 1;
+        }
+        // 房屋列表
+        List<HgjHouse> list = new ArrayList<>();
+        // 租户、产权人房屋查询
+        if(ownerFlag == 1){
+            HgjHouse hgjHouse = new HgjHouse();
+            hgjHouse.setCstCode(cstCode);
+            list = hgjHouseDaoMapper.getListByCstCode(hgjHouse);
+        }
+        // 员工、租客、亲属
+        if(ownerFlag == 0){
+            // 查询租户员工、租客、亲属已入住房间
+            List<String> houseIdList = new ArrayList<>();
+            List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCodeAndWxOpenId(cstCode, wxOpenId);
+            for(CstIntoHouse cstIntoHouse : cstIntoHouseList){
+                houseIdList.add(cstIntoHouse.getHouseId());
+            }
+            HgjHouse hgjHouse = new HgjHouse();
+            hgjHouse.setCstCode(cstCode);
+            hgjHouse.setHouseIdList(houseIdList);
+            list = hgjHouseDaoMapper.getListByCstCode(hgjHouse);
+        }
+
+        if(!list.isEmpty()){
+            // 根据客户编号查询卡权限
+            CstIntoCard cstIntoCard = new CstIntoCard();
+            cstIntoCard.setCstCode(cstCode);
+            List<CstIntoCard> cstIntoCardList = cstIntoCardMapper.getList(cstIntoCard);
+            // 根据客户编号查询房屋业主、租户
+            List<CstInto> ownerList = cstIntoMapper.getByCstCodeAndIntoRole(cstCode);
+            for(HgjHouse house : list){
+                // 员工、租客、亲属集合
+                List<CstInto> cstIntoList = cstIntoMapper.getListByHouseId(house.getId());
+                // 查询卡权限
+                for(CstInto cst : cstIntoList){
+                    // 查询是否有游泳卡
+                    List<CstIntoCard> cstIntoCardListFilterSwim = cstIntoCardList.stream().filter(cstIntoCard1 -> cst.getWxOpenId().equals(cstIntoCard1.getWxOpenId()) && cstIntoCard1.getCardId() == 1).collect(Collectors.toList());
+                    if(!cstIntoCardListFilterSwim.isEmpty()){
+                        cst.setSwimCardChecked(true);
+                    }else {
+                        cst.setSwimCardChecked(false);
+                    }
+                    // 查询是否有停车卡
+                    List<CstIntoCard> cstIntoCardListFilterPark = cstIntoCardList.stream().filter(cstIntoCard1 -> cst.getWxOpenId().equals(cstIntoCard1.getWxOpenId()) && cstIntoCard1.getCardId() == 2).collect(Collectors.toList());
+                    if(!cstIntoCardListFilterPark.isEmpty()){
+                        cst.setParkCardChecked(true);
+                    }else {
+                        cst.setParkCardChecked(false);
+                    }
+
+                }
+                // 每个房屋添加 业主、租户 信息
+                cstIntoList.addAll(ownerList);
+                // 排序
+                cstIntoList = cstIntoList.stream().sorted(Comparator.comparing(CstInto::getIntoRole)).collect(Collectors.toList());
+                house.setCstIntoList(cstIntoList);
+            }
+        }
+        map.put("list", list);
+        map.put("ownerFlag", ownerFlag);
+        map.put("proNum",cstInto.getProjectNum());
+        ajaxResult.setRespCode(Constant.SUCCESS);
+        ajaxResult.setMessage(Constant.SUCCESS_RESULT_MESSAGE);
+        ajaxResult.setData(map);
+        return ajaxResult;
     }
 
     //    /**

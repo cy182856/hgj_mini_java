@@ -18,7 +18,7 @@ public interface HgjHouseDaoMapper {
 
     List<HgjHouse> getByCstIntoId(String cstIntoId);
 
-   // List<HgjHouse> getListByCstCode(HgjHouse hgjHouse);
+    List<HgjHouse> getListByCstCode(HgjHouse hgjHouse);
 
 
 }

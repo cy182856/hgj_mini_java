@@ -8,11 +8,13 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-public class CardCst {
+public class CardCstBatch {
 
     private String id;
 
     private String proNum;
+
+    private Integer cardType;
 
     private Integer cardId;
 
@@ -20,7 +22,15 @@ public class CardCst {
 
     private String cstCode;
 
-    private Integer isExp;
+    private Integer totalNum;
+
+    private Integer applyNum;
+
+    private String expDate;
+
+    private String startTime;
+
+    private String endTime;
 
     private String createBy;
 
@@ -36,31 +46,5 @@ public class CardCst {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 
-    private String tagId;
-
-    private String proName;
-
-    private String cstName;
-
-    private String cardName;
-
-    private String cardTypeName;
-
-    private List<String> cstCodeList;
-
-    // 充值次数
-    private Integer rechargeNum;
-
-    private String expDate;
-
-    private String cardCstBatchId;
-
-    private Integer totalNum;
-
-    private Integer applyNum;
-
-    private String startTime;
-
-    private String endTime;
 
 }

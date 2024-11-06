@@ -2,6 +2,7 @@ package com.ej.hgj.service.hu;
 
 import com.alibaba.fastjson.JSONObject;
 import com.ej.hgj.constant.Constant;
+import com.ej.hgj.dao.hu.CstIntoCardMapper;
 import com.ej.hgj.dao.hu.CstIntoHouseDaoMapper;
 import com.ej.hgj.dao.hu.CstIntoMapper;
 import com.ej.hgj.dao.role.RoleDaoMapper;
@@ -31,6 +32,9 @@ public class HuServiceImpl implements HuService {
 
     @Autowired
     private CstIntoMapper cstIntoMapper;
+
+    @Autowired
+    private CstIntoCardMapper cstIntoCardMapper;
 
     @Override
     public JSONObject updateIntoStatus(JSONObject jsonObject, HuCheckInRequest huCheckInRequest, CstInto cstInto) {
@@ -82,6 +86,9 @@ public class HuServiceImpl implements HuService {
 
     @Override
     public void updateStatus(HouseInfoVO houseInfoVO) {
+        String proNum = houseInfoVO.getProNum();
+        String tenantWxOpenId = houseInfoVO.getTenantWxOpenId();
+        String cstCode = houseInfoVO.getCstCode();
         // 同意
         if("agree".equals(houseInfoVO.getButtonType())){
             CstInto cstInto = new CstInto();
@@ -104,7 +111,7 @@ public class HuServiceImpl implements HuService {
             cstIntoHouse.setUpdateTime(new Date());
             cstIntoHouseDaoMapper.updateById(cstIntoHouse);
 
-            // 如果租户员工、租客、同住人绑定房间被全部解除，入住表也解除
+            // 如果租户员工、租客、亲属绑定房间被全部解除，入住表也解除
             CstInto cs = cstIntoMapper.getById(houseInfoVO.getId());
             List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstIntoIdAndIntoStatus(houseInfoVO.getId());
             if(cstIntoHouseList.isEmpty() && cs != null && (cs.getIntoRole() == Constant.INTO_ROLE_ENTRUST || cs.getIntoRole() == Constant.INTO_ROLE_HOUSEHOLD) || cs.getIntoRole() == Constant.INTO_ROLE_COHABIT){
@@ -114,6 +121,9 @@ public class HuServiceImpl implements HuService {
                 cstInto.setUpdateTime(new Date());
                 cstIntoMapper.update(cstInto);
             }
+
+            // 移除卡权限
+            cstIntoCardMapper.deleteCardPerm(proNum,cstCode,tenantWxOpenId);
         }
     }
 }

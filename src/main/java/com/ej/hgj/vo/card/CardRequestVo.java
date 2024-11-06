@@ -22,5 +22,7 @@ public class CardRequestVo implements Serializable {
 
 	private String cardCstId;
 
+	private String cardCstBatchId;
+
 
 }

@@ -991,8 +991,7 @@ public class BillController extends BaseController {
 	// 组装参数下单参数-服务商  小程序主体是特约商户
 	public String buildPlaceOrder(String sp_appid, String sub_appid, String sp_mchid, String sub_mchid,
 								  String description,String out_trade_no,
-								  String notify_url,int total, String sub_openid
-	){
+								  String notify_url,int total, String sub_openid){
 		String spAppid = "{ \"sp_appid\":\"" + sp_appid + "\",";
 		String subAppid = "\"sub_appid\":\""+sub_appid+"\",";
 		String spMchid = "\"sp_mchid\":\"" + sp_mchid + "\",";

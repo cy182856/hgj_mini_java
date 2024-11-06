@@ -13,5 +13,7 @@ public interface CardCstDaoMapper {
 
     CardCst getById(String id);
 
-    CardCst getCardInfo(String proNum, String cstCode, String cardType);
+    CardCst getByCardCode(String cardCode);
+
+    CardCst getCardInfo(String proNum, String cstCode, String cardType, String expDate);
 }

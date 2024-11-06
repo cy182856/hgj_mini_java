@@ -25,4 +25,6 @@ public class HouseInfoVO {
    private String buttonType;
 
    private String cstIntoHouseId;
+
+   private String tenantWxOpenId;
 }

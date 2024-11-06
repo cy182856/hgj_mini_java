@@ -1,4 +1,4 @@
-package com.ej.hgj.entity.hu;
+package com.ej.hgj.entity.identity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -7,26 +7,16 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.util.Date;
 
 @Data
-public class CstInto {
+public class Identity {
     private String id;
 
-    private String projectNum;
+    private Integer code;
 
-    private String unionId;
+    private String name;
 
-    private String wxOpenId;
+    private String webDesc;
 
-    private String userName;
-
-    private String phone;
-
-    private String cstCode;
-
-    private String houseId;
-
-    private Integer intoRole;
-
-    private Integer intoStatus;
+    private String miniDesc;
 
     private String createBy;
 
@@ -42,14 +32,4 @@ public class CstInto {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
 
-
-    private String cstIntoHouseId;
-
-    private Integer houseIntoStatus;
-
-    private String intoRoleName;
-
-    private Boolean swimCardChecked;
-
-    private Boolean parkCardChecked;
 }

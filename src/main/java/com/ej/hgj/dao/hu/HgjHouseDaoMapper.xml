@@ -101,34 +101,34 @@
     </select>
 
     <!-- 根据客户编号查询房屋列表-->
-<!--    <select id="getListByCstCode" resultMap="BaseMap" parameterType="com.ej.hgj.entity.hu.HgjHouse" >-->
-<!--        select-->
-<!--        <include refid="Base_Column_List" />-->
-<!--        from-->
-<!--            (-->
-<!--                select-->
-<!--                    hu.*-->
-<!--                from-->
-<!--                    s_rcr rcr-->
-<!--                        left join s_contract con on con.id = rcr.ctt_id-->
-<!--                        left join s_house hu on hu.id = rcr.res_id-->
-<!--                where-->
-<!--                        rcr.cst_id = (-->
-<!--                        select-->
-<!--                            id-->
-<!--                        from-->
-<!--                            s_cst-->
-<!--                        where-->
-<!--                            code = #{cstCode,jdbcType=VARCHAR}-->
-<!--                    )-->
-<!--                    <if test="houseIdList != null and houseIdList.size() > 0">-->
-<!--                        and hu.id in-->
-<!--                        <foreach collection="houseIdList" item="houseId" index="index" open="(" close=")" separator=",">-->
-<!--                            #{houseId,jdbcType=VARCHAR}-->
-<!--                        </foreach>-->
-<!--                    </if>-->
-<!--            ) t-->
+    <select id="getListByCstCode" resultMap="BaseMap" parameterType="com.ej.hgj.entity.hu.HgjHouse" >
+        select
+        <include refid="Base_Column_List" />
+        from
+            (
+                select
+                    hu.*
+                from
+                    s_rcr rcr
+                        left join s_contract con on con.id = rcr.ctt_id
+                        left join s_house hu on hu.id = rcr.res_id
+                where
+                        rcr.cst_id = (
+                        select
+                            id
+                        from
+                            s_cst
+                        where
+                            code = #{cstCode,jdbcType=VARCHAR}
+                    )
+                    <if test="houseIdList != null and houseIdList.size() > 0">
+                        and hu.id in
+                        <foreach collection="houseIdList" item="houseId" index="index" open="(" close=")" separator=",">
+                            #{houseId,jdbcType=VARCHAR}
+                        </foreach>
+                    </if>
+            ) t
 
-<!--    </select>-->
+    </select>
 
 </mapper>

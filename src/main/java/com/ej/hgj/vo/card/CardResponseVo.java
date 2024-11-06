@@ -22,4 +22,8 @@ public class CardResponseVo extends BaseRespVo {
 
 	private String endTime;
 
+	private String expDate;
+
+	private String cardCstBatchId;
+
 }

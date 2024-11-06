@@ -10,6 +10,8 @@ public class DateUtils {
     public static SimpleDateFormat sdfYmd = new SimpleDateFormat("yyyyMMdd");
     public static SimpleDateFormat sdfHms = new SimpleDateFormat("HH:mm:ss");
     public static SimpleDateFormat sdf_Ymd = new SimpleDateFormat("yyyy-MM-dd");
+    public static SimpleDateFormat sdf_Ym = new SimpleDateFormat("yyyy-MM");
+    public static SimpleDateFormat sdf_Y = new SimpleDateFormat("yyyy");
     public static SimpleDateFormat sdfYmdHms = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     /**
@@ -33,6 +35,16 @@ public class DateUtils {
     public static String strYmd(Date date){
         String ymd = DateUtils.sdf_Ymd.format(date);
         return ymd;
+    }
+
+    public static String strYm(Date date){
+        String ym = DateUtils.sdf_Ym.format(date);
+        return ym;
+    }
+
+    public static String strY(Date date){
+        String y = DateUtils.sdf_Y.format(date);
+        return y;
     }
 
     public static String strYmdHms(Date date){
