@@ -105,13 +105,12 @@ public class LoginController extends BaseController {
         List<CstInto> cstIntoList = cstIntoMapper.getList(cstIntoPram);
         // 查询登录角色
         CstInto byWxOpenIdAndStatus_1 = cstIntoMapper.getByWxOpenIdAndStatus_1(loginInfo.getWxOpenId());
-
         // 判断客户是否已入住
         CstInto cstInto = new CstInto();
         cstInto.setWxOpenId(loginInfo.getWxOpenId());
         cstInto.setIntoStatus(Constant.INTO_STATUS_Y);
         List<CstInto> list = cstIntoMapper.getList(cstInto);
-        if(!list.isEmpty()){
+        if(list != null && list.size() > 0){
             loginInfo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
             List<MenuMini> menuMinis = menuMiniDaoMapper.findMenuByCstCode(loginInfo.getCstCode());
             if(!menuMinis.isEmpty()){
@@ -136,6 +135,7 @@ public class LoginController extends BaseController {
             loginInfo.setFunList(menuMinis);
         }else {
             loginInfo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+            loginInfo.setErrDesc("申请成功，请联系房主审批!");
         }
 
         // 首页我的 有待审核的入住申请菜单小红点提示 , 仅限于业主租户、产权人

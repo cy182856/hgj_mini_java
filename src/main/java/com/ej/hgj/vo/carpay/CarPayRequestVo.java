@@ -4,6 +4,7 @@ import com.ej.hgj.base.BaseReqVo;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @Data
 public class CarPayRequestVo extends BaseReqVo implements Serializable {
@@ -12,7 +13,22 @@ public class CarPayRequestVo extends BaseReqVo implements Serializable {
 
 	private String carCode;
 
+	private String cstCode;
 
+	private String proNum;
 
+	private String wxOpenId;
+
+	private String cardCstBatchId;
+
+	private BigDecimal priRev;
+
+	private BigDecimal cardAmount;
+
+	private Boolean radioChecked;
+
+	private String orderId;
+
+	private Integer orderStatus;
 
 }

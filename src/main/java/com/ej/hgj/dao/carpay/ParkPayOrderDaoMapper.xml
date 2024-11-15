@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ej.hgj.dao.carpay.ParkPayOrderDaoMapper">
+
+    <resultMap id="BaseMap" type="com.ej.hgj.entity.carpay.ParkPayOrder">
+        <result column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="pro_num" jdbcType="VARCHAR" property="proNum"/>
+        <result column="card_cst_batch_id" jdbcType="VARCHAR" property="cardCstBatchId"/>
+        <result column="car_code" jdbcType="VARCHAR" property="carCode"/>
+        <result column="wx_open_id" jdbcType="VARCHAR" property="wxOpenId"/>
+        <result column="cst_code" jdbcType="VARCHAR" property="cstCode"/>
+        <result column="pri_rev" jdbcType="DECIMAL" property="priRev"/>
+        <result column="pri_paid" jdbcType="DECIMAL" property="priPaid"/>
+        <result column="amount_total" jdbcType="INTEGER" property="amountTotal"/>
+        <result column="ip_item_name" jdbcType="VARCHAR" property="ipItemName"/>
+        <result column="order_status" jdbcType="INTEGER" property="orderStatus"/>
+        <result column="create_by" jdbcType="VARCHAR" property="createBy"/>
+        <result column="update_by" jdbcType="VARCHAR" property="updateBy"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
+    </resultMap>
+    <sql id="Base_Column_List" >
+        id, pro_num, card_cst_batch_id, car_code, wx_open_id, cst_code, pri_rev, pri_paid, amount_total, ip_item_name,
+        order_status, create_time, update_time, create_by, update_by, delete_flag
+    </sql>
+
+    <!-- 根据key查询-->
+    <select id="getById" resultMap="BaseMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from t_park_pay_order
+        where delete_flag = 0 and id = #{id,jdbcType=VARCHAR}
+    </select>
+
+    <!-- 保存-->
+    <insert id="save" parameterType="com.ej.hgj.entity.carpay.ParkPayOrder" >
+        insert into  t_park_pay_order(
+        <if test="id != null">
+            id,
+        </if>
+        <if test="proNum != null">
+            pro_num,
+        </if>
+        <if test="cardCstBatchId != null" >
+            card_cst_batch_id,
+        </if>
+        <if test="carCode != null" >
+            car_code,
+        </if>
+        <if test="wxOpenId != null">
+            wx_open_id,
+        </if>
+        <if test="cstCode != null">
+            cst_code,
+        </if>
+        <if test="priRev != null">
+            pri_rev,
+        </if>
+        <if test="priPaid != null">
+            pri_paid,
+        </if>
+        <if test="amountTotal != null">
+            amount_total,
+        </if>
+        <if test="ipItemName != null">
+            ip_item_name,
+        </if>
+        <if test="orderStatus != null">
+            order_status,
+        </if>
+        <if test="createTime != null">
+            create_time,
+        </if>
+        <if test="createBy != null">
+            create_by,
+        </if>
+        <if test="updateTime != null">
+            update_time,
+        </if>
+        <if test="updateBy != null">
+            update_by,
+        </if>
+        <if test="deleteFlag != null">
+            delete_flag
+        </if>
+        )
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=VARCHAR},
+            </if>
+            <if test="proNum != null" >
+                #{proNum,jdbcType=VARCHAR},
+            </if>
+            <if test="cardCstBatchId != null" >
+                #{cardCstBatchId,jdbcType=VARCHAR},
+            </if>
+            <if test="carCode != null" >
+                #{carCode,jdbcType=VARCHAR},
+            </if>
+            <if test="wxOpenId != null" >
+                #{wxOpenId,jdbcType=VARCHAR},
+            </if>
+            <if test="cstCode != null" >
+                #{cstCode,jdbcType=VARCHAR},
+            </if>
+            <if test="priRev != null" >
+                #{priRev,jdbcType=DECIMAL},
+            </if>
+            <if test="priPaid != null" >
+                #{priPaid,jdbcType=DECIMAL},
+            </if>
+            <if test="amountTotal != null" >
+                #{amountTotal,jdbcType=INTEGER},
+            </if>
+            <if test="ipItemName != null" >
+                #{ipItemName,jdbcType=VARCHAR},
+            </if>
+            <if test="orderStatus != null" >
+                #{orderStatus,jdbcType=INTEGER},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createBy != null">
+                #{createBy,jdbcType=VARCHAR},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateBy != null">
+                #{updateBy,jdbcType=VARCHAR},
+            </if>
+            <if test="deleteFlag != null">
+                #{deleteFlag,jdbcType=INTEGER}
+            </if>
+        </trim>
+    </insert>
+
+</mapper>

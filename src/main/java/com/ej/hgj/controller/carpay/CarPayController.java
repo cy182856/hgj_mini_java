@@ -3,19 +3,26 @@ package com.ej.hgj.controller.carpay;
 import com.alibaba.fastjson.JSONObject;
 import com.ej.hgj.constant.Constant;
 import com.ej.hgj.controller.base.BaseController;
+import com.ej.hgj.dao.card.CardCstBatchDaoMapper;
+import com.ej.hgj.dao.card.CardCstDaoMapper;
+import com.ej.hgj.dao.carpay.ParkPayOrderDaoMapper;
+import com.ej.hgj.dao.carpay.ParkPayRecordDaoMapper;
 import com.ej.hgj.dao.config.ConstantConfDaoMapper;
-import com.ej.hgj.entity.bill.Bill;
-import com.ej.hgj.entity.bill.BillMerge;
-import com.ej.hgj.entity.bill.BillMergeDetail;
+import com.ej.hgj.dao.cst.HgjCstDaoMapper;
 import com.ej.hgj.entity.bill.PaymentRecord;
+import com.ej.hgj.entity.card.CardCst;
+import com.ej.hgj.entity.carpay.ParkPayOrder;
+import com.ej.hgj.entity.carpay.ParkPayRecord;
 import com.ej.hgj.entity.config.ConstantConfig;
-import com.ej.hgj.entity.tag.TagCst;
+import com.ej.hgj.entity.cst.HgjCst;
 import com.ej.hgj.enums.JiasvBasicRespCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
 import com.ej.hgj.service.carpay.CarPayService;
+import com.ej.hgj.utils.DateUtils;
 import com.ej.hgj.utils.bill.HttpRequestUtils;
 import com.ej.hgj.utils.bill.MyPrivatekey;
 import com.ej.hgj.utils.bill.RandomStringUtils;
+import com.ej.hgj.utils.bill.TimestampGenerator;
 import com.ej.hgj.vo.bill.BillRequestVo;
 import com.ej.hgj.vo.bill.BillResponseVo;
 import com.ej.hgj.vo.bill.RequestPaymentStatusVo;
@@ -23,7 +30,7 @@ import com.ej.hgj.vo.bill.SignInfoVo;
 import com.ej.hgj.vo.carpay.CarInfoVo;
 import com.ej.hgj.vo.carpay.CarPayRequestVo;
 import com.ej.hgj.vo.carpay.CarPayResponseVo;
-import com.ej.hgj.vo.carpay.StopCouponVo;
+import com.ej.hgj.vo.carpay.ParkCardVo;
 import okhttp3.HttpUrl;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -44,6 +51,7 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 
 @Controller
@@ -62,6 +70,21 @@ public class CarPayController extends BaseController {
 
 	@Autowired
 	private ConstantConfDaoMapper constantConfDaoMapper;
+
+	@Autowired
+	private CardCstBatchDaoMapper cardCstBatchDaoMapper;
+
+	@Autowired
+	private CardCstDaoMapper cardCstDaoMapper;
+
+	@Autowired
+	private ParkPayOrderDaoMapper parkPayOrderDaoMapper;
+
+	@Autowired
+	private HgjCstDaoMapper hgjCstDaoMapper;
+
+	@Autowired
+	private ParkPayRecordDaoMapper parkPayRecordDaoMapper;
 
 	/**
 	 * 车牌号查询
@@ -105,21 +128,24 @@ public class CarPayController extends BaseController {
 		String wxOpenId = carPayRequestVo.getWxOpenId();
 		String carCode = carPayRequestVo.getCarCode();
 
+		String expDate = DateUtils.strYm(new Date());
+
 		// 查询车辆信息
 		CarInfoVo carInfoVo = new CarInfoVo();
 		carInfoVo.setCarCode("沪A898888");
 		carInfoVo.setInParkTime("2024-10-23 08:08:08");
 		carInfoVo.setStopCarTime("10小时34分");
-		carInfoVo.setTotalAmount(new BigDecimal("100"));
-		// 停车卷信息
-		StopCouponVo stopCouponVo = new StopCouponVo();
-		stopCouponVo.setCouponId("1111");
-		stopCouponVo.setCouponName("3小时停车券");
-		stopCouponVo.setCouponAmount(new BigDecimal("100"));
+		carInfoVo.setTotalAmount(new BigDecimal("0.5"));
+		// 查询当月停车卡信息
+		CardCst cardInfo = cardCstDaoMapper.getCardInfo(proNum, cstCode, "2", expDate);
+		ParkCardVo parkCardVo = new ParkCardVo();
+		parkCardVo.setCardCstBatchId(cardInfo.getCardCstBatchId());
+		Integer expNum = cardInfo.getTotalNum() - cardInfo.getApplyNum();
+		parkCardVo.setExpNum(expNum);
+		parkCardVo.setCardAmount(new BigDecimal(0.1));
 		// 创建缴费订单
-
 		carPayResponseVo.setCarInfoVo(carInfoVo);
-		carPayResponseVo.setStopCouponVo(stopCouponVo);
+		carPayResponseVo.setParkCardVo(parkCardVo);
 		carPayResponseVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
 		carPayResponseVo.setErrCode(JiasvBasicRespCode.SUCCESS.getRespCode());
 		carPayResponseVo.setErrDesc(JiasvBasicRespCode.SUCCESS.getRespDesc());
@@ -131,54 +157,91 @@ public class CarPayController extends BaseController {
 	 */
 	@ResponseBody
 	@RequestMapping("/carpay/carPayment.do")
-	public BillResponseVo carPayment(@RequestBody BillRequestVo billRequestVo) throws Exception {
-		BillResponseVo billResponseVo = new BillResponseVo();
-		String cstCode = billRequestVo.getCstCode();
-		String wxOpenId = billRequestVo.getWxOpenId();
-		String proNum = billRequestVo.getProNum();
-		String orderNo = billRequestVo.getId();
-		BigDecimal priRev = billRequestVo.getPriRev();
+	public CarPayResponseVo carPayment(@RequestBody CarPayRequestVo carPayRequestVo) throws Exception {
+		CarPayResponseVo carPayResponseVo = new CarPayResponseVo();
+		String cstCode = carPayRequestVo.getCstCode();
+		String wxOpenId = carPayRequestVo.getWxOpenId();
+		String proNum = carPayRequestVo.getProNum();
+		String cardCstBatchId = carPayRequestVo.getCardCstBatchId();
+		BigDecimal priRev = carPayRequestVo.getPriRev();
+		String carCode = carPayRequestVo.getCarCode();
+		Boolean radioChecked = carPayRequestVo.getRadioChecked();
+		BigDecimal cardAmount = carPayRequestVo.getCardAmount();
+		String orderId = carPayRequestVo.getOrderId();
+		if(radioChecked == true){
+			// 应收金额=总金额-停车卡金额
+			BigDecimal actAmount = priRev.subtract(cardAmount);
+			priRev = actAmount;
+		}
+		BigDecimal multiply = priRev.multiply(new BigDecimal("100"));
+		int intTotalAmount = multiply.intValue();
+
 		if(StringUtils.isBlank(cstCode)){
-			billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
-			billResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_CST_CODE_NULL.getRespCode());
-			billResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_CST_CODE_NULL.getRespDesc());
-			return billResponseVo;
+			carPayResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+			carPayResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_CST_CODE_NULL.getRespCode());
+			carPayResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_CST_CODE_NULL.getRespDesc());
+			return carPayResponseVo;
 		}
 		if(StringUtils.isBlank(wxOpenId)){
-			billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
-			billResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_WX_OPENID_NULL.getRespCode());
-			billResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_WX_OPENID_NULL.getRespDesc());
-			return billResponseVo;
+			carPayResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+			carPayResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_WX_OPENID_NULL.getRespCode());
+			carPayResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_WX_OPENID_NULL.getRespDesc());
+			return carPayResponseVo;
 		}
 		if(StringUtils.isBlank(proNum)){
-			billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
-			billResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_PRO_NUM_NULL.getRespCode());
-			billResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_PRO_NUM_NULL.getRespDesc());
-			return billResponseVo;
+			carPayResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+			carPayResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_PRO_NUM_NULL.getRespCode());
+			carPayResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_PRO_NUM_NULL.getRespDesc());
+			return carPayResponseVo;
 		}
-		if(StringUtils.isBlank(orderNo)){
-			billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
-			billResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_ORDER_NO_NULL.getRespCode());
-			billResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_ORDER_NO_NULL.getRespDesc());
-			return billResponseVo;
-		}
+
 		if(priRev == null || priRev.compareTo(BigDecimal.ZERO) <= 0 ){
-			billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
-			billResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_TOTAL_AMOUNT_NULL.getRespCode());
-			billResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_TOTAL_AMOUNT_NULL.getRespDesc());
-			return billResponseVo;
+			carPayResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+			carPayResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_TOTAL_AMOUNT_NULL.getRespCode());
+			carPayResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_TOTAL_AMOUNT_NULL.getRespDesc());
+			return carPayResponseVo;
 		}
 
 		// 预支付交易会话标识,该值有效期为2小时
 		String prepayId = null;
 		// 预下单成功返回，签名用
 		String sinPrepayId = null;
-		logger.info("缴费订单号:" + orderNo + "||缴费金额:" + billRequestVo.getPriRev());
-		if(StringUtils.isBlank(orderNo)){
-			billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
-			billResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_ORDER_NO_NULL.getRespCode());
-			billResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_ORDER_NO_NULL.getRespDesc());
-			return billResponseVo;
+		logger.info("缴费订单号:" + orderId + "||缴费金额:" + priRev);
+
+		// 查询预支付成功订单
+		CarPayRequestVo carPay = new CarPayRequestVo();
+		carPay.setOrderId(orderId);
+		carPay.setOrderStatus(0);
+		ParkPayRecord parkPayRecord = parkPayRecordDaoMapper.getParkPayRecord(carPay);
+		if(parkPayRecord != null){
+			prepayId = parkPayRecord.getPrepayId();
+			orderId = parkPayRecord.getOrderNo();
+		}else {
+			// 创建支付订单
+			ParkPayOrder parkPayOrder = new ParkPayOrder();
+			orderId = TimestampGenerator.generateSerialNumber();
+			parkPayOrder.setId(orderId);
+			parkPayOrder.setProNum(proNum);
+			parkPayOrder.setCardCstBatchId(cardCstBatchId);
+			parkPayOrder.setCarCode(carCode);
+			parkPayOrder.setWxOpenId(wxOpenId);
+			parkPayOrder.setCstCode(cstCode);
+			parkPayOrder.setPriRev(priRev);
+			parkPayOrder.setPriPaid(priRev);
+			parkPayOrder.setAmountTotal(intTotalAmount);
+			parkPayOrder.setIpItemName(orderId);
+			parkPayOrder.setOrderStatus(0);
+			parkPayOrder.setCreateTime(new Date());
+			parkPayOrder.setUpdateTime(new Date());
+			parkPayOrder.setDeleteFlag(Constant.DELETE_FLAG_NOT);
+			parkPayOrderDaoMapper.save(parkPayOrder);
+		}
+
+		if(StringUtils.isBlank(orderId)){
+			carPayResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+			carPayResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_ORDER_NO_NULL.getRespCode());
+			carPayResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_ORDER_NO_NULL.getRespDesc());
+			return carPayResponseVo;
 		}
 
 		// 服务商小程appId
@@ -203,8 +266,6 @@ public class CarPayController extends BaseController {
 			signInfo.setRepayId("prepay_id=" + prepayId);
 		}else {
 			// JSAPI下单-获取prepay_id
-			BigDecimal multiply = priRev.multiply(new BigDecimal("100"));
-			int intTotalAmount = multiply.intValue();
 
 			// --------------------根据项目号选择商户号--------------
 			// 服务商模式-东方渔人码头
@@ -233,8 +294,8 @@ public class CarPayController extends BaseController {
 			prePayUrl = Constant.PREPAY_URL;
 
 			params = buildPlaceOrder(signInfo.getSpAppId(), signInfo.getSubAppId(), signInfo.getSpMchId(),
-					signInfo.getSubMchId(), billRequestVo.getIpItemName(), orderNo,
-					Constant.CALLBACK_URL, intTotalAmount, billRequestVo.getWxOpenId());
+					signInfo.getSubMchId(), orderId, orderId,
+					Constant.CALLBACK_URL, intTotalAmount, wxOpenId);
 			HttpUrl httpurl = HttpUrl.parse(prePayUrl);
 			// 获取证书token
 			String authorization = carPayService.getToken("POST", httpurl, params, signInfo, proNum);
@@ -248,37 +309,59 @@ public class CarPayController extends BaseController {
 			// 下单成功
 			if (StringUtils.isNotBlank(prepay_id)) {
 				signInfo.setRepayId("prepay_id=" + prepay_id);
-				logger.info("下单成功返回prepay_id:" + prepay_id + "||单号:" + billRequestVo.getId() + "||支付金额:" + intTotalAmount + "分");
+				logger.info("下单成功返回prepay_id:" + prepay_id + "||单号:" + orderId + "||支付金额:" + intTotalAmount + "分");
 			} else {
 				// 下单失败
-				billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
-				billResponseVo.setErrCode(jsonObject.getString("code"));
-				billResponseVo.setErrDesc(jsonObject.getString("message"));
-				logger.info("下单失败单号:" + billRequestVo.getId() + "||message:" + jsonObject.getString("message"));
-				return billResponseVo;
+				carPayResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+				carPayResponseVo.setErrCode(jsonObject.getString("code"));
+				carPayResponseVo.setErrDesc(jsonObject.getString("message"));
+				logger.info("下单失败单号:" + orderId + "||message:" + jsonObject.getString("message"));
+				return carPayResponseVo;
 			}
 		}
 		// 生成签名
 		String paySign = getPaySign(signInfo,sinPrepayId, proNum);
 		if(StringUtils.isNotBlank(paySign)){
-			logger.info("生成签名成功返回paySign:" + paySign + "||单号:" + billRequestVo.getId());
+			logger.info("生成签名成功返回paySign:" + paySign + "||单号:" + orderId);
 			signInfo.setPaySign(paySign);
 		}else {
-			billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
-			billResponseVo.setErrCode(JiasvBasicRespCode.SIGNATURE_FAILED.getRespCode());
-			billResponseVo.setErrDesc(JiasvBasicRespCode.SIGNATURE_FAILED.getRespDesc());
-			logger.info("生成签名失败单号:" + billRequestVo.getId());
-			return billResponseVo;
+			carPayResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+			carPayResponseVo.setErrCode(JiasvBasicRespCode.SIGNATURE_FAILED.getRespCode());
+			carPayResponseVo.setErrDesc(JiasvBasicRespCode.SIGNATURE_FAILED.getRespDesc());
+			logger.info("生成签名失败单号:" + orderId);
+			return carPayResponseVo;
 		}
-		billResponseVo.setSignInfoVo(signInfo);
-		billResponseVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
-		billResponseVo.setErrCode(JiasvBasicRespCode.SUCCESS.getRespCode());
-		billResponseVo.setErrDesc(JiasvBasicRespCode.SUCCESS.getRespDesc());
+		carPayResponseVo.setOrderId(orderId);
+		carPayResponseVo.setSignInfoVo(signInfo);
+		carPayResponseVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
+		carPayResponseVo.setErrCode(JiasvBasicRespCode.SUCCESS.getRespCode());
+		carPayResponseVo.setErrDesc(JiasvBasicRespCode.SUCCESS.getRespDesc());
 		// 插入缴费记录 - 没有预下单或者预下单超出两个小时
 		if(StringUtils.isBlank(prepayId)) {
-			// savePayment(billRequestVo, sinPrepayId);
+			savePayment(carPayRequestVo, orderId, sinPrepayId, priRev, intTotalAmount);
 		}
-		return billResponseVo;
+		return carPayResponseVo;
+	}
+
+	public void savePayment(CarPayRequestVo carPayRequestVo, String orderId, String sinPrepayId, BigDecimal priPev, int intTotalAmount){
+		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(carPayRequestVo.getCstCode());
+		ParkPayRecord parkPayRecord = new ParkPayRecord();
+		parkPayRecord.setId(TimestampGenerator.generateSerialNumber());
+		parkPayRecord.setOrderNo(orderId);
+		parkPayRecord.setPrepayId(sinPrepayId);
+		parkPayRecord.setProNum(carPayRequestVo.getProNum());
+		parkPayRecord.setWxOpenId(carPayRequestVo.getWxOpenId());
+		parkPayRecord.setCstCode(carPayRequestVo.getCstCode());
+		parkPayRecord.setCstName(hgjCst.getCstName());
+		parkPayRecord.setAmountTotal(intTotalAmount);
+		parkPayRecord.setPriRev(priPev);
+		parkPayRecord.setPriPaid(priPev);
+		parkPayRecord.setIpItemName(orderId);
+		parkPayRecord.setPaymentStatus(Constant.PAYMENT_STATUS_PRE);
+		parkPayRecord.setCreateTime(new Date());
+		parkPayRecord.setUpdateTime(new Date());
+		parkPayRecord.setDeleteFlag(0);
+		parkPayRecordDaoMapper.save(parkPayRecord);
 	}
 
 	// 组装参数下单参数-服务商  小程序主体是特约商户

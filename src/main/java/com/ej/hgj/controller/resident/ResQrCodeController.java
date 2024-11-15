@@ -8,15 +8,18 @@ import com.ej.hgj.dao.config.ConstantConfDaoMapper;
 import com.ej.hgj.dao.cst.HgjCstDaoMapper;
 import com.ej.hgj.dao.hu.CstIntoMapper;
 import com.ej.hgj.dao.hu.HgjHouseDaoMapper;
+import com.ej.hgj.dao.identity.IdentityDaoMapper;
 import com.ej.hgj.dao.visit.VisitLogDaoMapper;
 import com.ej.hgj.dao.visit.VisitPassDaoMapper;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.cst.HgjCst;
 import com.ej.hgj.entity.hu.CstInto;
 import com.ej.hgj.entity.hu.HgjHouse;
+import com.ej.hgj.entity.identity.Identity;
 import com.ej.hgj.entity.visit.VisitLog;
 import com.ej.hgj.entity.visit.VisitPass;
 import com.ej.hgj.enums.MonsterBasicRespCode;
+import com.ej.hgj.sy.dao.house.SyHouseDaoMapper;
 import com.ej.hgj.utils.QrCodeUtil;
 import com.ej.hgj.utils.RandomNumberGenerator;
 import com.ej.hgj.utils.bill.TimestampGenerator;
@@ -53,11 +56,21 @@ public class ResQrCodeController extends BaseController {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
+	@Autowired
+	private CstIntoMapper cstIntoMapper;
+
+	@Autowired
+	private IdentityDaoMapper identityDaoMapper;
+
+	@Autowired
+	private SyHouseDaoMapper syHouseDaoMapper;
+
 	@RequestMapping("/resQrCode/addResQrCode.do")
 	@ResponseBody
 	public JSONObject addVisitQrCode(HttpServletResponse response, @RequestBody BaseReqVo baseReqVo) {
 		JSONObject jsonObject = new JSONObject();
 		String wxOpenId = baseReqVo.getWxOpenId();
+		String cstCode = baseReqVo.getCstCode();
 		if(StringUtils.isBlank(baseReqVo.getCstCode()) || StringUtils.isBlank(wxOpenId) || StringUtils.isBlank(baseReqVo.getProNum())){
 			jsonObject.put("RESPCODE", "999");
 			jsonObject.put("ERRDESC", "请求参数错误");
@@ -88,6 +101,24 @@ public class ResQrCodeController extends BaseController {
 			Date endDate = new Date(newTimestamp);
 			String endTime = sdf.format(endDate);
 			jsonObject.put("endTime", endTime);
+			// 入住信息
+			CstInto byWxOpenIdAndStatus_1 = cstIntoMapper.getByWxOpenIdAndStatus_1(wxOpenId);
+			// 姓名
+			jsonObject.put("userName", byWxOpenIdAndStatus_1.getUserName());
+			// 身份
+			Identity byCode = identityDaoMapper.getByCode(byWxOpenIdAndStatus_1.getIntoRole().toString());
+			jsonObject.put("identity", byCode.getMiniDesc());
+			// 房间号
+			HgjHouse hgjHouse = new HgjHouse();
+			hgjHouse.setCstCode(cstCode);
+			List<HgjHouse> list = syHouseDaoMapper.getListByCstCode(hgjHouse);
+			List<String> houseList = new ArrayList<>();
+			if(!list.isEmpty()){
+				for(HgjHouse house : list){
+					houseList.add(house.getResName());
+				}
+			}
+			jsonObject.put("houseList", houseList);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

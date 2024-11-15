@@ -172,4 +172,5 @@ public class LoginInfo extends BaseRespVo {
 
     // 首页我的 是否显示小红点
     private Boolean homeDot;
+
 }

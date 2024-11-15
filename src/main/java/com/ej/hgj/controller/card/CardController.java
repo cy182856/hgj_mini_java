@@ -118,8 +118,8 @@ public class CardController extends BaseController {
 		cstIntoCard.setWxOpenId(wxOpenId);
 		cstIntoCard.setCardId(1);
 		List<CstIntoCard> cstIntoCardList = cstIntoCardMapper.getList(cstIntoCard);
-		// 身份是产权人、亲属和有卡权限的才可以看到游泳卡
-		if(cardInfo != null && byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 2 || byWxOpenIdAndStatus_1.getIntoRole() == 4 || !cstIntoCardList.isEmpty())){
+		// 身份是产权人和有卡权限的才可以使用游泳卡
+		if(cardInfo != null && byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 2 || !cstIntoCardList.isEmpty())){
 			cardResponseVo.setCardCstBatchId(cardInfo.getCardCstBatchId());
 			cardResponseVo.setCardCode(cardInfo.getCardCode());
 			cardResponseVo.setCardName(cardInfo.getCardName());
