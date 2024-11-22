@@ -7,6 +7,7 @@
         <result column="pro_num" jdbcType="VARCHAR" property="proNum"/>
         <result column="pro_name" jdbcType="VARCHAR" property="proName"/>
         <result column="type" jdbcType="INTEGER" property="type"/>
+        <result column="visit_name" jdbcType="VARCHAR" property="visitName"/>
         <result column="exp_date" jdbcType="VARCHAR" property="expDate"/>
         <result column="start_time" jdbcType="BIGINT" property="startTime"/>
         <result column="end_time" jdbcType="BIGINT" property="endTime"/>
@@ -29,7 +30,7 @@
         <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
     </resultMap>
     <sql id="Base_Column_List" >
-        id, pro_num, pro_name, `type`, exp_date, start_time, end_time,
+        id, pro_num, pro_name, `type`, visit_name, exp_date, start_time, end_time,
         card_no, qr_code_content, neigh_no, address_num, unit_num, floors,
         wx_open_id, cst_code, cst_name, house_id, create_time,
         update_time, create_by, update_by, delete_flag
@@ -64,6 +65,9 @@
         <if test="wxOpenId != null">
             and wx_open_id = #{wxOpenId,jdbcType=VARCHAR}
         </if>
+        <if test="visitName != null">
+            and visit_name = #{visitName,jdbcType=VARCHAR}
+        </if>
         <if test="expDate != null">
             and exp_date = #{expDate,jdbcType=VARCHAR}
         </if>
@@ -83,6 +87,9 @@
         </if>
         <if test="type != null">
             `type`,
+        </if>
+        <if test="visitName != null">
+            visit_name,
         </if>
         <if test="expDate != null">
             exp_date,
@@ -154,6 +161,9 @@
             </if>
             <if test="type != null" >
                 #{type,jdbcType=INTEGER},
+            </if>
+            <if test="visitName != null" >
+                #{visitName,jdbcType=VARCHAR},
             </if>
             <if test="expDate != null" >
                 #{expDate,jdbcType=VARCHAR},

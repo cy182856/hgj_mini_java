@@ -14,4 +14,6 @@ public interface MenuMiniDaoMapper {
 
     List<MenuMini> findMenuByCstCode(String cstCode);
 
+    List<MenuMini> findMenuByProNumAndWxOpenId(String proNum, String wxOpenId);
+
 }

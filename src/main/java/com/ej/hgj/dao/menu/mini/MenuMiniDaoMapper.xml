@@ -39,4 +39,17 @@
         order by m.sort
     </select>
 
+    <!-- 根据项目号、wxOpenId查询对应菜单权限-->
+    <select id="findMenuByProNumAndWxOpenId" resultMap="BaseMap"  parameterType="java.lang.String">
+        select
+            c.*
+        from t_identity_menu a
+                 inner join t_cst_into b on b.into_role = a.identity_code
+                 inner join t_menu_mini c on c.id = a.menu_id
+        where c.delete_flag = 0
+          and a.pro_num = #{proNum,jdbcType=VARCHAR}
+          and b.wx_open_id = #{wxOpenId,jdbcType=VARCHAR}
+        order by c.sort desc
+    </select>
+
 </mapper>

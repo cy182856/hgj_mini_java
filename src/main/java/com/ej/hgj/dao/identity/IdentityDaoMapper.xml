@@ -4,6 +4,7 @@
 
     <resultMap id="BaseMap" type="com.ej.hgj.entity.identity.Identity">
         <result column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="pro_num" jdbcType="VARCHAR" property="proNum"/>
         <result column="code" jdbcType="INTEGER" property="code"/>
         <result column="name" jdbcType="VARCHAR" property="name"/>
         <result column="web_desc" jdbcType="VARCHAR" property="webDesc"/>
@@ -15,7 +16,7 @@
         <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
     </resultMap>
     <sql id="Base_Column_List" >
-        id, code, `name`, web_desc, mini_desc, create_time, update_time, create_by,
+        id, pro_num, code, `name`, web_desc, mini_desc, create_time, update_time, create_by,
         update_by, delete_flag
     </sql>
 
@@ -33,6 +34,9 @@
         <include refid="Base_Column_List" />
         from t_identity
         where delete_flag = 0
+        <if test="proNum != null">
+            and pro_num = #{proNum,jdbcType=VARCHAR}
+        </if>
     </select>
 
 </mapper>

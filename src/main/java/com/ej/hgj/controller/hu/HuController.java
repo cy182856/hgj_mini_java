@@ -1,6 +1,7 @@
 package com.ej.hgj.controller.hu;
 
 import com.alibaba.fastjson.JSONObject;
+import com.ej.hgj.base.BaseReqVo;
 import com.ej.hgj.base.BaseRespVo;
 import com.ej.hgj.constant.AjaxResult;
 import com.ej.hgj.constant.Constant;
@@ -30,6 +31,7 @@ import com.ej.hgj.utils.exception.BusinessException;
 import com.ej.hgj.vo.bill.BillResponseVo;
 import com.ej.hgj.vo.hu.CardPermVo;
 import com.ej.hgj.vo.hu.HouseInfoVO;
+import com.ej.hgj.vo.into.IntoVo;
 import com.ej.hgj.vo.repair.RepairRequestVo;
 import org.apache.commons.httpclient.HttpURL;
 import org.apache.commons.lang3.StringUtils;
@@ -235,7 +237,7 @@ public class HuController extends BaseController {
         CstInto cstInto = cstIntoMapper.getById(huCheckInRequest.getCstIntoId());
         if(cstInto == null){
             jsonObject.put("respCode", Constant.FAIL_RESULT_CODE);
-            jsonObject.put("errDesc", "入住信息不存在!");
+            jsonObject.put("errDesc", "入住信息已失效!");
             return jsonObject;
         }
         return huService.updateIntoStatus(jsonObject, huCheckInRequest, cstInto);
@@ -254,42 +256,6 @@ public class HuController extends BaseController {
         billResponseVo.setErrCode(JiasvBasicRespCode.SUCCESS.getRespCode());
         billResponseVo.setErrDesc(JiasvBasicRespCode.SUCCESS.getRespDesc());
         return billResponseVo;
-    }
-
-    /**
-     * 卡权限设置
-     */
-    @ResponseBody
-    @RequestMapping("hu/cardPerm")
-    public AjaxResult cardPerm(@RequestBody CardPermVo cardPermVo) {
-       AjaxResult ajaxResult = new AjaxResult();
-       String proNum = cardPermVo.getProNum();
-       String wxOpenId = cardPermVo.getWxOpenId();
-       String tenantWxOpenId = cardPermVo.getTenantWxOpenId();
-       String cstCode = cardPermVo.getCstCode();
-       // 删除卡权限
-       cstIntoCardMapper.deleteCardPerm(proNum,cstCode,tenantWxOpenId);
-       // 新增卡权限
-       Integer[] cardIds = cardPermVo.getCardIds();
-       if(cardIds != null && cardIds.length > 0){
-           for(int i = 0; i<cardIds.length; i++){
-               CstIntoCard cstIntoCard = new CstIntoCard();
-               cstIntoCard.setId(TimestampGenerator.generateSerialNumber());
-               cstIntoCard.setProNum(proNum);
-               cstIntoCard.setCardId(cardIds[i]);
-               cstIntoCard.setWxOpenId(tenantWxOpenId);
-               cstIntoCard.setCstCode(cstCode);
-               cstIntoCard.setCreateBy(wxOpenId);
-               cstIntoCard.setUpdateBy(wxOpenId);
-               cstIntoCard.setCreateTime(new Date());
-               cstIntoCard.setUpdateTime(new Date());
-               cstIntoCard.setDeleteFlag(Constant.DELETE_FLAG_NOT);
-               cstIntoCardMapper.save(cstIntoCard);
-           }
-       }
-        ajaxResult.setRespCode(Constant.SUCCESS);
-        ajaxResult.setMessage(Constant.SUCCESS_RESULT_MESSAGE);
-        return ajaxResult;
     }
 
     /**
@@ -374,6 +340,35 @@ public class HuController extends BaseController {
         ajaxResult.setMessage(Constant.SUCCESS_RESULT_MESSAGE);
         ajaxResult.setData(map);
         return ajaxResult;
+    }
+
+    /**
+     * 根据客户编号查询房屋
+     */
+    @RequestMapping("hu/houseListByCstCode")
+    @ResponseBody
+    public JSONObject houseListByCstCode(@RequestBody BaseReqVo baseReqVo){
+        JSONObject jsonObject = new JSONObject();
+        String cstCode = baseReqVo.getCstCode();
+        HgjHouse hgjHouse = new HgjHouse();
+        hgjHouse.setCstCode(cstCode);
+        List<HgjHouse> houseList = hgjHouseDaoMapper.getListByCstCode(hgjHouse);
+        jsonObject.put("respCode", "000");
+        jsonObject.put("houseList", houseList);
+        return jsonObject;
+    }
+
+    /**
+     * 创建入住信息-房屋邀请
+     */
+    @RequestMapping("hu/createIntoInfo")
+    @ResponseBody
+    public JSONObject createIntoInfo(@RequestBody IntoVo intoVo){
+        JSONObject jsonObject = new JSONObject();
+        String cstIntoId = huService.saveCstIntoInfo(intoVo);
+        jsonObject.put("respCode", "000");
+        jsonObject.put("cstIntoId", cstIntoId);
+        return jsonObject;
     }
 
     //    /**

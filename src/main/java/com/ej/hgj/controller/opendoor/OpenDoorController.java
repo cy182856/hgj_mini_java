@@ -79,13 +79,20 @@ public class OpenDoorController extends BaseController {
 	@SneakyThrows
 	@RequestMapping("/opendoor/addOpenDoorQrCode.do")
 	@ResponseBody
-	public JSONObject addVisitQrCode(HttpServletResponse response, @RequestBody OpenDoorCodeVo openDoorLogVo) {
+	public JSONObject addVisitQrCode(HttpServletResponse response, @RequestBody OpenDoorCodeVo openDoorCodeVo) {
 		JSONObject jsonObject = new JSONObject();
-		String expDate = openDoorLogVo.getExpDate();
-		String houseId = openDoorLogVo.getHouseId();
-		String cstCode = openDoorLogVo.getCstCode();
-		String wxOpenId = openDoorLogVo.getWxOpenId();
-		String proNum = openDoorLogVo.getProNum();
+		String expDate = openDoorCodeVo.getExpDate();
+		String houseId = openDoorCodeVo.getHouseId();
+		String cstCode = openDoorCodeVo.getCstCode();
+		String wxOpenId = openDoorCodeVo.getWxOpenId();
+		String proNum = openDoorCodeVo.getProNum();
+		String visitName = openDoorCodeVo.getVisitName();
+		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(openDoorCodeVo.getCstCode());
+		if(StringUtils.isNotBlank(visitName)){
+			openDoorCodeVo.setVisitName(visitName);
+		}else {
+			openDoorCodeVo.setVisitName(hgjCst.getCstName());
+		}
 		if(StringUtils.isBlank(expDate) || StringUtils.isBlank(houseId) || StringUtils.isBlank(cstCode) || StringUtils.isBlank(wxOpenId) || StringUtils.isBlank(proNum)){
 			jsonObject.put("RESPCODE", "999");
 			jsonObject.put("ERRDESC", "请求参数错误");
@@ -102,13 +109,14 @@ public class OpenDoorController extends BaseController {
 		List<OpenDoorCode> qrCodeByExpDate = openDoorCodeDaoMapper.getQrCodeByExpDate(openDoorCodeParam);
 		if(!qrCodeByExpDate.isEmpty() && qrCodeByExpDate.size() >= qrCreateSize){
 			jsonObject.put("RESPCODE", "999");
-			jsonObject.put("ERRDESC", "访客通行码生成次数已达到上限值");
+			jsonObject.put("ERRDESC", "访客通行码当天生成次数已用完");
 			return jsonObject;
 		}
-		// 根据有效日期查询生成记录，如果有直接查询历史记录，反之再调用接口
+		// 根据有效日期、访客称呼查询生成记录，如果有直接查询历史记录，反之再调用接口
 		OpenDoorCode openDoorCodeParam2 = new OpenDoorCode();
 		openDoorCodeParam2.setWxOpenId(wxOpenId);
 		openDoorCodeParam2.setType(1);
+		openDoorCodeParam2.setVisitName(openDoorCodeVo.getVisitName());
 		openDoorCodeParam2.setExpDate(expDate);
 		List<OpenDoorCode> qrCodeByExpDate2 = openDoorCodeDaoMapper.getQrCodeByExpDate2(openDoorCodeParam2);
 		if(!qrCodeByExpDate2.isEmpty()){
@@ -118,7 +126,7 @@ public class OpenDoorController extends BaseController {
 			String png_base64 = createQrCode(qrCodeContent,response);
 			jsonObject.put("RESPCODE", "000");
 			jsonObject.put("visitQrCode", png_base64);
-			jsonObject.put("openDoorLogVo",openDoorLogVo);
+			jsonObject.put("openDoorCodeVo",openDoorCodeVo);
 			return jsonObject;
 		}
 		// 拆分时间
@@ -150,8 +158,11 @@ public class OpenDoorController extends BaseController {
 		String floor = hgjHouse.getFloorNum().toString();
 		// 调用获取二维码内容的接口-post请求
 		ConstantConfig constantConfigUrl = constantConfDaoMapper.getByKey(Constant.OPEN_DOOR_QR_CODE_URL);
-		String jsonData = "{  \"neighNo\": \"" + neighNo + "\",  \"addressNumber\": " + addressNumber + ",  \"startTime\": " +
-				startTime + ",  \"endTime\": " + endTime + ",  \"unitNumber\": " + unitNo + ",  \"floors\": " + floor + "}";
+//		String jsonData = "{  \"neighNo\": \"" + neighNo + "\",  \"addressNumber\": " + addressNumber + ",  \"startTime\": " +
+//				startTime + ",  \"endTime\": " + endTime + ",  \"unitNumber\": " + unitNo + ",  \"floors\": " + floor + "}";
+		String unitInfos = "[{\"unitNumber\":" + unitNo + ",\"floorType\":" + "2" + ",\"floors\":null}]";
+		String jsonData = "{  \"neighNo\": \"" + neighNo + "\",  \"addressNumber\": " + unitNo + ",  \"startTime\": " +
+				startTime + ",  \"endTime\": " + endTime + ",  \"unitInfos\": " + unitInfos + "}";
 		JSONObject resultJson = HttpClientUtil.sendPost(constantConfigUrl.getConfigValue(), jsonData);
 		String result = resultJson.get("result").toString();
 		String message = resultJson.getString("message");
@@ -167,11 +178,12 @@ public class OpenDoorController extends BaseController {
 			OpenDoorCode openDoorCode = new OpenDoorCode();
 			Date date = new Date();
 			openDoorCode.setId(TimestampGenerator.generateSerialNumber());
-			openDoorCode.setProNum(openDoorLogVo.getProNum());
-			openDoorCode.setProName(openDoorLogVo.getProName());
+			openDoorCode.setProNum(openDoorCodeVo.getProNum());
+			openDoorCode.setProName(openDoorCodeVo.getProName());
 			// 1-智慧管家二维码 2-客服直接创建的二维码
 			openDoorCode.setType(1);
-			openDoorCode.setExpDate(openDoorLogVo.getExpDate());
+			openDoorCode.setVisitName(openDoorCodeVo.getVisitName());
+			openDoorCode.setExpDate(openDoorCodeVo.getExpDate());
 			openDoorCode.setStartTime(startTime);
 			openDoorCode.setEndTime(endTime);
 			openDoorCode.setCardNo(cardNo);
@@ -180,9 +192,8 @@ public class OpenDoorController extends BaseController {
 			openDoorCode.setAddressNum(addressNumber);
 			openDoorCode.setUnitNum(unitNo);
 			openDoorCode.setFloors(floor);
-			openDoorCode.setWxOpenId(openDoorLogVo.getWxOpenId());
-			openDoorCode.setCstCode(openDoorLogVo.getCstCode());
-			HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(openDoorLogVo.getCstCode());
+			openDoorCode.setWxOpenId(openDoorCodeVo.getWxOpenId());
+			openDoorCode.setCstCode(openDoorCodeVo.getCstCode());
 			openDoorCode.setCstName(hgjCst.getCstName());
 			openDoorCode.setHouseId(houseId);
 			openDoorCode.setResCode(hgjHouse.getResCode());
@@ -192,8 +203,7 @@ public class OpenDoorController extends BaseController {
 			openDoorCodeDaoMapper.save(openDoorCode);
 			jsonObject.put("RESPCODE", "000");
 			jsonObject.put("visitQrCode", png_base64);
-			jsonObject.put("openDoorLogVo",openDoorLogVo);
-
+			jsonObject.put("openDoorCodeVo",openDoorCodeVo);
 		}else {
 			jsonObject.put("RESPCODE", "999");
 			jsonObject.put("ERRDESC", message);

@@ -14,5 +14,4 @@ public interface IdentityDaoMapper {
 
     List<Identity> getList(Identity identity);
 
-
 }

@@ -39,4 +39,5 @@ public class OpenDoorCodeVo implements Serializable{
     private List<OpenDoorLog> list;
     private String respCode;
 
+    private String visitName;
 }

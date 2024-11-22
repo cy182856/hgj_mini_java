@@ -112,7 +112,8 @@ public class LoginController extends BaseController {
         List<CstInto> list = cstIntoMapper.getList(cstInto);
         if(list != null && list.size() > 0){
             loginInfo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
-            List<MenuMini> menuMinis = menuMiniDaoMapper.findMenuByCstCode(loginInfo.getCstCode());
+            //List<MenuMini> menuMinis = menuMiniDaoMapper.findMenuByCstCode(loginInfo.getCstCode());
+            List<MenuMini> menuMinis = menuMiniDaoMapper.findMenuByProNumAndWxOpenId(loginInfo.getProNum(),loginInfo.getWxOpenId());
             if(!menuMinis.isEmpty()){
                 for(MenuMini menuMini : menuMinis){
                     // 5-物业缴费

@@ -210,4 +210,7 @@ public class Constant<https> {
 
     // 活动中心游泳池闸机扣次数的设备号
     public static String SWIM_DEVICE_NO = "swim_device_no";
+
+    // 游泳池营业时间,创建门禁二维码使用
+    public static String SWIM_BUS_TIME = "swim_bus_time";
 }

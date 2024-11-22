@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.ej.hgj.base.BaseReqVo;
+import com.ej.hgj.constant.AjaxResult;
 import com.ej.hgj.constant.Constant;
 import com.ej.hgj.controller.base.BaseController;
 import com.ej.hgj.dao.active.CouponQrCodeDaoMapper;
@@ -40,6 +41,7 @@ import com.ej.hgj.vo.active.ActiveRequestVo;
 import com.ej.hgj.vo.active.ActiveResponseVo;
 import com.ej.hgj.vo.card.CardRequestVo;
 import com.ej.hgj.vo.card.CardResponseVo;
+import com.ej.hgj.vo.hu.CardPermVo;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import lombok.SneakyThrows;
@@ -181,39 +183,65 @@ public class CardController extends BaseController {
 			jsonObject.put("ERRDESC", "卡已过期");
 			return jsonObject;
 		}
-		// 根据日期，客户编号, 客户卡关联ID，查询已生成的二维码
+
+		// 查询游泳池营业时间
+		ConstantConfig swim_bus_time = constantConfDaoMapper.getByKey(Constant.SWIM_BUS_TIME);
+		String[] busTimes = swim_bus_time.getConfigValue().split(",");
+		String startHourMin = busTimes[0];
+		String [] startHourMins = startHourMin.split(":");
+		Integer startHour = Integer.valueOf(startHourMins[0]);
+		Integer startMin = Integer.valueOf(startHourMins[1]);
+		String endHourMin = busTimes[1];
+		String [] endHourMins = endHourMin.split(":");
+		Integer endHour = Integer.valueOf(endHourMins[0]);
+		Integer endMin = Integer.valueOf(endHourMins[1]);
+
+		// 根据日期，客户编号, 客户卡关联ID，有效状态，查询已生成的二维码
 		CardQrCode cardQrCodePram = new CardQrCode();
 		cardQrCodePram.setExpDate(expDate);
 		cardQrCodePram.setCstCode(cstCode);
+		//cardQrCodePram.setWxOpenId(wxOpenId);
+		cardQrCodePram.setIsExp(1);
 		cardQrCodePram.setCardCstBatchId(cardCstBatchId);
 		List<CardQrCode> qrCodeByExpDate = cardQrCodeDaoMapper.getQrCodeByExpDate(cardQrCodePram);
 		// 如果有直接查询历史记录，反之再调用接口
 		if(!qrCodeByExpDate.isEmpty()){
-			CardQrCode qrCode = qrCodeByExpDate.get(0);
-			// 卡二维码失效校验
-			if(qrCode.getIsExp() == 0){
-				jsonObject.put("RESPCODE", "999");
-				jsonObject.put("ERRDESC", "当天开门次数已用完");
+			// 过滤出当前微信号当天已生成的二维码
+			List<CardQrCode> qrCodeByExpDateFilter = qrCodeByExpDate.stream().filter(cardQrCode -> cardQrCode.getWxOpenId().equals(wxOpenId)).collect(Collectors.toList());
+			if(!qrCodeByExpDateFilter.isEmpty()) {
+				CardQrCode qrCode = qrCodeByExpDateFilter.get(0);
+				// 卡二维码失效校验
+	//			if(qrCode.getIsExp() == 0){
+	//				jsonObject.put("RESPCODE", "999");
+	//				jsonObject.put("ERRDESC", "当天开门次数已用完");
+	//				return jsonObject;
+	//			}
+				String qrCodeContent = qrCode.getQrCodeContent();
+				// 生成二维码
+				String png_base64 = createQrCode(qrCodeContent, response);
+				jsonObject.put("RESPCODE", "000");
+				jsonObject.put("cardQrCode", png_base64);
+				jsonObject.put("startExpDate",expDate+" "+startHourMin);
+				jsonObject.put("endExpDate",expDate+" "+endHourMin);
+				// 总开门次数
+				ConstantConfig configOpenDoorSize = constantConfDaoMapper.getByKey(Constant.CARD_QR_CODE_OPEN_DOOR_SIZE);
+				jsonObject.put("openDoorTotalNum", configOpenDoorSize.getConfigValue());
+				// 需要扣次数的设备号
+				//ConstantConfig configDeviceNo = constantConfDaoMapper.getByKey(Constant.SWIM_DEVICE_NO);
+				// 已开门次数
+//				List<OpenDoorLog> byCardNoAndIsUnlock = openDoorLogDaoMapper.getByCardNoAndIsUnlock(qrCode.getCardNo(), configDeviceNo.getConfigValue());
+//				if (!byCardNoAndIsUnlock.isEmpty()) {
+//					jsonObject.put("openDoorApplyNum", byCardNoAndIsUnlock.size());
+//				} else {
+//					jsonObject.put("openDoorApplyNum", "0");
+//				}
 				return jsonObject;
 			}
-			String qrCodeContent = qrCode.getQrCodeContent();
-			// 生成二维码
-			String png_base64 = createQrCode(qrCodeContent,response);
-			jsonObject.put("RESPCODE", "000");
-			jsonObject.put("cardQrCode", png_base64);
-			jsonObject.put("expDate",expDate);
-			// 总开门次数
-			ConstantConfig configOpenDoorSize = constantConfDaoMapper.getByKey(Constant.CARD_QR_CODE_OPEN_DOOR_SIZE);
-			jsonObject.put("openDoorTotalNum", configOpenDoorSize.getConfigValue());
-			// 需要扣次数的设备号
-			ConstantConfig configDeviceNo = constantConfDaoMapper.getByKey(Constant.SWIM_DEVICE_NO);
-			// 已开门次数
-			List<OpenDoorLog> byCardNoAndIsUnlock = openDoorLogDaoMapper.getByCardNoAndIsUnlock(qrCode.getCardNo(),configDeviceNo.getConfigValue());
-			if(!byCardNoAndIsUnlock.isEmpty()) {
-				jsonObject.put("openDoorApplyNum", byCardNoAndIsUnlock.size());
-			}else {
-				jsonObject.put("openDoorApplyNum","0");
-			}
+		}
+		// 游泳卡二维码创建次数大于游泳卡剩余次数，无法继续创建
+		if(!qrCodeByExpDate.isEmpty() && qrCodeByExpDate.size() >= (totalNum - applyNum)){
+			jsonObject.put("RESPCODE", "999");
+			jsonObject.put("ERRDESC", "二维码生成次数不能大于卡剩余次数");
 			return jsonObject;
 		}
 		// 游泳卡次数用完不能再创建二维码
@@ -227,10 +255,11 @@ public class CardController extends BaseController {
 		Integer expYear = Integer.valueOf(expDateSpilt[0]);
 		Integer expMonth = Integer.valueOf(expDateSpilt[1]);
 		Integer expDay = Integer.valueOf(expDateSpilt[2]);
+
 		// 设置特定的年、月、日、时、分、秒
-		LocalDateTime startDate = LocalDateTime.of(expYear, expMonth, expDay, 00, 00, 00);
+		LocalDateTime startDate = LocalDateTime.of(expYear, expMonth, expDay, startHour, startMin, 00);
 		// 设置特定的年、月、日、时、分、秒
-		LocalDateTime endDate = LocalDateTime.of(expYear, expMonth, expDay, 23, 59, 59);
+		LocalDateTime endDate = LocalDateTime.of(expYear, expMonth, expDay, endHour, endMin, 59);
 		// 获取时区
 		ZoneId zoneId = ZoneId.systemDefault();
 		// 转换为ZonedDateTime并获取毫秒时间戳
@@ -307,26 +336,63 @@ public class CardController extends BaseController {
 			cardQrCodeDaoMapper.save(cardQrCode);
 			jsonObject.put("RESPCODE", "000");
 			jsonObject.put("cardQrCode", png_base64);
-			jsonObject.put("expDate",expDate);
+			jsonObject.put("startExpDate",expDate+" "+startHourMin);
+			jsonObject.put("endExpDate",expDate+" "+endHourMin);
 
 			// 总开门次数
 			ConstantConfig configOpenDoorSize = constantConfDaoMapper.getByKey(Constant.CARD_QR_CODE_OPEN_DOOR_SIZE);
 			jsonObject.put("openDoorTotalNum", configOpenDoorSize.getConfigValue());
 			// 需要扣次数的设备号
-			ConstantConfig configDeviceNo = constantConfDaoMapper.getByKey(Constant.SWIM_DEVICE_NO);
+			// ConstantConfig configDeviceNo = constantConfDaoMapper.getByKey(Constant.SWIM_DEVICE_NO);
 			// 已开门次数
-			List<OpenDoorLog> byCardNoAndIsUnlock = openDoorLogDaoMapper.getByCardNoAndIsUnlock(cardNo,configDeviceNo.getConfigValue());
-			if(!byCardNoAndIsUnlock.isEmpty()) {
-				jsonObject.put("openDoorApplyNum", byCardNoAndIsUnlock.size());
-			}else {
-				jsonObject.put("openDoorApplyNum","0");
-			}
+//			List<OpenDoorLog> byCardNoAndIsUnlock = openDoorLogDaoMapper.getByCardNoAndIsUnlock(cardNo,configDeviceNo.getConfigValue());
+//			if(!byCardNoAndIsUnlock.isEmpty()) {
+//				jsonObject.put("openDoorApplyNum", byCardNoAndIsUnlock.size());
+//			}else {
+//				jsonObject.put("openDoorApplyNum","0");
+//			}
 		}else {
 			jsonObject.put("RESPCODE", "999");
 			jsonObject.put("ERRDESC", message);
 			return jsonObject;
 		}
 		return jsonObject;
+	}
+
+	/**
+	 * 卡权限设置
+	 */
+	@ResponseBody
+	@RequestMapping("card/cardPerm")
+	public AjaxResult cardPerm(@RequestBody CardPermVo cardPermVo) {
+		AjaxResult ajaxResult = new AjaxResult();
+		String proNum = cardPermVo.getProNum();
+		String wxOpenId = cardPermVo.getWxOpenId();
+		String tenantWxOpenId = cardPermVo.getTenantWxOpenId();
+		String cstCode = cardPermVo.getCstCode();
+		// 删除卡权限
+		cstIntoCardMapper.deleteCardPerm(proNum,cstCode,tenantWxOpenId);
+		// 新增卡权限
+		Integer[] cardIds = cardPermVo.getCardIds();
+		if(cardIds != null && cardIds.length > 0){
+			for(int i = 0; i<cardIds.length; i++){
+				CstIntoCard cstIntoCard = new CstIntoCard();
+				cstIntoCard.setId(TimestampGenerator.generateSerialNumber());
+				cstIntoCard.setProNum(proNum);
+				cstIntoCard.setCardId(cardIds[i]);
+				cstIntoCard.setWxOpenId(tenantWxOpenId);
+				cstIntoCard.setCstCode(cstCode);
+				cstIntoCard.setCreateBy(wxOpenId);
+				cstIntoCard.setUpdateBy(wxOpenId);
+				cstIntoCard.setCreateTime(new Date());
+				cstIntoCard.setUpdateTime(new Date());
+				cstIntoCard.setDeleteFlag(Constant.DELETE_FLAG_NOT);
+				cstIntoCardMapper.save(cstIntoCard);
+			}
+		}
+		ajaxResult.setRespCode(Constant.SUCCESS);
+		ajaxResult.setMessage(Constant.SUCCESS_RESULT_MESSAGE);
+		return ajaxResult;
 	}
 
 	@SneakyThrows

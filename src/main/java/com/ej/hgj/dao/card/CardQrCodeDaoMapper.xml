@@ -42,6 +42,9 @@
         <if test="wxOpenId != null">
             and wx_open_id = #{wxOpenId,jdbcType=VARCHAR}
         </if>
+        <if test="isExp != null">
+            and is_exp = #{isExp,jdbcType=INTEGER}
+        </if>
         <if test="expDate != null">
             and exp_date = #{expDate,jdbcType=VARCHAR}
         </if>

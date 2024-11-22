@@ -11,13 +11,16 @@ import com.ej.hgj.entity.hu.CstIntoHouse;
 import com.ej.hgj.entity.role.Role;
 import com.ej.hgj.request.hu.HuCheckInRequest;
 import com.ej.hgj.service.role.RoleService;
+import com.ej.hgj.utils.bill.TimestampGenerator;
 import com.ej.hgj.vo.hu.HouseInfoVO;
+import com.ej.hgj.vo.into.IntoVo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -125,5 +128,41 @@ public class HuServiceImpl implements HuService {
             // 移除卡权限
             cstIntoCardMapper.deleteCardPerm(proNum,cstCode,tenantWxOpenId);
         }
+    }
+
+    @Override
+    public String saveCstIntoInfo(IntoVo intoVo) {
+        // 根据入住类型预生成入住信息
+        String intoType = intoVo.getIntoType();
+        String[] resIds = intoVo.getResId();
+        CstInto cstInto = new CstInto();
+        String cstIntoId = TimestampGenerator.generateSerialNumber();
+        cstInto.setId(cstIntoId);
+        cstInto.setProjectNum(intoVo.getOrgId());
+        cstInto.setCstCode(intoVo.getCstCode());
+        cstInto.setIntoRole(Integer.valueOf(intoType));
+        cstInto.setIntoStatus(Constant.INTO_STATUS_N);
+        cstInto.setCreateTime(new Date());
+        cstInto.setUpdateTime(new Date());
+        cstInto.setDeleteFlag(Constant.DELETE_FLAG_NOT);
+        cstIntoMapper.save(cstInto);
+        // 如果是租户员工、租客、亲属，需要保存房间号
+        if("1".equals(intoType) || "3".equals(intoType) || "4".equals(intoType)){
+            List<CstIntoHouse> cstIntoHouseList = new ArrayList<>();
+            for(int i = 0; i<resIds.length; i++){
+                CstIntoHouse cstIntoHouse = new CstIntoHouse();
+                cstIntoHouse.setId(TimestampGenerator.generateSerialNumber());
+                cstIntoHouse.setCstIntoId(cstIntoId);
+                cstIntoHouse.setHouseId(resIds[i]);
+                cstIntoHouse.setIntoStatus(Constant.INTO_STATUS_N);
+                cstIntoHouse.setCreateTime(new Date());
+                cstIntoHouse.setUpdateTime(new Date());
+                cstIntoHouse.setDeleteFlag(Constant.DELETE_FLAG_NOT);
+                cstIntoHouseList.add(cstIntoHouse);
+            }
+            cstIntoHouseDaoMapper.insertList(cstIntoHouseList);
+        }
+
+        return cstIntoId;
     }
 }

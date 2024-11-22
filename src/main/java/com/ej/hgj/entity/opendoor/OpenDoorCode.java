@@ -17,6 +17,8 @@ public class OpenDoorCode {
 
     private Integer type;
 
+    private String visitName;
+
     private String expDate;
 
     private Long startTime;

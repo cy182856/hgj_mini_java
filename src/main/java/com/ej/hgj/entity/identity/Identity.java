@@ -10,6 +10,8 @@ import java.util.Date;
 public class Identity {
     private String id;
 
+    private String proNum;
+
     private Integer code;
 
     private String name;
