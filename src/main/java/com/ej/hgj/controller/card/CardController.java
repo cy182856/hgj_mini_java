@@ -13,6 +13,7 @@ import com.ej.hgj.dao.card.CardCstDaoMapper;
 import com.ej.hgj.dao.card.CardQrCodeDaoMapper;
 import com.ej.hgj.dao.config.ConstantConfDaoMapper;
 import com.ej.hgj.dao.config.ProNeighConfDaoMapper;
+import com.ej.hgj.dao.config.WorkTimeConfDaoMapper;
 import com.ej.hgj.dao.coupon.CouponGrantDaoMapper;
 import com.ej.hgj.dao.cst.HgjCstDaoMapper;
 import com.ej.hgj.dao.hu.CstIntoCardMapper;
@@ -26,6 +27,7 @@ import com.ej.hgj.entity.card.CardCstBatch;
 import com.ej.hgj.entity.card.CardQrCode;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.config.ProNeighConfig;
+import com.ej.hgj.entity.config.WorkTimeConfig;
 import com.ej.hgj.entity.coupon.CouponGrant;
 import com.ej.hgj.entity.cst.HgjCst;
 import com.ej.hgj.entity.hu.CstInto;
@@ -97,6 +99,9 @@ public class CardController extends BaseController {
 
 	@Autowired
 	private CstIntoCardMapper cstIntoCardMapper;
+
+	@Autowired
+	private WorkTimeConfDaoMapper workTimeConfDaoMapper;
 
 	/**
 	 * 查询游泳卡信息
@@ -184,17 +189,33 @@ public class CardController extends BaseController {
 			return jsonObject;
 		}
 
-		// 查询游泳池营业时间
-		ConstantConfig swim_bus_time = constantConfDaoMapper.getByKey(Constant.SWIM_BUS_TIME);
-		String[] busTimes = swim_bus_time.getConfigValue().split(",");
-		String startHourMin = busTimes[0];
-		String [] startHourMins = startHourMin.split(":");
-		Integer startHour = Integer.valueOf(startHourMins[0]);
-		Integer startMin = Integer.valueOf(startHourMins[1]);
-		String endHourMin = busTimes[1];
-		String [] endHourMins = endHourMin.split(":");
-		Integer endHour = Integer.valueOf(endHourMins[0]);
-		Integer endMin = Integer.valueOf(endHourMins[1]);
+		// 租客、亲属卡权限校验
+		CstInto byWxOpenIdAndStatus_1 = cstIntoMapper.getByWxOpenIdAndStatus_1(wxOpenId);
+		if(byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 3 || byWxOpenIdAndStatus_1.getIntoRole() == 4)){
+			CstIntoCard cstIntoCard = new CstIntoCard();
+			cstIntoCard.setProNum(proNum);
+			cstIntoCard.setWxOpenId(wxOpenId);
+			cstIntoCard.setCardId(cardCst.getCardId());
+			List<CstIntoCard> cstIntoCardList = cstIntoCardMapper.getList(cstIntoCard);
+			if(cstIntoCardList.isEmpty()){
+				jsonObject.put("RESPCODE", "999");
+				jsonObject.put("ERRDESC", "无使用权限");
+				return jsonObject;
+			}
+		}
+
+		// 查询泳池开放时间  2-泳池
+		WorkTimeConfig workTime = workTimeConfDaoMapper.getWorkTime(2);
+		String startWorkTime= workTime.getStartTime();
+		String[] startTimes = startWorkTime.split(":");
+		Integer startHour = Integer.valueOf(startTimes[0]);
+		Integer startMin = Integer.valueOf(startTimes[1]);
+		Integer startSec = Integer.valueOf(startTimes[2]);
+		String endWorkTime = workTime.getEndTime();
+		String[] endTimes = endWorkTime.split(":");
+		Integer endHour = Integer.valueOf(endTimes[0]);
+		Integer endMin = Integer.valueOf(endTimes[1]);
+		Integer endSec = Integer.valueOf(endTimes[2]);
 
 		// 根据日期，客户编号, 客户卡关联ID，有效状态，查询已生成的二维码
 		CardQrCode cardQrCodePram = new CardQrCode();
@@ -221,8 +242,8 @@ public class CardController extends BaseController {
 				String png_base64 = createQrCode(qrCodeContent, response);
 				jsonObject.put("RESPCODE", "000");
 				jsonObject.put("cardQrCode", png_base64);
-				jsonObject.put("startExpDate",expDate+" "+startHourMin);
-				jsonObject.put("endExpDate",expDate+" "+endHourMin);
+				jsonObject.put("startExpDate",expDate+" "+ startWorkTime);
+				jsonObject.put("endExpDate",expDate+" "+ endWorkTime);
 				// 总开门次数
 				ConstantConfig configOpenDoorSize = constantConfDaoMapper.getByKey(Constant.CARD_QR_CODE_OPEN_DOOR_SIZE);
 				jsonObject.put("openDoorTotalNum", configOpenDoorSize.getConfigValue());
@@ -250,6 +271,7 @@ public class CardController extends BaseController {
 			jsonObject.put("ERRDESC", "无可用次数");
 			return jsonObject;
 		}
+
 		// 拆分时间
 		String[] expDateSpilt = expDate.split("-");
 		Integer expYear = Integer.valueOf(expDateSpilt[0]);
@@ -257,9 +279,9 @@ public class CardController extends BaseController {
 		Integer expDay = Integer.valueOf(expDateSpilt[2]);
 
 		// 设置特定的年、月、日、时、分、秒
-		LocalDateTime startDate = LocalDateTime.of(expYear, expMonth, expDay, startHour, startMin, 00);
+		LocalDateTime startDate = LocalDateTime.of(expYear, expMonth, expDay, startHour, startMin, startSec);
 		// 设置特定的年、月、日、时、分、秒
-		LocalDateTime endDate = LocalDateTime.of(expYear, expMonth, expDay, endHour, endMin, 59);
+		LocalDateTime endDate = LocalDateTime.of(expYear, expMonth, expDay, endHour, endMin, endSec);
 		// 获取时区
 		ZoneId zoneId = ZoneId.systemDefault();
 		// 转换为ZonedDateTime并获取毫秒时间戳
@@ -336,8 +358,8 @@ public class CardController extends BaseController {
 			cardQrCodeDaoMapper.save(cardQrCode);
 			jsonObject.put("RESPCODE", "000");
 			jsonObject.put("cardQrCode", png_base64);
-			jsonObject.put("startExpDate",expDate+" "+startHourMin);
-			jsonObject.put("endExpDate",expDate+" "+endHourMin);
+			jsonObject.put("startExpDate",expDate+" "+ startWorkTime);
+			jsonObject.put("endExpDate",expDate+" "+ endWorkTime);
 
 			// 总开门次数
 			ConstantConfig configOpenDoorSize = constantConfDaoMapper.getByKey(Constant.CARD_QR_CODE_OPEN_DOOR_SIZE);
@@ -371,7 +393,7 @@ public class CardController extends BaseController {
 		String tenantWxOpenId = cardPermVo.getTenantWxOpenId();
 		String cstCode = cardPermVo.getCstCode();
 		// 删除卡权限
-		cstIntoCardMapper.deleteCardPerm(proNum,cstCode,tenantWxOpenId);
+		cstIntoCardMapper.deleteCardPerm(proNum,tenantWxOpenId);
 		// 新增卡权限
 		Integer[] cardIds = cardPermVo.getCardIds();
 		if(cardIds != null && cardIds.length > 0){

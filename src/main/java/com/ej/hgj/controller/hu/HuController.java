@@ -10,12 +10,14 @@ import com.ej.hgj.dao.config.ConstantConfDaoMapper;
 import com.ej.hgj.dao.config.ProConfDaoMapper;
 import com.ej.hgj.dao.cst.HgjCstDaoMapper;
 import com.ej.hgj.dao.hu.*;
+import com.ej.hgj.dao.identity.IdentityDaoMapper;
 import com.ej.hgj.dao.user.UsrConfMapper;
 import com.ej.hgj.dao.wechat.WechatPubConfMapper;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.config.ProConfig;
 import com.ej.hgj.entity.cst.HgjCst;
 import com.ej.hgj.entity.hu.*;
+import com.ej.hgj.entity.identity.Identity;
 import com.ej.hgj.entity.login.MiniProSession;
 import com.ej.hgj.entity.login.MutipUsrVo;
 import com.ej.hgj.enums.JiasvBasicRespCode;
@@ -89,6 +91,9 @@ public class HuController extends BaseController {
 
     @Autowired
     private CstIntoCardMapper cstIntoCardMapper;
+
+    @Autowired
+    private IdentityDaoMapper identityDaoMapper;
 
     @ResponseBody
     @RequestMapping({"/queryMutipUsr","/queryMutipUsr.do"})
@@ -368,6 +373,39 @@ public class HuController extends BaseController {
         String cstIntoId = huService.saveCstIntoInfo(intoVo);
         jsonObject.put("respCode", "000");
         jsonObject.put("cstIntoId", cstIntoId);
+        return jsonObject;
+    }
+
+    /**
+     * 创建入住信息-房屋邀请
+     */
+    @RequestMapping("hu/queryIntoInfo")
+    @ResponseBody
+    public JSONObject queryIntoInfo(@RequestBody IntoVo intoVo){
+        JSONObject jsonObject = new JSONObject();
+        String cstIntoId = intoVo.getCstIntoId();
+        CstInto cstInto = cstIntoMapper.getById(cstIntoId);
+        Identity identity = identityDaoMapper.getByCode(cstInto.getIntoRole().toString());
+        List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstIntoId(cstIntoId);
+        List<String> houseIdList = new ArrayList<>();
+        if(!cstIntoHouseList.isEmpty()){
+            for (CstIntoHouse cstIntoHouse : cstIntoHouseList){
+                houseIdList.add(cstIntoHouse.getHouseId());
+            }
+        }
+        HgjHouse hgjHouse = new HgjHouse();
+        hgjHouse.setCstCode(cstInto.getCstCode());
+        hgjHouse.setHouseIdList(houseIdList);
+        List<HgjHouse> hgjHouseList = hgjHouseDaoMapper.getListByCstCode(hgjHouse);
+        List<String> resNames = new ArrayList<>();
+        if(!hgjHouseList.isEmpty()){
+            for(HgjHouse house : hgjHouseList){
+                resNames.add(house.getResName());
+            }
+        }
+        jsonObject.put("respCode", "000");
+        jsonObject.put("identity", identity);
+        jsonObject.put("resNames", resNames);
         return jsonObject;
     }
 

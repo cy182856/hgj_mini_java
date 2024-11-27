@@ -212,5 +212,5 @@ public class Constant<https> {
     public static String SWIM_DEVICE_NO = "swim_device_no";
 
     // 游泳池营业时间,创建门禁二维码使用
-    public static String SWIM_BUS_TIME = "swim_bus_time";
+    //public static String SWIM_BUS_TIME = "swim_bus_time";
 }

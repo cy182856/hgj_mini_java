@@ -126,7 +126,7 @@ public class HuServiceImpl implements HuService {
             }
 
             // 移除卡权限
-            cstIntoCardMapper.deleteCardPerm(proNum,cstCode,tenantWxOpenId);
+            cstIntoCardMapper.deleteCardPerm(proNum,tenantWxOpenId);
         }
     }
 

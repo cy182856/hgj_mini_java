@@ -8,11 +8,16 @@ import java.util.Date;
 
 @Data
 public class WorkTimeConfig {
-    private String id;
+
+    private Integer id;
+
+    private Integer type;
 
     private String startTime;
 
     private String endTime;
+
+    private String desc;
 
     private String createBy;
 

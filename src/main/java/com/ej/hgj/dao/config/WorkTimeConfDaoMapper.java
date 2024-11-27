@@ -11,7 +11,7 @@ import java.util.List;
 @Component
 public interface WorkTimeConfDaoMapper {
 
-    WorkTimeConfig getWorkTime();
+    WorkTimeConfig getWorkTime(Integer type);
 
 
 }

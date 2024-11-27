@@ -17,5 +17,5 @@ public interface CstIntoCardMapper {
 
     void delete(String id);
 
-    void deleteCardPerm(String proNum, String cstCode, String tenantWxOpenId);
+    void deleteCardPerm(String proNum, String tenantWxOpenId);
 }

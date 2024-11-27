@@ -69,8 +69,8 @@ public class HouseKeepController extends BaseController {
 	public UserInfoVo houseKeepInfo(@RequestBody HouseInfoVO houseInfoVO) {
 		UserInfoVo userInfoVo = new UserInfoVo();
 		String cstCode = houseInfoVO.getCstCode();
-		// 查询工作时间
-		WorkTimeConfig workTime = workTimeConfDaoMapper.getWorkTime();
+		// 查询工作时间 1-管家工作时间
+		WorkTimeConfig workTime = workTimeConfDaoMapper.getWorkTime(1);
 		// 查询所有值班电话
 		List<UserDutyPhone> userDutyPhoneList = userDutyPhoneDaoMapper.getList(new UserDutyPhone());
 		// 在工作时间内

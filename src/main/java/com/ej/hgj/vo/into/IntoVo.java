@@ -5,6 +5,8 @@ import lombok.Data;
 @Data
 public class IntoVo {
 
+    private String cstIntoId;
+
     private String[] resId;
 
     private String cstCode;

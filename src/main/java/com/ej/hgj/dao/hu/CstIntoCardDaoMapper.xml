@@ -116,7 +116,7 @@
 
     <!-- 删除卡权限-->
     <delete id="deleteCardPerm" parameterType="java.lang.String" >
-        delete from t_cst_into_card where pro_num=#{proNum} and cst_code = #{cstCode} and wx_open_id = #{tenantWxOpenId}
+        delete from t_cst_into_card where pro_num=#{proNum} and wx_open_id = #{tenantWxOpenId}
     </delete>
 
 </mapper>
