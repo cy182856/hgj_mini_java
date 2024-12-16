@@ -15,6 +15,10 @@ public interface OpenDoorLogDaoMapper {
 
     List<OpenDoorLog> getList(OpenDoorLog openDoorLog);
 
+    List<OpenDoorLog> getListByWxOpenId(String wxOpenId);
+
     List<OpenDoorLog> getByCardNoAndIsUnlock(String cardNo, String deviceNo);
+
+    List<OpenDoorLog> getListByCardNo(String cardNo);
 
 }

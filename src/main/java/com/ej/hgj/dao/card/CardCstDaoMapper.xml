@@ -55,7 +55,7 @@
         left join t_card c on c.id = a.card_id
         left join t_card_type d on d.id = c.type
         left join t_card_cst_batch e on e.card_code = a.card_code and e.cst_code = a.cst_code
-        where a.delete_flag = 0
+        where a.delete_flag = 0 and e.delete_flag = 0
           and a.is_exp = 1
           and a.pro_num = #{proNum}
           and a.cst_code = #{cstCode}

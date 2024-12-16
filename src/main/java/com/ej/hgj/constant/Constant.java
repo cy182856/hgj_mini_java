@@ -213,4 +213,7 @@ public class Constant<https> {
 
     // 游泳池营业时间,创建门禁二维码使用
     //public static String SWIM_BUS_TIME = "swim_bus_time";
+
+    // 门禁通行码创建快速码的间隔时间
+    public static String OPEN_DOOR_QUICK_CODE_INTER_TIME = "open_door_quick_code_inter_time";
 }

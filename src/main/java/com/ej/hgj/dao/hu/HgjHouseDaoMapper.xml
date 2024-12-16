@@ -113,14 +113,15 @@
                         left join s_contract con on con.id = rcr.ctt_id
                         left join s_house hu on hu.id = rcr.res_id
                 where
-                        rcr.cst_id = (
-                        select
-                            id
-                        from
-                            s_cst
-                        where
-                            code = #{cstCode,jdbcType=VARCHAR}
-                    )
+                        rcr.is_affect = 1
+                        and rcr.cst_id = (
+                                select
+                                    id
+                                from
+                                    s_cst
+                                where
+                                    code = #{cstCode,jdbcType=VARCHAR}
+                            )
                     <if test="houseIdList != null and houseIdList.size() > 0">
                         and hu.id in
                         <foreach collection="houseIdList" item="houseId" index="index" open="(" close=")" separator=",">
@@ -128,7 +129,7 @@
                         </foreach>
                     </if>
             ) t
-
+        order by t.res_code
     </select>
 
 </mapper>

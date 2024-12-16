@@ -130,7 +130,11 @@ public class CardController extends BaseController {
 			cardResponseVo.setCardCstBatchId(cardInfo.getCardCstBatchId());
 			cardResponseVo.setCardCode(cardInfo.getCardCode());
 			cardResponseVo.setCardName(cardInfo.getCardName());
-			cardResponseVo.setCardExpNum(cardInfo.getTotalNum() - cardInfo.getApplyNum());
+			Integer expNum = cardInfo.getTotalNum() - cardInfo.getApplyNum();
+			if(expNum < 0){
+				expNum = 0;
+			}
+			cardResponseVo.setCardExpNum(expNum);
 			cardResponseVo.setExpDate(cardInfo.getExpDate());
 		}
 		cardResponseVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
@@ -241,6 +245,7 @@ public class CardController extends BaseController {
 				// 生成二维码
 				String png_base64 = createQrCode(qrCodeContent, response);
 				jsonObject.put("RESPCODE", "000");
+				jsonObject.put("cardNo", qrCode.getCardNo());
 				jsonObject.put("cardQrCode", png_base64);
 				jsonObject.put("startExpDate",expDate+" "+ startWorkTime);
 				jsonObject.put("endExpDate",expDate+" "+ endWorkTime);
@@ -357,6 +362,7 @@ public class CardController extends BaseController {
 			cardQrCode.setDeleteFlag(0);
 			cardQrCodeDaoMapper.save(cardQrCode);
 			jsonObject.put("RESPCODE", "000");
+			jsonObject.put("cardNo", cardNo);
 			jsonObject.put("cardQrCode", png_base64);
 			jsonObject.put("startExpDate",expDate+" "+ startWorkTime);
 			jsonObject.put("endExpDate",expDate+" "+ endWorkTime);

@@ -1,6 +1,7 @@
 package com.ej.hgj.controller.opendoor;
 
 import com.alibaba.fastjson.JSONObject;
+import com.ej.hgj.base.BaseReqVo;
 import com.ej.hgj.constant.Constant;
 import com.ej.hgj.controller.base.BaseController;
 import com.ej.hgj.dao.config.ConstantConfDaoMapper;
@@ -308,15 +309,26 @@ public class OpenDoorController extends BaseController {
 		return jsonObject;
 	}
 
+	/**
+	 * 获取创建快速码的间隔时间
+	 * @param baseReqVo
+	 * @return
+	 */
+	@RequestMapping("/opendoor/queryQuickCodeInterTime.do")
+	@ResponseBody
+	public JSONObject queryQuickCodeInterTime(@RequestBody BaseReqVo baseReqVo) {
+		JSONObject jsonObject = new JSONObject();
+		ConstantConfig constantConfig = constantConfDaoMapper.getByKey(Constant.OPEN_DOOR_QUICK_CODE_INTER_TIME);
+		jsonObject.put("respCode", "000");
+		jsonObject.put("quickCodeInterTime", constantConfig.getConfigValue());
+		return jsonObject;
+	}
+
 	@RequestMapping("/opendoor/queryOpenDoorLog.do")
 	@ResponseBody
-	public OpenDoorCodeVo queryVisitInfos(HttpServletRequest request, @RequestBody OpenDoorCodeVo openDoorLogVo) {
+	public OpenDoorCodeVo queryVisitInfos(@RequestBody OpenDoorCodeVo openDoorLogVo) {
 		PageHelper.offsetPage((openDoorLogVo.getPageNum()-1) * openDoorLogVo.getPageSize(),openDoorLogVo.getPageSize());
-		OpenDoorLog doorLog = new OpenDoorLog();
-//		doorLog.setProNum(openDoorLogVo.getProNum());
-		doorLog.setWxOpenId(openDoorLogVo.getWxOpenId());
-//		doorLog.setCstCode(openDoorLogVo.getCstCode());
-		List<OpenDoorLog> list = openDoorLogDaoMapper.getList(doorLog);
+		List<OpenDoorLog> list = openDoorLogDaoMapper.getListByWxOpenId(openDoorLogVo.getWxOpenId());
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 		for(OpenDoorLog openDoorLog : list){
 			Long eventTime = openDoorLog.getEventTime();
@@ -335,6 +347,21 @@ public class OpenDoorController extends BaseController {
 		openDoorLogVo.setList(list);
 		openDoorLogVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
 		return openDoorLogVo;
+	}
+
+	@RequestMapping("/opendoor/queryOpenDoorLogByCardNo.do")
+	@ResponseBody
+	public JSONObject queryOpenDoorLogByCardNo(@RequestBody OpenDoorLog openDoorLog) {
+		JSONObject jsonObject = new JSONObject();
+		List<OpenDoorLog> list = openDoorLogDaoMapper.getListByCardNo(openDoorLog.getCardNo());
+		Integer openDoorLogSize = 0;
+		if(list != null){
+			openDoorLogSize = list.size();
+		}
+		jsonObject.put("respCode", "000");
+		jsonObject.put("openDoorLogSize", openDoorLogSize);
+		logger.info("卡号："+ openDoorLog.getCardNo() +"刷卡次数：" + openDoorLogSize);
+		return jsonObject;
 	}
 
 	/**

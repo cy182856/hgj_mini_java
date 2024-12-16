@@ -34,16 +34,32 @@
         from t_open_door_log l
         inner join t_open_door_code c on c.card_no = l.card_no
         where l.delete_flag = 0
-<!--        <if test="proNum != null">-->
-<!--            and pro_num = #{proNum,jdbcType=VARCHAR}-->
-<!--        </if>-->
         <if test="wxOpenId != null">
             and c.wx_open_id = #{wxOpenId,jdbcType=VARCHAR}
         </if>
-<!--        <if test="cstCode != null">-->
-<!--            and cst_code = #{cstCode,jdbcType=VARCHAR}-->
-<!--        </if>-->
+        <if test="cardNo != null">
+            and l.card_no = #{cardNo,jdbcType=VARCHAR}
+        </if>
         order by l.create_time desc
+    </select>
+
+    <select id="getListByWxOpenId" resultMap="BaseMap"  parameterType="java.lang.String">
+        select
+        l.card_no,l.event_time,l.is_unlock
+        from t_open_door_log l
+        inner join t_open_door_code c on c.card_no = l.card_no
+        where l.delete_flag = 0
+        and c.wx_open_id = #{wxOpenId,jdbcType=VARCHAR}
+        group by l.card_no,l.event_time, l.is_unlock
+        order by l.event_time desc
+    </select>
+
+    <!-- 查询列表-->
+    <select id="getListByCardNo" resultMap="BaseMap"  parameterType="java.lang.String">
+        select
+        <include refid="Base_Column_List" />
+        from t_open_door_log
+        where delete_flag = 0 and card_no = #{cardNo,jdbcType=VARCHAR}
     </select>
 
     <!-- 根据卡号查询进门次数-->

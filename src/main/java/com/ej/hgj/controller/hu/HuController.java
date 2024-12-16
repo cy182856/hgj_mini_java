@@ -177,7 +177,8 @@ public class HuController extends BaseController {
                 }else {
                     HgjHouse hgjHouse = new HgjHouse();
                     hgjHouse.setCstCode(cstCode);
-                    List<HgjHouse> list = syHouseDaoMapper.getListByCstCode(hgjHouse);
+                    //List<HgjHouse> list = syHouseDaoMapper.getListByCstCode(hgjHouse);
+                    List<HgjHouse> list = hgjHouseDaoMapper.getListByCstCode(hgjHouse);
                     if(!list.isEmpty()){
                         for(HgjHouse house : list){
                             houseList.add(house.getResName());

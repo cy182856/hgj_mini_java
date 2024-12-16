@@ -65,6 +65,9 @@ public class ResQrCodeController extends BaseController {
 	@Autowired
 	private SyHouseDaoMapper syHouseDaoMapper;
 
+	@Autowired
+	private HgjHouseDaoMapper hgjHouseDaoMapper;
+
 	@RequestMapping("/resQrCode/addResQrCode.do")
 	@ResponseBody
 	public JSONObject addVisitQrCode(HttpServletResponse response, @RequestBody BaseReqVo baseReqVo) {
@@ -111,7 +114,8 @@ public class ResQrCodeController extends BaseController {
 			// 房间号
 			HgjHouse hgjHouse = new HgjHouse();
 			hgjHouse.setCstCode(cstCode);
-			List<HgjHouse> list = syHouseDaoMapper.getListByCstCode(hgjHouse);
+			//List<HgjHouse> list = syHouseDaoMapper.getListByCstCode(hgjHouse);
+			List<HgjHouse> list = hgjHouseDaoMapper.getListByCstCode(hgjHouse);
 			List<String> houseList = new ArrayList<>();
 			if(!list.isEmpty()){
 				for(HgjHouse house : list){

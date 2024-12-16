@@ -40,4 +40,5 @@ public class OpenDoorCodeVo implements Serializable{
     private String respCode;
 
     private String visitName;
+
 }

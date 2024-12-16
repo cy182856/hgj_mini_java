@@ -199,8 +199,8 @@ public class LoginController extends BaseController {
         ProConfig proConfig = proConfDaoMapper.getByProjectNum(billRequestVo.getProNum());
         String proName = proConfig.getProjectName();
         billResponseVo.setProName(proName);
-        Bill bill = billDaoMapper.priRevAmount(billRequestVo);
         BigDecimal priRev = new BigDecimal(0);
+        Bill bill = billDaoMapper.priRevAmount(billRequestVo);
         if(bill != null){
             priRev = bill.getPriRev();
         }
