@@ -1,6 +1,7 @@
 package com.ej.hgj.vo.opendoor;
 
 import com.ej.hgj.entity.opendoor.OpenDoorLog;
+import com.ej.hgj.entity.opendoor.OpenDoorQuickCode;
 import com.ej.hgj.entity.visit.VisitLog;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -37,6 +38,7 @@ public class OpenDoorCodeVo implements Serializable{
     private Integer totalNum;//总记录数
     private Integer pages;//总页数
     private List<OpenDoorLog> list;
+    private List<OpenDoorQuickCode> quickCodeList;
     private String respCode;
 
     private String visitName;

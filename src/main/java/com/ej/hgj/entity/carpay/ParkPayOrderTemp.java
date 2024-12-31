@@ -8,49 +8,25 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
-public class ParkPayOrder {
+public class ParkPayOrderTemp {
 
     private String id;
 
-    private String proNum;
+    private String orderId;
 
     private String parkOrderNo;
 
-    private String cardCstBatchId;
+    private String payOrderNo;
 
-    private String carCode;
+    private String createCode;
 
-    private String wxOpenId;
+    private String createMsg;
 
-    private String cstCode;
+    private String payCallBackCode;
 
-    private String cstName;
+    private String payCallBackMsg;
 
-    private BigDecimal payAmount;
-
-    private Integer amountTotal;
-
-    private String ipItemName;
-
-    private String transactionId;
-
-    private String tradeType;
-
-    private String tradeState;
-
-    private String tradeStateDesc;
-
-    private String bankType;
-
-    private String successTime;
-
-    private Integer isDeduction;
-
-    private String inTime;
-
-    private String outTime;
-
-    private Integer orderStatus;
+    private String remark;
 
     private String createBy;
 
@@ -65,4 +41,7 @@ public class ParkPayOrder {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;
+
+
+
 }

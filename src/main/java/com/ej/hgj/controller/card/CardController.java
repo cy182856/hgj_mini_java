@@ -327,12 +327,14 @@ public class CardController extends BaseController {
 		JSONObject resultJson = HttpClientUtil.sendPost(constantConfigUrl.getConfigValue(), jsonData);
 		String result = resultJson.get("result").toString();
 		String message = resultJson.getString("message");
+		logger.info("调用创建门禁二维码接口返回:" + message);
 		// 成功
 		if("1".equals(result)){
 			// 获取data中的二维码内容
 			JSONObject data = resultJson.getJSONObject("data");
 			String cardNo = data.get("cardNo").toString();
 			String qrCodeContent = data.get("qrCode").toString();
+			logger.info("调用创建门禁二维码接口返回卡号:" + cardNo);
 			// 生成通行二维码
 			String png_base64 = createQrCode(qrCodeContent,response);
 			// 保存二维码生成记录

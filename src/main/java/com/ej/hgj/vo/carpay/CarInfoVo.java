@@ -11,8 +11,10 @@ public class CarInfoVo {
 
     private String inParkTime;
 
-    private String stopCarTime;
+    private String outParkTime;
 
     private BigDecimal totalAmount;
+
+    private String parkDur;
 
 }

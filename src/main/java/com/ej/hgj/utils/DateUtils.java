@@ -17,39 +17,71 @@ public class DateUtils {
     /**
      * 默认日期格式
      */
-    private static final String DEFAULT_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    public static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     // 获取系统时间 年月日时分秒
-    public static String strYmdHms(){
+    public static String strYmdHms() {
         Date date = new Date();
         String ymdHms = DateUtils.sdfYmdHms.format(date);
         return ymdHms;
     }
 
-    public static String strYmd(){
+    public static String strYmd() {
         Date date = new Date();
         String ymd = DateUtils.sdfYmd.format(date);
         return ymd;
     }
 
-    public static String strYmd(Date date){
+    public static String strYmd(Date date) {
         String ymd = DateUtils.sdf_Ymd.format(date);
         return ymd;
     }
 
-    public static String strYm(Date date){
+    public static String strYm(Date date) {
         String ym = DateUtils.sdf_Ym.format(date);
         return ym;
     }
 
-    public static String strY(Date date){
+    public static String strY(Date date) {
         String y = DateUtils.sdf_Y.format(date);
         return y;
     }
 
-    public static String strYmdHms(Date date){
+    public static String strYmdHms(Date date) {
         String ymd = DateUtils.sdfYmdHms.format(date);
         return ymd;
+    }
+
+    public static Date strDate(String strDate) {
+        try {
+            Date date = formatter.parse(strDate);
+            return date;
+        } catch(
+                ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * 获取停车时长
+     * @param inTime
+     * @param outTime
+     * @return
+     */
+    public static long[] getDistanceTimes(Date inTime, Date outTime) {
+        long day = 0;
+        long hour = 0;
+        long min = 0;
+        long sec = 0;
+        long diff;
+        diff = outTime.getTime() - inTime.getTime();
+        day = diff / (24 * 60 * 60 * 1000);
+        hour = (diff / (60 * 60 * 1000) - day * 24);
+        min = ((diff / (60 * 1000)) - day * 24 * 60 - hour * 60);
+        sec = (diff/1000-day*24*60*60-hour*60*60-min*60);
+        long[] times = {day, hour, min, sec};
+        return times;
     }
 
     /**判断是否超过多少小时 如：2

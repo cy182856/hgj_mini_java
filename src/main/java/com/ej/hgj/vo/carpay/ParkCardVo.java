@@ -13,6 +13,4 @@ public class ParkCardVo {
 
     private Integer expNum;
 
-   private BigDecimal cardAmount;
-
 }

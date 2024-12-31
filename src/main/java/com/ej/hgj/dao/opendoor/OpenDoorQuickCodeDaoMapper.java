@@ -12,4 +12,6 @@ public interface OpenDoorQuickCodeDaoMapper {
 
     void save(OpenDoorQuickCode openDoorQuickCode);
 
+    List<OpenDoorQuickCode> getListByDay(String wxOpenId);
+
 }

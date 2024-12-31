@@ -50,6 +50,7 @@
         inner join t_open_door_code c on c.card_no = l.card_no
         where l.delete_flag = 0
         and c.wx_open_id = #{wxOpenId,jdbcType=VARCHAR}
+        and date(c.create_time) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
         group by l.card_no,l.event_time, l.is_unlock
         order by l.event_time desc
     </select>

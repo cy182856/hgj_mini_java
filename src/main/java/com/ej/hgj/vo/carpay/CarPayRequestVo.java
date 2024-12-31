@@ -21,13 +21,7 @@ public class CarPayRequestVo extends BaseReqVo implements Serializable {
 
 	private String cardCstBatchId;
 
-	private BigDecimal priRev;
-
-	private BigDecimal cardAmount;
-
 	private Boolean radioChecked;
-
-	private String orderId;
 
 	private Integer orderStatus;
 

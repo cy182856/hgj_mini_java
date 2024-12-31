@@ -69,6 +69,8 @@ public class Constant<https> {
     //public static String CALLBACK_URL =  "https://hgj.shofw.com/jiasv/callBack";
     // 服务商回调地址
     public static String CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/callBack";
+    // 服务商回调地址-停车缴费
+    public static String CARPAY_CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/carPay/callBack";
     // 直连商户回调地址
     public static String CALLBACK_URL_BUS =  "https://zhgj.shofw.com/wx/callBackBus";
 
@@ -216,4 +218,26 @@ public class Constant<https> {
 
     // 门禁通行码创建快速码的间隔时间
     public static String OPEN_DOOR_QUICK_CODE_INTER_TIME = "open_door_quick_code_inter_time";
+
+    // 智慧停车接口地址
+    public static String ZHTC_API_URL = "zhtc_api_url";
+
+    // 智慧停车AppID
+    public static String ZHTC_API_APP_ID = "zhtc_api_app_id";
+
+    // 智慧停车AppSecret
+    public static String ZHTC_API_APP_SECRET = "zhtc_api_app_secret";
+
+    // 智慧停车授权码
+    public static String ZHTC_API_AUTH_CODE = "zhtc_api_auth_code";
+
+    // 支付状态 0-预下单成功
+    public static final int ORDER_STATUS_PRE = 0;
+    // 支付状态 1-支付中
+    public static final int ORDER_STATUS_PRO = 1;
+    // 支付状态 2-支付成功
+    public static final int ORDER_STATUS_SUCCESS = 2;
+    // 支付状态 3-支付失败
+    public static final int ORDER_STATUS_FAIL = 3;
+
 }

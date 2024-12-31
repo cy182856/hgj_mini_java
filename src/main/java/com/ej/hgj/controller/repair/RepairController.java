@@ -261,6 +261,7 @@ public class RepairController extends BaseController {
 		// 发送请求
 		//String p7 = initTicket2(orgId, orgName, cstCode, cstName, woNoBasicId, houseId, workPos, desc, phone, wxOpenId, budId, fileList);
 		String p7 = initTicket(orgId, orgName, no, cstId, cstName, woNoBasicId, woNoBasicName, quesTypeId, quesTypeName, houseId, workPos, desc, desc, phone, fileList);
+		logger.info("报修信息|项目号：" + orgId + "|报修单号：" + no + "|客户名称:" + cstName);
 		// 获取请求结果-54号接口
 		JSONObject jsonObject = SyPostClient.callSy1("User_Service_SaveWorkOrdInfoAndroid", p7, token, constantConfig.getConfigValue());
 		// 4、报事上传接口

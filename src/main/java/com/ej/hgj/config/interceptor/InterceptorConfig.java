@@ -21,6 +21,7 @@ public class InterceptorConfig extends WebMvcConfigurerAdapter {
                         "/**/queryImgUrl/**",
                         "/**/wechatPub/**",
                         "/**/callBack/**",
+                        "/**/carPay/callBack/**",
                         "/**/hu/**",
                         "/**/pass/code/**"
                 ); //放行接口

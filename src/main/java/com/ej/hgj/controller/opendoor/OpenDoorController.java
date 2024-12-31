@@ -161,7 +161,7 @@ public class OpenDoorController extends BaseController {
 		ConstantConfig constantConfigUrl = constantConfDaoMapper.getByKey(Constant.OPEN_DOOR_QR_CODE_URL);
 //		String jsonData = "{  \"neighNo\": \"" + neighNo + "\",  \"addressNumber\": " + addressNumber + ",  \"startTime\": " +
 //				startTime + ",  \"endTime\": " + endTime + ",  \"unitNumber\": " + unitNo + ",  \"floors\": " + floor + "}";
-		String unitInfos = "[{\"unitNumber\":" + unitNo + ",\"floorType\":" + "2" + ",\"floors\":null}]";
+		String unitInfos = "[{\"unitNumber\":" + unitNo + ",\"floorType\":" + "1" + ",\"floors\":[" + floor + "]}]";
 		String jsonData = "{  \"neighNo\": \"" + neighNo + "\",  \"addressNumber\": " + unitNo + ",  \"startTime\": " +
 				startTime + ",  \"endTime\": " + endTime + ",  \"unitInfos\": " + unitInfos + "}";
 		JSONObject resultJson = HttpClientUtil.sendPost(constantConfigUrl.getConfigValue(), jsonData);
@@ -345,6 +345,24 @@ public class OpenDoorController extends BaseController {
 		openDoorLogVo.setTotalNum((int) pageInfo.getTotal());
 		openDoorLogVo.setPageSize(openDoorLogVo.getPageSize());
 		openDoorLogVo.setList(list);
+		openDoorLogVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
+		return openDoorLogVo;
+	}
+
+	@RequestMapping("/opendoor/queryOpenDoorQuickCodeLog.do")
+	@ResponseBody
+	public OpenDoorCodeVo queryOpenDoorQuickCodeLog(@RequestBody OpenDoorCodeVo openDoorLogVo) {
+		PageHelper.offsetPage((openDoorLogVo.getPageNum()-1) * openDoorLogVo.getPageSize(),openDoorLogVo.getPageSize());
+		List<OpenDoorQuickCode> list = openDoorQuickCodeDaoMapper.getListByDay(openDoorLogVo.getWxOpenId());
+		PageInfo<OpenDoorQuickCode> pageInfo = new PageInfo<>(list);
+		int pageNumTotal = (int) Math.ceil((double)pageInfo.getTotal()/(double)openDoorLogVo.getPageSize());
+		list = pageInfo.getList();
+		logger.info("list返回记录数");
+		logger.info(list != null ? list.size() + "":0 + "");
+		openDoorLogVo.setPages(pageNumTotal);
+		openDoorLogVo.setTotalNum((int) pageInfo.getTotal());
+		openDoorLogVo.setPageSize(openDoorLogVo.getPageSize());
+		openDoorLogVo.setQuickCodeList(list);
 		openDoorLogVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
 		return openDoorLogVo;
 	}

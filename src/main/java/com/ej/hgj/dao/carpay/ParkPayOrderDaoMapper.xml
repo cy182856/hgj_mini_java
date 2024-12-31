@@ -5,14 +5,24 @@
     <resultMap id="BaseMap" type="com.ej.hgj.entity.carpay.ParkPayOrder">
         <result column="id" jdbcType="VARCHAR" property="id"/>
         <result column="pro_num" jdbcType="VARCHAR" property="proNum"/>
+        <result column="park_order_no" jdbcType="VARCHAR" property="parkOrderNo"/>
         <result column="card_cst_batch_id" jdbcType="VARCHAR" property="cardCstBatchId"/>
         <result column="car_code" jdbcType="VARCHAR" property="carCode"/>
         <result column="wx_open_id" jdbcType="VARCHAR" property="wxOpenId"/>
         <result column="cst_code" jdbcType="VARCHAR" property="cstCode"/>
-        <result column="pri_rev" jdbcType="DECIMAL" property="priRev"/>
-        <result column="pri_paid" jdbcType="DECIMAL" property="priPaid"/>
+        <result column="cst_name" jdbcType="VARCHAR" property="cstName"/>
+        <result column="pay_amount" jdbcType="DECIMAL" property="payAmount"/>
         <result column="amount_total" jdbcType="INTEGER" property="amountTotal"/>
         <result column="ip_item_name" jdbcType="VARCHAR" property="ipItemName"/>
+        <result column="transaction_id" jdbcType="VARCHAR" property="transactionId"/>
+        <result column="trade_type" jdbcType="VARCHAR" property="tradeType"/>
+        <result column="trade_state" jdbcType="VARCHAR" property="tradeState"/>
+        <result column="trade_state_desc" jdbcType="VARCHAR" property="tradeStateDesc"/>
+        <result column="bank_type" jdbcType="VARCHAR" property="bankType"/>
+        <result column="success_time" jdbcType="VARCHAR" property="successTime"/>
+        <result column="is_deduction" jdbcType="INTEGER" property="isDeduction"/>
+        <result column="in_time" jdbcType="VARCHAR" property="inTime"/>
+        <result column="out_time" jdbcType="VARCHAR" property="outTime"/>
         <result column="order_status" jdbcType="INTEGER" property="orderStatus"/>
         <result column="create_by" jdbcType="VARCHAR" property="createBy"/>
         <result column="update_by" jdbcType="VARCHAR" property="updateBy"/>
@@ -21,8 +31,8 @@
         <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
     </resultMap>
     <sql id="Base_Column_List" >
-        id, pro_num, card_cst_batch_id, car_code, wx_open_id, cst_code, pri_rev, pri_paid, amount_total, ip_item_name,
-        order_status, create_time, update_time, create_by, update_by, delete_flag
+        id, pro_num, park_order_no, card_cst_batch_id, car_code, wx_open_id, cst_code, cst_name, pay_amount, amount_total, ip_item_name,transaction_id,trade_type,
+        trade_state, trade_state_desc, bank_type, success_time, is_deduction, in_time, out_time, order_status, create_time, update_time, create_by, update_by, delete_flag
     </sql>
 
     <!-- 根据key查询-->
@@ -33,6 +43,19 @@
         where delete_flag = 0 and id = #{id,jdbcType=VARCHAR}
     </select>
 
+    <!-- 根据订单号与付款状态查询订单-->
+    <select id="getParkPayOrder" resultMap="BaseMap" parameterType="com.ej.hgj.vo.carpay.RequestOrderStatusVo" >
+        select
+        <include refid="Base_Column_List" />
+        from t_park_pay_order
+        where delete_flag = 0
+        and id = #{id,jdbcType=VARCHAR}
+        and order_status in
+        <foreach collection="orderStatusList" item="orderStatus" index="index" open="(" close=")" separator=",">
+            #{orderStatus,jdbcType=INTEGER}
+        </foreach>
+    </select>
+
     <!-- 保存-->
     <insert id="save" parameterType="com.ej.hgj.entity.carpay.ParkPayOrder" >
         insert into  t_park_pay_order(
@@ -41,6 +64,9 @@
         </if>
         <if test="proNum != null">
             pro_num,
+        </if>
+        <if test="parkOrderNo != null">
+            park_order_no,
         </if>
         <if test="cardCstBatchId != null" >
             card_cst_batch_id,
@@ -54,17 +80,44 @@
         <if test="cstCode != null">
             cst_code,
         </if>
-        <if test="priRev != null">
-            pri_rev,
+        <if test="cstName != null">
+            cst_name,
         </if>
-        <if test="priPaid != null">
-            pri_paid,
+        <if test="payAmount != null">
+            pay_amount,
         </if>
         <if test="amountTotal != null">
             amount_total,
         </if>
         <if test="ipItemName != null">
             ip_item_name,
+        </if>
+        <if test="transactionId != null">
+            transaction_id,
+        </if>
+        <if test="tradeType != null">
+            trade_type,
+        </if>
+        <if test="tradeState != null">
+            trade_state,
+        </if>
+        <if test="tradeStateDesc != null">
+            trade_state_desc,
+        </if>
+        <if test="bankType != null">
+            bank_type,
+        </if>
+        <if test="successTime != null">
+            success_time,
+        </if>
+        <if test="isDeduction != null">
+            is_deduction,
+        </if>
+        <if test="inTime != null">
+            in_time,
+        </if>
+        <if test="outTime != null">
+            out_time,
         </if>
         <if test="orderStatus != null">
             order_status,
@@ -92,6 +145,9 @@
             <if test="proNum != null" >
                 #{proNum,jdbcType=VARCHAR},
             </if>
+            <if test="parkOrderNo != null" >
+                #{parkOrderNo,jdbcType=VARCHAR},
+            </if>
             <if test="cardCstBatchId != null" >
                 #{cardCstBatchId,jdbcType=VARCHAR},
             </if>
@@ -104,17 +160,44 @@
             <if test="cstCode != null" >
                 #{cstCode,jdbcType=VARCHAR},
             </if>
-            <if test="priRev != null" >
-                #{priRev,jdbcType=DECIMAL},
+            <if test="cstName != null" >
+                #{cstName,jdbcType=VARCHAR},
             </if>
-            <if test="priPaid != null" >
-                #{priPaid,jdbcType=DECIMAL},
+            <if test="payAmount != null" >
+                #{payAmount,jdbcType=DECIMAL},
             </if>
             <if test="amountTotal != null" >
                 #{amountTotal,jdbcType=INTEGER},
             </if>
             <if test="ipItemName != null" >
                 #{ipItemName,jdbcType=VARCHAR},
+            </if>
+            <if test="transactionId != null" >
+                #{transactionId,jdbcType=VARCHAR},
+            </if>
+            <if test="tradeType != null" >
+                #{tradeType,jdbcType=VARCHAR},
+            </if>
+            <if test="tradeState != null" >
+                #{tradeState,jdbcType=VARCHAR},
+            </if>
+            <if test="tradeStateDesc != null" >
+                #{tradeStateDesc,jdbcType=VARCHAR},
+            </if>
+            <if test="bankType != null" >
+                #{bankType,jdbcType=VARCHAR},
+            </if>
+            <if test="successTime != null" >
+                #{successTime,jdbcType=VARCHAR},
+            </if>
+            <if test="isDeduction != null" >
+                #{isDeduction,jdbcType=INTEGER},
+            </if>
+            <if test="inTime != null" >
+                #{inTime,jdbcType=VARCHAR},
+            </if>
+            <if test="outTime != null" >
+                #{outTime,jdbcType=VARCHAR},
             </if>
             <if test="orderStatus != null" >
                 #{orderStatus,jdbcType=INTEGER},
@@ -136,5 +219,38 @@
             </if>
         </trim>
     </insert>
+
+    <!-- 更新-->
+    <update id="update" parameterType="com.ej.hgj.entity.carpay.ParkPayOrder" >
+        update
+        t_park_pay_order
+        <set>
+            <if test="transactionId != null">
+                transaction_id = #{transactionId,jdbcType=VARCHAR},
+            </if>
+            <if test="tradeType != null">
+                trade_type = #{tradeType,jdbcType=VARCHAR},
+            </if>
+            <if test="tradeState != null">
+                trade_state = #{tradeState,jdbcType=VARCHAR},
+            </if>
+            <if test="tradeStateDesc != null">
+                trade_state_desc = #{tradeStateDesc,jdbcType=VARCHAR},
+            </if>
+            <if test="bankType != null">
+                bank_type = #{bankType,jdbcType=VARCHAR},
+            </if>
+            <if test="successTime != null">
+                success_time = #{successTime,jdbcType=VARCHAR},
+            </if>
+            <if test="orderStatus != null">
+                order_status = #{orderStatus,jdbcType=INTEGER},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where id = #{id,jdbcType=VARCHAR}
+    </update>
 
 </mapper>

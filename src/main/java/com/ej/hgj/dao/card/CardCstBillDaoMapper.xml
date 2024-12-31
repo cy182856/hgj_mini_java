@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ej.hgj.dao.card.CardCstBillDaoMapper">
+
+    <resultMap id="BaseMap" type="com.ej.hgj.entity.card.CardCstBill">
+        <result column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="pro_num" jdbcType="VARCHAR" property="proNum"/>
+        <result column="card_cst_batch_id" jdbcType="VARCHAR" property="cardCstBatchId"/>
+        <result column="card_type" jdbcType="INTEGER" property="cardType"/>
+        <result column="card_id" jdbcType="INTEGER" property="cardId"/>
+        <result column="card_code" jdbcType="VARCHAR" property="cardCode"/>
+        <result column="cst_code" jdbcType="VARCHAR" property="cstCode"/>
+        <result column="bill_num" jdbcType="INTEGER" property="billNum"/>
+        <result column="bill_type" jdbcType="INTEGER" property="billType"/>
+        <result column="wx_open_id" jdbcType="VARCHAR" property="wxOpenId"/>
+        <result column="create_by" jdbcType="VARCHAR" property="createBy"/>
+        <result column="update_by" jdbcType="VARCHAR" property="updateBy"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
+
+        <result column="pro_name" jdbcType="VARCHAR" property="proName"/>
+        <result column="cst_name" jdbcType="VARCHAR" property="cstName"/>
+        <result column="card_type_name" jdbcType="VARCHAR" property="cardTypeName"/>
+        <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+        <result column="into_name" jdbcType="VARCHAR" property="intoName"/>
+        <result column="exp_date" jdbcType="VARCHAR" property="expDate"/>
+
+    </resultMap>
+    <sql id="Base_Column_List" >
+        id, card_cst_batch_id, pro_num, card_type, card_id, card_code, cst_code, bill_num, bill_type, wx_open_id, create_time, update_time, create_by, update_by, delete_flag
+    </sql>
+
+    <!-- 保存-->
+    <insert id="save" parameterType="com.ej.hgj.entity.card.CardCstBill" >
+        insert into  t_card_cst_bill(
+        <if test="id != null">
+            id,
+        </if>
+        <if test="cardCstBatchId != null">
+            card_cst_batch_Id,
+        </if>
+        <if test="proNum != null">
+            pro_num,
+        </if>
+        <if test="cardType != null">
+            card_type,
+        </if>
+        <if test="cardId != null">
+            card_id,
+        </if>
+        <if test="cardCode != null">
+            card_code,
+        </if>
+        <if test="cstCode != null">
+            cst_code,
+        </if>
+        <if test="billNum != null">
+            bill_num,
+        </if>
+        <if test="billType != null">
+            bill_type,
+        </if>
+        <if test="wxOpenId != null">
+            wx_open_id,
+        </if>
+        <if test="createTime != null">
+            create_time,
+        </if>
+        <if test="createBy != null">
+            create_by,
+        </if>
+        <if test="updateTime != null">
+            update_time,
+        </if>
+        <if test="updateBy != null">
+            update_by,
+        </if>
+        <if test="deleteFlag != null">
+            delete_flag
+        </if>
+        )
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=VARCHAR},
+            </if>
+            <if test="cardCstBatchId != null" >
+                #{cardCstBatchId,jdbcType=VARCHAR},
+            </if>
+            <if test="proNum != null" >
+                #{proNum,jdbcType=VARCHAR},
+            </if>
+            <if test="cardType != null" >
+                #{cardType,jdbcType=INTEGER},
+            </if>
+            <if test="cardId != null" >
+                #{cardId,jdbcType=INTEGER},
+            </if>
+            <if test="cardCode != null" >
+                #{cardCode,jdbcType=VARCHAR},
+            </if>
+            <if test="cstCode != null" >
+                #{cstCode,jdbcType=VARCHAR},
+            </if>
+            <if test="billNum != null" >
+                #{billNum,jdbcType=INTEGER},
+            </if>
+            <if test="billType != null" >
+                #{billType,jdbcType=INTEGER},
+            </if>
+            <if test="wxOpenId != null">
+                #{wxOpenId,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createBy != null">
+                #{createBy,jdbcType=VARCHAR},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateBy != null">
+                #{updateBy,jdbcType=VARCHAR},
+            </if>
+            <if test="deleteFlag != null">
+                #{deleteFlag,jdbcType=INTEGER}
+            </if>
+        </trim>
+    </insert>
+
+</mapper>
