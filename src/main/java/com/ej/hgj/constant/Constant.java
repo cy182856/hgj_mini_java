@@ -71,6 +71,8 @@ public class Constant<https> {
     public static String CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/callBack";
     // 服务商回调地址-停车缴费
     public static String CARPAY_CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/carPay/callBack";
+    // 服务商回调地址-车辆续费
+    public static String CARRENEW_CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/carRenew/callBack";
     // 直连商户回调地址
     public static String CALLBACK_URL_BUS =  "https://zhgj.shofw.com/wx/callBackBus";
 
@@ -230,6 +232,9 @@ public class Constant<https> {
 
     // 智慧停车授权码
     public static String ZHTC_API_AUTH_CODE = "zhtc_api_auth_code";
+
+    // 智慧停车车辆续费月费用
+    public static String ZHTC_MONTH_COST = "zhtc_month_cost";
 
     // 支付状态 0-预下单成功
     public static final int ORDER_STATUS_PRE = 0;

@@ -1,11 +1,11 @@
-package com.ej.hgj.vo.carpay;
+package com.ej.hgj.vo.carrenew;
 
 import lombok.Data;
 
 import java.util.List;
 
 @Data
-public class RequestOrderStatusVo {
+public class CarRenewOrderStatusVo {
 
     private String id;
 
@@ -17,9 +17,6 @@ public class RequestOrderStatusVo {
 
 
     private String wxOpenId;
-
-
-    private List<Integer> syPayStatusList;
 
 
     private List<Integer> orderStatusList;

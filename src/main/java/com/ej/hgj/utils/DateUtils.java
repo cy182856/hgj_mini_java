@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 public class DateUtils {
@@ -13,6 +14,9 @@ public class DateUtils {
     public static SimpleDateFormat sdf_Ym = new SimpleDateFormat("yyyy-MM");
     public static SimpleDateFormat sdf_Y = new SimpleDateFormat("yyyy");
     public static SimpleDateFormat sdfYmdHms = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    public static DateTimeFormatter formatter_ymd_hms = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    public static DateTimeFormatter formatter_ymd = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     /**
      * 默认日期格式

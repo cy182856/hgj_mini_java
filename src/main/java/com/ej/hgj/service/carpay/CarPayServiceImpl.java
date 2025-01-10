@@ -204,10 +204,14 @@ public class CarPayServiceImpl implements CarPayService {
             }
             // 停车卡剩余时长扣除
             Integer subNum = expNum - hour.intValue();
+            // 本次扣减小时
+            Integer hourNum = 0;
             if(subNum > 0){
                 cardCstBatch.setApplyNum(cardCstBatch.getApplyNum() + hour.intValue());
+                hourNum = hour.intValue();
             }else {
                 cardCstBatch.setApplyNum(cardCstBatch.getApplyNum() + expNum);
+                hourNum = expNum;
             }
             if(cardCstBatch.getApplyNum() > 0) {
                 // 更新停车卡数量
@@ -226,7 +230,7 @@ public class CarPayServiceImpl implements CarPayService {
                 cardCstBillInsert.setCardId(cardCstBatch.getCardId());
                 cardCstBillInsert.setCardCode(cardCstBatch.getCardCode());
                 cardCstBillInsert.setCstCode(cardCstBatch.getCstCode());
-                cardCstBillInsert.setBillNum(-cardCstBatch.getApplyNum());
+                cardCstBillInsert.setBillNum(-hourNum);
                 cardCstBillInsert.setBillType(2);
                 cardCstBillInsert.setWxOpenId(parkPayOrder.getWxOpenId());
                 cardCstBillInsert.setCreateTime(new Date());

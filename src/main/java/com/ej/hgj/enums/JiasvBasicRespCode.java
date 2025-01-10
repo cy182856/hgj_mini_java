@@ -80,6 +80,10 @@ public enum JiasvBasicRespCode {
     PAYMENT_ORDER_REPEAT("5018", "请勿重复下单"),
     PAYMENT_ORDER_IN("5019", "有账单正在付款中,请稍后再试"),
 
+    CAR_PAY_CAR_CODE_NULL("5020", "车牌号为空"),
+
+    CAR_RENEW_MONTH_NUM_NULL("5021", "续费月数为空"),
+
     /** */
     HU_CHARGED("6001", "暂不支持同一用户多辆车同时充电")
     ;
