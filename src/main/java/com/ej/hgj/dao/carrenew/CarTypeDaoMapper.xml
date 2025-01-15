@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ej.hgj.dao.carrenew.CarTypeDaoMapper">
+
+    <resultMap id="BaseMap" type="com.ej.hgj.entity.carrenew.CarType">
+        <result column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="car_type_no" jdbcType="VARCHAR" property="carTypeNo"/>
+        <result column="car_type_name" jdbcType="VARCHAR" property="carTypeName"/>
+        <result column="create_by" jdbcType="VARCHAR" property="createBy"/>
+        <result column="update_by" jdbcType="VARCHAR" property="updateBy"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
+    </resultMap>
+    <sql id="Base_Column_List" >
+        id, car_type_no, car_type_name, create_time, update_time, create_by, update_by, delete_flag
+    </sql>
+
+    <select id="getListByCarType" resultMap="BaseMap"  parameterType="java.lang.String">
+        select
+        <include refid="Base_Column_List" />
+        from t_car_type
+        where delete_flag = 0
+        and car_type_no = #{carTypeNo,jdbcType=VARCHAR}
+    </select>
+
+</mapper>

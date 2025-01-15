@@ -10,11 +10,13 @@ import com.ej.hgj.dao.card.CardCstDaoMapper;
 import com.ej.hgj.dao.carpay.ParkPayOrderDaoMapper;
 import com.ej.hgj.dao.carpay.ParkPayOrderTempDaoMapper;
 import com.ej.hgj.dao.carrenew.CarRenewOrderDaoMapper;
+import com.ej.hgj.dao.carrenew.CarTypeDaoMapper;
 import com.ej.hgj.dao.config.ConstantConfDaoMapper;
 import com.ej.hgj.dao.cst.HgjCstDaoMapper;
 import com.ej.hgj.entity.carpay.ParkPayOrder;
 import com.ej.hgj.entity.carpay.ParkPayOrderTemp;
 import com.ej.hgj.entity.carrenew.CarRenewOrder;
+import com.ej.hgj.entity.carrenew.CarType;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.cst.HgjCst;
 import com.ej.hgj.enums.JiasvBasicRespCode;
@@ -92,6 +94,9 @@ public class CarRenewController extends BaseController {
 	@Autowired
 	private CarRenewService carRenewService;
 
+	@Autowired
+	private CarTypeDaoMapper carTypeDaoMapper;
+
 	/**
 	 * 车牌号获取月租车信息
 	 * @param carRenewRequestVo
@@ -142,10 +147,19 @@ public class CarRenewController extends BaseController {
 				String userName = jsonData.getString("userName");
 				String phone = jsonData.getString("phone");
 				String homeAddress = jsonData.getString("homeAddress");
-				// 查询月租车信息
+				// 月租车信息
 				CarRenewInfoVo carRenewInfoVo = new CarRenewInfoVo();
+				// 月租车类型校验
+				List<CarType> carTypeList = carTypeDaoMapper.getListByCarType(carTypeNo);
+				if(carTypeList.isEmpty()){
+					carRenewResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+					carRenewResponseVo.setErrCode(JiasvBasicRespCode.CAR_TYPE_NO_FAIL.getRespCode());
+					carRenewResponseVo.setErrDesc(JiasvBasicRespCode.CAR_TYPE_NO_FAIL.getRespDesc());
+					return carRenewResponseVo;
+				}else {
+					carRenewInfoVo.setCarTypeNo(carTypeList.get(0).getCarTypeName());
+				}
 				carRenewInfoVo.setCarCode(carCode);
-				carRenewInfoVo.setCarTypeNo(carTypeNo);
 				carRenewInfoVo.setBeginTime(beginTime);
 				carRenewInfoVo.setEndTime(endTime);
 				carRenewInfoVo.setUserName(userName);

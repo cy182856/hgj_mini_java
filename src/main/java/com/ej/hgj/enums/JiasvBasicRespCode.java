@@ -84,6 +84,8 @@ public enum JiasvBasicRespCode {
 
     CAR_RENEW_MONTH_NUM_NULL("5021", "续费月数为空"),
 
+    CAR_TYPE_NO_FAIL("5022", "车辆类型不符合"),
+
     /** */
     HU_CHARGED("6001", "暂不支持同一用户多辆车同时充电")
     ;
