@@ -178,16 +178,6 @@ public class CarPayController extends BaseController {
 					carInfoVo.setOutParkTime(outPartTime);
 					carInfoVo.setTotalAmount(payFee);
 					carInfoVo.setParkDur(parkDur);
-					// 停车卡信息
-					if(cardInfo != null) {
-						ParkCardVo parkCardVo = new ParkCardVo();
-						parkCardVo.setCardCstBatchId(cardInfo.getCardCstBatchId());
-						Integer expNum = cardInfo.getTotalNum() - cardInfo.getApplyNum();
-						if(expNum > 0){
-							parkCardVo.setExpNum(expNum);
-							carPayResponseVo.setParkCardVo(parkCardVo);
-						}
-					}
 					// 返回数据
 					carPayResponseVo.setCarInfoVo(carInfoVo);
 					carPayResponseVo.setPayFeeStatus(payFeeStatus);
@@ -209,6 +199,39 @@ public class CarPayController extends BaseController {
 			logger.info("------车牌号查询失败----------");
 		}
 		return carPayResponseVo;
+	}
+
+	/**
+	 * 查询停车卡时长
+	 * @param carPayRequestVo
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/carpay/queryCardExpNum")
+	public JSONObject queryCardExpNum(@RequestBody CarPayRequestVo carPayRequestVo) {
+		JSONObject jsonObject = new JSONObject();
+		String proNum = carPayRequestVo.getProNum();
+		String cstCode = carPayRequestVo.getCstCode();
+		String expDate = DateUtils.strYm(new Date());
+		try{
+			// 查询当月停车卡信息
+			CardCst cardInfo = cardCstDaoMapper.getCardInfo(proNum, cstCode, "2", expDate);
+			if(cardInfo != null){
+				Integer expNum = cardInfo.getTotalNum() - cardInfo.getApplyNum();
+				jsonObject.put("cardCstBatchId", cardInfo.getCardCstBatchId());
+				jsonObject.put("expNum", expNum);
+				jsonObject.put("isCard", true);
+			}else {
+				jsonObject.put("isCard", false);
+			}
+			jsonObject.put("respCode", Constant.SUCCESS);
+		}catch (Exception e){
+			e.printStackTrace();
+			jsonObject.put("respCode", Constant.FAIL_RESULT_CODE);
+			jsonObject.put("errDesc", e.toString());
+			logger.info("------停车卡查询失败----------");
+		}
+		return jsonObject;
 	}
 
 	/**
@@ -256,6 +279,21 @@ public class CarPayController extends BaseController {
 			// 根据车牌号查询缴费信息
 			String expDate = DateUtils.strYm(new Date());
 			CardCst cardInfo = cardCstDaoMapper.getCardInfo(proNum, cstCode, "2", expDate);
+			if(radioChecked == true && cardInfo == null){
+				carPayResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+				carPayResponseVo.setErrCode("6001");
+				carPayResponseVo.setErrDesc("停车卡查询失败");
+				return carPayResponseVo;
+			}
+			// 停车卡剩余时长
+			Integer expNum = cardInfo.getTotalNum() - cardInfo.getApplyNum();
+			// 停车卡时长校验
+			if(radioChecked == true && expNum <= 0){
+				carPayResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+				carPayResponseVo.setErrCode("6001");
+				carPayResponseVo.setErrDesc("抵扣失败，请返回重试");
+				return carPayResponseVo;
+			}
 			// 调用车牌号查询停车订单费用接口
 			ConstantConfig zhtc_api_url = constantConfDaoMapper.getByKey(Constant.ZHTC_API_URL);
 			String apiUrl = zhtc_api_url.getConfigValue();
@@ -280,8 +318,7 @@ public class CarPayController extends BaseController {
 			String signData = "";
 			String expMinus = "";
 			// 是否选择停车卡抵扣
-			if (radioChecked == true && cardInfo != null) {
-				Integer expNum = cardInfo.getTotalNum() - cardInfo.getApplyNum();
+			if (radioChecked == true) {
 				expMinus = (expNum * 60) + "";
 				signData = "appid=" + appId + "&carNo=" + carCode + "&freeMinutes=" + expMinus + "&parkKey=" + authCode + "&rand=" + randomNumber + "&version=v1.0&";
 			} else {
@@ -291,7 +328,7 @@ public class CarPayController extends BaseController {
 			String sign = DigestUtils.md5Hex(stringSignTemp).toUpperCase();
 			String signJson = ",\"sign\":\"" + sign + "\"";
 			String pramJson = "";
-			if (radioChecked == true && cardInfo != null) {
+			if (radioChecked == true) {
 				String freeMinutes = "\"freeMinutes\":\"" + expMinus + "\",";
 				pramJson = start + appid + carNo + freeMinutes + parkKey + rand + version + signJson + end;
 			} else {
@@ -316,6 +353,12 @@ public class CarPayController extends BaseController {
 					totalAmount = "0.0";
 				}
 				payAmount = new BigDecimal(totalAmount);
+				// 校验提交订单时无费用发生，提示离场
+				if(radioChecked == false && payAmount.compareTo(BigDecimal.ZERO) <= 0){
+					carPayResponseVo.setRespCode("999");
+					carPayResponseVo.setErrDesc("该车牌目前无需付费，可直接出场");
+					return carPayResponseVo;
+				}
 				// 入场时间
 				String enterTime = jsonData.getString("enterTime");
 				// 停车场订单号
