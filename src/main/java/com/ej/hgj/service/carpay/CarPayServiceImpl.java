@@ -189,59 +189,64 @@ public class CarPayServiceImpl implements CarPayService {
         if(parkPayOrder.getIsDeduction() == 1 && "1".equals(code)){
            // 查询客户停车卡信息
             CardCstBatch cardCstBatch = cardCstBatchDaoMapper.getById(parkPayOrder.getCardCstBatchId());
-            // 计算停车卡剩余小时
-            Integer expNum = cardCstBatch.getTotalNum() - cardCstBatch.getApplyNum();
-            // 计算客户停车分钟
-            String inTime = parkPayOrder.getInTime();
-            String outTime = parkPayOrder.getOutTime();
-            Date inDate = DateUtils.strDate(inTime);
-            Date outDate = DateUtils.strDate(outTime);
-            long[] distanceTimes = DateUtils.getDistanceTimes(inDate, outDate);
-            Long hour = distanceTimes[0] * 24  + distanceTimes[1];
-            Long minute = distanceTimes[2];
-            if(minute > 0){
-                hour = hour + 1;
+            if(cardCstBatch != null) {
+                // 抵扣时长
+                Integer deductionNum = parkPayOrder.getDeductionNum();
+                // 计算停车卡剩余小时
+//            Integer expNum = cardCstBatch.getTotalNum() - cardCstBatch.getApplyNum();
+                // 计算客户停车分钟
+//            String inTime = parkPayOrder.getInTime();
+//            String outTime = parkPayOrder.getOutTime();
+//            Date inDate = DateUtils.strDate(inTime);
+//            Date outDate = DateUtils.strDate(outTime);
+//            long[] distanceTimes = DateUtils.getDistanceTimes(inDate, outDate);
+//            Long hour = distanceTimes[0] * 24  + distanceTimes[1];
+//            Long minute = distanceTimes[2];
+//            if(minute > 0){
+//                hour = hour + 1;
+//            }
+                // 停车卡剩余时长扣除
+                //Integer subNum = expNum - hour.intValue();
+                // 本次扣减小时
+//            Integer hourNum = 0;
+//            if(subNum > 0){
+//                cardCstBatch.setApplyNum(cardCstBatch.getApplyNum() + hour.intValue());
+//                hourNum = hour.intValue();
+//            }else {
+//                cardCstBatch.setApplyNum(cardCstBatch.getApplyNum() + expNum);
+//                hourNum = expNum;
+//            }
+                cardCstBatch.setApplyNum(cardCstBatch.getApplyNum() + deductionNum);
+                if (cardCstBatch.getApplyNum() > 0) {
+                    // 更新停车卡数量
+                    CardCstBatch cstBatchPram = new CardCstBatch();
+                    cstBatchPram.setId(cardCstBatch.getId());
+                    cstBatchPram.setApplyNum(cardCstBatch.getApplyNum());
+                    cstBatchPram.setUpdateTime(new Date());
+                    cardCstBatchDaoMapper.update(cstBatchPram);
+                    logger.info("-------------更新停车卡数量成功----------");
+                    // 新增卡账单扣减记录
+                    CardCstBill cardCstBillInsert = new CardCstBill();
+                    cardCstBillInsert.setId(TimestampGenerator.generateSerialNumber());
+                    cardCstBillInsert.setCardCstBatchId(cardCstBatch.getId());
+                    cardCstBillInsert.setProNum(cardCstBatch.getProNum());
+                    cardCstBillInsert.setCardType(cardCstBatch.getCardType());
+                    cardCstBillInsert.setCardId(cardCstBatch.getCardId());
+                    cardCstBillInsert.setCardCode(cardCstBatch.getCardCode());
+                    cardCstBillInsert.setCstCode(cardCstBatch.getCstCode());
+                    //cardCstBillInsert.setBillNum(-hourNum);
+                    cardCstBillInsert.setBillNum(-deductionNum);
+                    cardCstBillInsert.setBillType(2);
+                    cardCstBillInsert.setWxOpenId(parkPayOrder.getWxOpenId());
+                    cardCstBillInsert.setCreateTime(new Date());
+                    cardCstBillInsert.setCreateBy("");
+                    cardCstBillInsert.setUpdateTime(new Date());
+                    cardCstBillInsert.setUpdateBy("");
+                    cardCstBillInsert.setDeleteFlag(Constant.DELETE_FLAG_NOT);
+                    cardCstBillDaoMapper.save(cardCstBillInsert);
+                    logger.info("支付成功回调，停车卡账单插入成功:" + JSONObject.toJSONString(cardCstBillInsert));
+                }
             }
-            // 停车卡剩余时长扣除
-            Integer subNum = expNum - hour.intValue();
-            // 本次扣减小时
-            Integer hourNum = 0;
-            if(subNum > 0){
-                cardCstBatch.setApplyNum(cardCstBatch.getApplyNum() + hour.intValue());
-                hourNum = hour.intValue();
-            }else {
-                cardCstBatch.setApplyNum(cardCstBatch.getApplyNum() + expNum);
-                hourNum = expNum;
-            }
-            if(cardCstBatch.getApplyNum() > 0) {
-                // 更新停车卡数量
-                CardCstBatch cstBatchPram = new CardCstBatch();
-                cstBatchPram.setId(cardCstBatch.getId());
-                cstBatchPram.setApplyNum(cardCstBatch.getApplyNum());
-                cstBatchPram.setUpdateTime(new Date());
-                cardCstBatchDaoMapper.update(cstBatchPram);
-                logger.info("-------------更新停车卡数量成功----------");
-                // 新增卡账单扣减记录
-                CardCstBill cardCstBillInsert = new CardCstBill();
-                cardCstBillInsert.setId(TimestampGenerator.generateSerialNumber());
-                cardCstBillInsert.setCardCstBatchId(cardCstBatch.getId());
-                cardCstBillInsert.setProNum(cardCstBatch.getProNum());
-                cardCstBillInsert.setCardType(cardCstBatch.getCardType());
-                cardCstBillInsert.setCardId(cardCstBatch.getCardId());
-                cardCstBillInsert.setCardCode(cardCstBatch.getCardCode());
-                cardCstBillInsert.setCstCode(cardCstBatch.getCstCode());
-                cardCstBillInsert.setBillNum(-hourNum);
-                cardCstBillInsert.setBillType(2);
-                cardCstBillInsert.setWxOpenId(parkPayOrder.getWxOpenId());
-                cardCstBillInsert.setCreateTime(new Date());
-                cardCstBillInsert.setCreateBy("");
-                cardCstBillInsert.setUpdateTime(new Date());
-                cardCstBillInsert.setUpdateBy("");
-                cardCstBillInsert.setDeleteFlag(Constant.DELETE_FLAG_NOT);
-                cardCstBillDaoMapper.save(cardCstBillInsert);
-                logger.info("支付成功回调，停车卡账单插入成功:" + JSONObject.toJSONString(cardCstBillInsert));
-            }
-
         }
 
     }

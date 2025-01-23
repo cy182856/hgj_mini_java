@@ -30,10 +30,10 @@ public class CarPayFinishTask implements SchedulingConfigurer {
      */
     @Override
     public void configureTasks(ScheduledTaskRegistrar scheduledTaskRegistrar) {
-//        scheduledTaskRegistrar.addTriggerTask(() -> carPayTaskService.updateOrderStatus_1(), triggerContext -> {
-//            Cron cronByType = cronDaoMapper.getByType("12");
-//            String cron = cronByType.getCron();
-//            return new CronTrigger(cron).nextExecutionTime(triggerContext);
-//        });
+        scheduledTaskRegistrar.addTriggerTask(() -> carPayTaskService.updateOrderStatus_1(), triggerContext -> {
+            Cron cronByType = cronDaoMapper.getByType("12");
+            String cron = cronByType.getCron();
+            return new CronTrigger(cron).nextExecutionTime(triggerContext);
+        });
     }
 }

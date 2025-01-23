@@ -11,11 +11,17 @@ import com.ej.hgj.dao.carpay.ParkPayOrderDaoMapper;
 import com.ej.hgj.dao.carpay.ParkPayOrderTempDaoMapper;
 import com.ej.hgj.dao.config.ConstantConfDaoMapper;
 import com.ej.hgj.dao.cst.HgjCstDaoMapper;
+import com.ej.hgj.dao.hu.CstIntoCardMapper;
+import com.ej.hgj.dao.hu.CstIntoMapper;
+import java.math.RoundingMode;
 import com.ej.hgj.entity.card.CardCst;
 import com.ej.hgj.entity.carpay.ParkPayOrder;
 import com.ej.hgj.entity.carpay.ParkPayOrderTemp;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.cst.HgjCst;
+import com.ej.hgj.entity.hu.CstInto;
+import com.ej.hgj.entity.hu.CstIntoCard;
+import com.ej.hgj.entity.opendoor.OpenDoorLog;
 import com.ej.hgj.enums.JiasvBasicRespCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
 import com.ej.hgj.service.carpay.CarPayService;
@@ -24,9 +30,13 @@ import com.ej.hgj.utils.HttpClientUtil;
 import com.ej.hgj.utils.bill.*;
 import com.ej.hgj.vo.bill.SignInfoVo;
 import com.ej.hgj.vo.carpay.*;
+import com.ej.hgj.vo.opendoor.OpenDoorCodeVo;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import okhttp3.HttpUrl;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.math3.dfp.DfpField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +54,9 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Controller
@@ -78,6 +91,12 @@ public class CarPayController extends BaseController {
 	@Autowired
 	private ParkPayOrderTempDaoMapper parkPayOrderTempDaoMapper;
 
+	@Autowired
+	private CstIntoCardMapper cstIntoCardMapper;
+
+	@Autowired
+	private CstIntoMapper cstIntoMapper;
+
 	/**
 	 * 车牌号查询停车订单费用接口
 	 * @param carPayRequestVo
@@ -92,6 +111,7 @@ public class CarPayController extends BaseController {
 		String cstCode = carPayRequestVo.getCstCode();
 		String expDate = DateUtils.strYm(new Date());
 		Boolean radioChecked = carPayRequestVo.getRadioChecked();
+		Integer hourNumValue = carPayRequestVo.getHourNumValue();
 		// 查询当月停车卡信息
 		CardCst cardInfo = cardCstDaoMapper.getCardInfo(proNum, cstCode, "2", expDate);
 		// 调用车牌号查询停车订单费用接口
@@ -119,8 +139,9 @@ public class CarPayController extends BaseController {
 		String expMinus = "";
 		// 是否选择停车卡抵扣
 		if(radioChecked == true && cardInfo != null){
-			Integer expNum = cardInfo.getTotalNum() - cardInfo.getApplyNum();
-			expMinus = (expNum * 60)+"";
+//			Integer expNum = cardInfo.getTotalNum() - cardInfo.getApplyNum();
+//			expMinus = (expNum * 60)+"";
+			expMinus = (hourNumValue * 60) + "";
 			signData = "appid=" + appId + "&carNo=" + carCode + "&freeMinutes=" + expMinus + "&parkKey=" + authCode + "&rand=" + randomNumber + "&version=v1.0&";
 		}else {
 			signData = "appid=" + appId + "&carNo=" + carCode + "&parkKey=" + authCode + "&rand=" + randomNumber + "&version=v1.0&";
@@ -151,12 +172,12 @@ public class CarPayController extends BaseController {
 				JSONObject jsonData = resultJson.getJSONObject("data");
 				String totalAmount = jsonData.getString("totalAmount");
 				// 测试用
-				totalAmount = "0.01";
-				if(radioChecked == true){
-					totalAmount = "0.0";
-				}
+//				totalAmount = "0.01";
+//				if(radioChecked == true){
+//					totalAmount = "0.0";
+//				}
 				BigDecimal payFee = new BigDecimal(totalAmount);
-				if((payFee.compareTo(BigDecimal.ZERO) > 0 && radioChecked == false) || (payFee.compareTo(BigDecimal.ZERO) == 0 && radioChecked == true)){
+				if((payFee.compareTo(BigDecimal.ZERO) > 0) || (payFee.compareTo(BigDecimal.ZERO) == 0 && radioChecked == true)){
 					payFeeStatus = true;
 					String inParkTime = jsonData.getString("enterTime");
 					String outPartTime = DateUtils.strYmdHms();
@@ -178,6 +199,23 @@ public class CarPayController extends BaseController {
 					carInfoVo.setOutParkTime(outPartTime);
 					carInfoVo.setTotalAmount(payFee);
 					carInfoVo.setParkDur(parkDur);
+
+					// 计算客户选择抵扣小时数组 ，最小为1，最大为停车小时数，如果有分钟，则小时加1 , 最大数如果超出客户停车卡剩余时长，则取剩余时长为最大数。
+//					Long maxHour = distanceTimes[0] * 60 + distanceTimes[1];
+//					if(distanceTimes[2] > 0){
+//						maxHour = maxHour + 1;
+//					}
+//					if(cardInfo != null){
+//						Integer expNum = cardInfo.getTotalNum() - cardInfo.getApplyNum();
+//						if(expNum < maxHour){
+//							maxHour = expNum.longValue();
+//						}
+//					}
+//					List<Integer> hourNumArray = new ArrayList<>();
+//					for(int i = 1; i <= maxHour; i++){
+//						hourNumArray.add(i);
+//					}
+
 					// 返回数据
 					carPayResponseVo.setCarInfoVo(carInfoVo);
 					carPayResponseVo.setPayFeeStatus(payFeeStatus);
@@ -213,14 +251,24 @@ public class CarPayController extends BaseController {
 		String proNum = carPayRequestVo.getProNum();
 		String cstCode = carPayRequestVo.getCstCode();
 		String expDate = DateUtils.strYm(new Date());
+		String wxOpenId = carPayRequestVo.getWxOpenId();
+		// 查询登录人身份
+		CstInto byWxOpenIdAndStatus_1 = cstIntoMapper.getByWxOpenIdAndStatus_1(wxOpenId);
+		// 查询登录人停车卡权限
+		CstIntoCard cstIntoCard = new CstIntoCard();
+		cstIntoCard.setWxOpenId(wxOpenId);
+		cstIntoCard.setCardId(2);
+		List<CstIntoCard> cstIntoCardList = cstIntoCardMapper.getList(cstIntoCard);
 		try{
 			// 查询当月停车卡信息
 			CardCst cardInfo = cardCstDaoMapper.getCardInfo(proNum, cstCode, "2", expDate);
-			if(cardInfo != null){
+			if(cardInfo != null && byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 2 || !cstIntoCardList.isEmpty())){
 				Integer expNum = cardInfo.getTotalNum() - cardInfo.getApplyNum();
-				jsonObject.put("cardCstBatchId", cardInfo.getCardCstBatchId());
-				jsonObject.put("expNum", expNum);
-				jsonObject.put("isCard", true);
+				if(expNum > 0) {
+					jsonObject.put("cardCstBatchId", cardInfo.getCardCstBatchId());
+					jsonObject.put("expNum", expNum);
+					jsonObject.put("isCard", true);
+				}
 			}else {
 				jsonObject.put("isCard", false);
 			}
@@ -230,6 +278,94 @@ public class CarPayController extends BaseController {
 			jsonObject.put("respCode", Constant.FAIL_RESULT_CODE);
 			jsonObject.put("errDesc", e.toString());
 			logger.info("------停车卡查询失败----------");
+		}
+		return jsonObject;
+	}
+
+	/**
+	 * 查询选择停车卡时长数组
+	 * @param carPayRequestVo
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/carpay/queryHourNum")
+	public JSONObject queryHourNum(@RequestBody CarPayRequestVo carPayRequestVo) {
+		JSONObject jsonObject = new JSONObject();
+		String carCode = carPayRequestVo.getCarCode();
+		String proNum = carPayRequestVo.getProNum();
+		String cstCode = carPayRequestVo.getCstCode();
+		String expDate = DateUtils.strYm(new Date());
+		// 调用车牌号查询停车订单费用接口
+		ConstantConfig zhtc_api_url = constantConfDaoMapper.getByKey(Constant.ZHTC_API_URL);
+		String apiUrl = zhtc_api_url.getConfigValue();
+		ConstantConfig zhtc_api_app_id = constantConfDaoMapper.getByKey(Constant.ZHTC_API_APP_ID);
+		String appId = zhtc_api_app_id.getConfigValue();
+		ConstantConfig zhtc_api_app_secret = constantConfDaoMapper.getByKey(Constant.ZHTC_API_APP_SECRET);
+		String appSecret = zhtc_api_app_secret.getConfigValue();
+		ConstantConfig zhtc_api_auth_code = constantConfDaoMapper.getByKey(Constant.ZHTC_API_AUTH_CODE);
+		String authCode = zhtc_api_auth_code.getConfigValue();
+		Random random = new Random();
+		// 生成一个9位小数的随机数
+		double randomNumber = random.nextDouble();
+		// 保留9位小数
+		randomNumber = Math.round(randomNumber * 1e9) / 1e9;
+		String start = "{";
+		String appid = "\"appid\":\"" + appId + "\",";
+		String carNo = "\"carNo\":\"" + carCode + "\",";
+		String parkKey = "\"parkKey\":\"" + authCode + "\",";
+		String rand = "\"rand\":\"" + randomNumber + "\",";
+		String version = "\"version\":\"v1.0\"";
+		String end = "}";
+		// 是否选择停车卡抵扣
+		String signData = "appid=" + appId + "&carNo=" + carCode + "&parkKey=" + authCode + "&rand=" + randomNumber + "&version=v1.0&";
+		String stringSignTemp = signData + appSecret;
+		String sign = DigestUtils.md5Hex(stringSignTemp).toUpperCase();
+		String signJson = ",\"sign\":\"" + sign + "\"";
+		String pramJson =  start + appid + carNo + parkKey + rand + version + signJson + end;;
+		try{
+			JSONObject resultJson = HttpClientUtil.sendPost(apiUrl + "/Inquire/GetCarNoOrderFee", pramJson);
+			String code = resultJson.get("code").toString();
+			String msg = resultJson.getString("msg");
+			// 失败
+			if("0".equals(code)){
+				jsonObject.put("respCode", Constant.FAIL_RESULT_CODE);
+				jsonObject.put("errDesc", msg);
+				return jsonObject;
+			}
+			// 成功
+			if("1".equals(code)){
+				JSONObject jsonData = resultJson.getJSONObject("data");
+				String totalAmount = jsonData.getString("totalAmount");
+				BigDecimal payFee = new BigDecimal(totalAmount);
+				// 计算客户选择抵扣小时数组 ，最小为1，最大为停车小时数(停车应付金额/每小时停车费)，如果有余数，则小时加1 , 最大数如果超出客户停车卡剩余时长，则取剩余时长为最大数。
+				// 获取每小时停车费
+				ConstantConfig zhtc_hour_park_cost = constantConfDaoMapper.getByKey(Constant.ZHTC_HOUR_PARK_COST);
+				BigDecimal hourCost = new BigDecimal(zhtc_hour_park_cost.getConfigValue());
+				// 通过停车应付金额计算小时,应付金额除以每小时停车费，向上取整
+				BigDecimal divide = payFee.divide(hourCost, 10, RoundingMode.HALF_UP);
+				BigDecimal resultCeiling = divide.setScale(0, RoundingMode.CEILING);
+				Integer maxHour = resultCeiling.intValue();
+				// 查询当月停车卡信息
+				CardCst cardInfo = cardCstDaoMapper.getCardInfo(proNum, cstCode, "2", expDate);
+				if(cardInfo != null){
+					Integer expNum = cardInfo.getTotalNum() - cardInfo.getApplyNum();
+					if(expNum < maxHour){
+						maxHour = expNum;
+					}
+				}
+				List<Integer> hourNumArray = new ArrayList<>();
+				for(int i = 1; i <= maxHour; i++){
+					hourNumArray.add(i);
+				}
+				jsonObject.put("respCode", Constant.SUCCESS);
+				jsonObject.put("hourNumArray",hourNumArray);
+				return jsonObject;
+			}
+		}catch (Exception e){
+			e.printStackTrace();
+			jsonObject.put("respCode", Constant.FAIL_RESULT_CODE);
+			jsonObject.put("errDesc", (e.toString()));
+			logger.info("------车牌号查询失败----------");
 		}
 		return jsonObject;
 	}
@@ -250,6 +386,7 @@ public class CarPayController extends BaseController {
 		String cardCstBatchId = carPayRequestVo.getCardCstBatchId();
 		String carCode = carPayRequestVo.getCarCode();
 		Boolean radioChecked = carPayRequestVo.getRadioChecked();
+		Integer hourNumValue = carPayRequestVo.getHourNumValue();
 		// 参数校验
 		if(StringUtils.isBlank(cstCode)){
 			carPayResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
@@ -319,7 +456,8 @@ public class CarPayController extends BaseController {
 			String expMinus = "";
 			// 是否选择停车卡抵扣
 			if (radioChecked == true) {
-				expMinus = (expNum * 60) + "";
+				//expMinus = (expNum * 60) + "";
+				expMinus = (hourNumValue * 60) + "";
 				signData = "appid=" + appId + "&carNo=" + carCode + "&freeMinutes=" + expMinus + "&parkKey=" + authCode + "&rand=" + randomNumber + "&version=v1.0&";
 			} else {
 				signData = "appid=" + appId + "&carNo=" + carCode + "&parkKey=" + authCode + "&rand=" + randomNumber + "&version=v1.0&";
@@ -348,10 +486,10 @@ public class CarPayController extends BaseController {
 				JSONObject jsonData = resultJson.getJSONObject("data");
 				String totalAmount = jsonData.getString("totalAmount");
 				// 测试用
-				totalAmount = "0.01";
-				if(radioChecked == true){
-					totalAmount = "0.0";
-				}
+//				totalAmount = "0.01";
+//				if(radioChecked == true){
+//					totalAmount = "0.0";
+//				}
 				payAmount = new BigDecimal(totalAmount);
 				// 校验提交订单时无费用发生，提示离场
 				if(radioChecked == false && payAmount.compareTo(BigDecimal.ZERO) <= 0){
@@ -370,6 +508,7 @@ public class CarPayController extends BaseController {
 				parkPayOrder.setParkOrderNo(parkOrderNo);
 				if (radioChecked == true) {
 					parkPayOrder.setIsDeduction(1);
+					parkPayOrder.setDeductionNum(hourNumValue);
 					parkPayOrder.setCardCstBatchId(cardCstBatchId);
 				} else {
 					parkPayOrder.setIsDeduction(0);
@@ -755,12 +894,45 @@ public class CarPayController extends BaseController {
 		return res;
 	}
 
+	@RequestMapping("/carpay/queryCarPayLog.do")
+	@ResponseBody
+	public CarPayLogVo queryCarPayLog(@RequestBody CarPayLogVo carPayLogVo) {
+		PageHelper.offsetPage((carPayLogVo.getPageNum()-1) * carPayLogVo.getPageSize(),carPayLogVo.getPageSize());
+		ParkPayOrder parkPayOrder = new ParkPayOrder();
+		parkPayOrder.setWxOpenId(carPayLogVo.getWxOpenId());
+		List<ParkPayOrder> list = parkPayOrderDaoMapper.getList(parkPayOrder);
+		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+		for(ParkPayOrder p : list){
+			if(StringUtils.isNotBlank(p.getSuccessTime())) {
+				ZonedDateTime zonedDateTime = ZonedDateTime.parse(p.getSuccessTime(), formatter);
+				String formatted = zonedDateTime.format(DateUtils.formatter_ymd_hms);
+				p.setSuccessTime(formatted);
+			}
+		}
+		PageInfo<ParkPayOrder> pageInfo = new PageInfo<>(list);
+		int pageNumTotal = (int) Math.ceil((double)pageInfo.getTotal()/(double)carPayLogVo.getPageSize());
+		list = pageInfo.getList();
+		logger.info("list返回记录数");
+		logger.info(list != null ? list.size() + "":0 + "");
+		carPayLogVo.setPages(pageNumTotal);
+		carPayLogVo.setTotalNum((int) pageInfo.getTotal());
+		carPayLogVo.setPageSize(carPayLogVo.getPageSize());
+		carPayLogVo.setList(list);
+		carPayLogVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
+		return carPayLogVo;
+	}
 
 	public static void main(String[] args) {
-		String stringA="appid=ym5e3ad2743739c30a&carNo=川A55D67&parkKey=m3kgkktp&rand=5.394985805&version=v1.0&";
-		String stringSignTemp = stringA+"cb5ea7750f464bd1ac3976e80d9865e0";
-		String sign = DigestUtils.md5Hex(stringSignTemp).toUpperCase();
-		System.out.println(sign);
+//		String stringA="appid=ym5e3ad2743739c30a&carNo=川A55D67&parkKey=m3kgkktp&rand=5.394985805&version=v1.0&";
+//		String stringSignTemp = stringA+"cb5ea7750f464bd1ac3976e80d9865e0";
+//		String sign = DigestUtils.md5Hex(stringSignTemp).toUpperCase();
+//		System.out.println(sign);
+		BigDecimal a = new BigDecimal("10");
+		BigDecimal b = new BigDecimal("3");
+		BigDecimal divide = a.divide(b, 10, RoundingMode.HALF_UP);
+		BigDecimal resultCeiling = divide.setScale(0, RoundingMode.CEILING);
+
+		System.out.println(resultCeiling);
 	}
 
 }

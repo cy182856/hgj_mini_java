@@ -295,6 +295,7 @@ public class BillController extends BaseController {
 	public BillResponseVo queryBillMerge(@RequestBody BillRequestVo billRequestVo) {
 		BillResponseVo billResponseVo = new BillResponseVo();
 		String cstCode = billRequestVo.getCstCode();
+		String wxOpenId = billRequestVo.getWxOpenId();
 		// 查询客户是否有缴费开票权限
 		Integer isPayment = 0;
 		Integer isInvoice = 0;
@@ -310,15 +311,23 @@ public class BillController extends BaseController {
 //			}
 //		}
 		// 查询付款开票标签编号
-		ConstantConfig payByKey = constantConfDaoMapper.getByProNumAndKey(billRequestVo.getProNum(), Constant.PAY_TAG_ID);
-		TagCst tagCst = new TagCst();
-		tagCst.setTagId(payByKey.getConfigValue());
-		tagCst.setCstCode(cstCode);
-		// 通过缴费编号查询客户是否有缴费标签
-		List<TagCst> tagCstListPay = tagCstDaoMapper.getList(tagCst);
-		if(!tagCstListPay.isEmpty()){
+//		ConstantConfig payByKey = constantConfDaoMapper.getByProNumAndKey(billRequestVo.getProNum(), Constant.PAY_TAG_ID);
+//		TagCst tagCst = new TagCst();
+//		tagCst.setTagId(payByKey.getConfigValue());
+//		tagCst.setCstCode(cstCode);
+//		// 通过缴费编号查询客户是否有缴费标签
+//		List<TagCst> tagCstListPay = tagCstDaoMapper.getList(tagCst);
+//		if(!tagCstListPay.isEmpty()){
+//			isPayment = 1;
+//		}
+
+		// 根据身份查询客户是否有缴费权限
+		// 查询登录人身份
+		//CstInto byWxOpenIdAndStatus_1 = cstIntoMapper.getByWxOpenIdAndStatus_1(wxOpenId);
+		//if(byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 2 || byWxOpenIdAndStatus_1.getIntoRole() == 3 || byWxOpenIdAndStatus_1.getIntoRole() == 4)){
 			isPayment = 1;
-		}
+		//}
+
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
 		billRequestVo.setCstId(hgjCst.getId());
 		PageHelper.offsetPage((billRequestVo.getPageNum() - 1) * billRequestVo.getPageSize(), billRequestVo.getPageSize());
@@ -407,7 +416,7 @@ public class BillController extends BaseController {
 		HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
 		billRequestVo.setCstId(hgjCst.getId());
 		List<String> houseIdList = new ArrayList<>();
-		// 查询委托人、住户已入住房间
+		// 查询员工、租客、亲属已入住房间
 		List<CstIntoHouse> cstIntoHouseList = cstIntoHouseDaoMapper.getByCstCodeAndWxOpenId(billRequestVo.getCstCode(), billRequestVo.getWxOpenId());
 		for(CstIntoHouse cstIntoHouse : cstIntoHouseList){
 			houseIdList.add(cstIntoHouse.getHouseId());
@@ -504,19 +513,30 @@ public class BillController extends BaseController {
 //			return billResponseVo;
 //		}
 
-		// 查询付款开票标签编号
-		ConstantConfig payByKey = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.PAY_TAG_ID);
-		TagCst tagCst = new TagCst();
-		tagCst.setTagId(payByKey.getConfigValue());
-		tagCst.setCstCode(cstCode);
-		// 通过缴费编号查询客户是否有缴费标签
-		List<TagCst> tagCstListPay = tagCstDaoMapper.getList(tagCst);
-		if(tagCstListPay.isEmpty()){
-			billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
-			billResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_CST_NOT_PAYMENT.getRespCode());
-			billResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_CST_NOT_PAYMENT.getRespDesc());
-			return billResponseVo;
-		}
+//
+//		// 查询付款开票标签编号
+//		ConstantConfig payByKey = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.PAY_TAG_ID);
+//		TagCst tagCst = new TagCst();
+//		tagCst.setTagId(payByKey.getConfigValue());
+//		tagCst.setCstCode(cstCode);
+//		// 通过缴费编号查询客户是否有缴费标签
+//		List<TagCst> tagCstListPay = tagCstDaoMapper.getList(tagCst);
+//		if(tagCstListPay.isEmpty()){
+//			billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+//			billResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_CST_NOT_PAYMENT.getRespCode());
+//			billResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_CST_NOT_PAYMENT.getRespDesc());
+//			return billResponseVo;
+//		}
+
+		// 根据身份查询客户是否有缴费权限
+		// 查询登录人身份
+//		CstInto byWxOpenIdAndStatus_1 = cstIntoMapper.getByWxOpenIdAndStatus_1(wxOpenId);
+//		if(byWxOpenIdAndStatus_1 == null || (byWxOpenIdAndStatus_1.getIntoRole() != 2 && byWxOpenIdAndStatus_1.getIntoRole() != 3 && byWxOpenIdAndStatus_1.getIntoRole() != 4)){
+//			billResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+//			billResponseVo.setErrCode(JiasvBasicRespCode.PAYMENT_CST_NOT_PAYMENT.getRespCode());
+//			billResponseVo.setErrDesc(JiasvBasicRespCode.PAYMENT_CST_NOT_PAYMENT.getRespDesc());
+//			return billResponseVo;
+//		}
 
 		// 1-表示有缴费权限  2-表示开票权限
 //		List<CstPayPer> cstPayPerListPayFilter = cstPayPerList.stream().filter(cstPayPer -> 1 == cstPayPer.getFunctionId()).collect(Collectors.toList());

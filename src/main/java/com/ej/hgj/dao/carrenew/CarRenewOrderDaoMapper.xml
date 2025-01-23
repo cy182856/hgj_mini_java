@@ -73,6 +73,24 @@
         and DATE_FORMAT(create_time, '%Y-%m-%d %H:%i:%s' ) &lt;= #{beForTenMin,jdbcType=VARCHAR}
     </select>
 
+    <!-- 查询列表-->
+    <select id="getList" resultMap="BaseMap"  parameterType="com.ej.hgj.entity.carrenew.CarRenewOrder">
+        select
+        <include refid="Base_Column_List" />
+        from t_car_renew_order
+        where delete_flag = 0 and order_status in (1,2)
+        <if test="proNum != null">
+            and pro_num = #{proNum,jdbcType=VARCHAR}
+        </if>
+        <if test="wxOpenId != null">
+            and wx_open_id = #{wxOpenId,jdbcType=VARCHAR}
+        </if>
+        <if test="cstCode != null">
+            and cst_code = #{cstCode,jdbcType=VARCHAR}
+        </if>
+        order by update_time desc
+    </select>
+
     <!-- 保存-->
     <insert id="save" parameterType="com.ej.hgj.entity.carrenew.CarRenewOrder" >
         insert into  t_car_renew_order(

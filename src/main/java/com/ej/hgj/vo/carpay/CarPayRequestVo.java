@@ -1,10 +1,12 @@
 package com.ej.hgj.vo.carpay;
 
 import com.ej.hgj.base.BaseReqVo;
+import com.ej.hgj.entity.carpay.ParkPayOrder;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 public class CarPayRequestVo extends BaseReqVo implements Serializable {
@@ -24,5 +26,7 @@ public class CarPayRequestVo extends BaseReqVo implements Serializable {
 	private Boolean radioChecked;
 
 	private Integer orderStatus;
+
+	private Integer hourNumValue;
 
 }

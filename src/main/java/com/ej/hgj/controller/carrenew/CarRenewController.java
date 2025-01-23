@@ -28,10 +28,9 @@ import com.ej.hgj.utils.HttpClientUtil;
 import com.ej.hgj.utils.bill.*;
 import com.ej.hgj.vo.bill.SignInfoVo;
 import com.ej.hgj.vo.carpay.*;
-import com.ej.hgj.vo.carrenew.CarRenewInfoVo;
-import com.ej.hgj.vo.carrenew.CarRenewOrderStatusVo;
-import com.ej.hgj.vo.carrenew.CarRenewRequestVo;
-import com.ej.hgj.vo.carrenew.CarRenewResponseVo;
+import com.ej.hgj.vo.carrenew.*;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import okhttp3.HttpUrl;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -54,6 +53,8 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Controller
@@ -581,6 +582,33 @@ public class CarRenewController extends BaseController {
 		return res;
 	}
 
+	@RequestMapping("/carrenew/queryCarRenewLog.do")
+	@ResponseBody
+	public CarRenewLogVo queryCarRenewLog(@RequestBody CarRenewLogVo carRenewLogVo) {
+		PageHelper.offsetPage((carRenewLogVo.getPageNum()-1) * carRenewLogVo.getPageSize(),carRenewLogVo.getPageSize());
+		CarRenewOrder carRenewOrder = new CarRenewOrder();
+		carRenewOrder.setWxOpenId(carRenewLogVo.getWxOpenId());
+		List<CarRenewOrder> list = carRenewOrderDaoMapper.getList(carRenewOrder);
+		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+		for(CarRenewOrder c : list){
+			if(StringUtils.isNotBlank(c.getSuccessTime())) {
+				ZonedDateTime zonedDateTime = ZonedDateTime.parse(c.getSuccessTime(), formatter);
+				String formatted = zonedDateTime.format(DateUtils.formatter_ymd_hms);
+				c.setSuccessTime(formatted);
+			}
+		}
+		PageInfo<CarRenewOrder> pageInfo = new PageInfo<>(list);
+		int pageNumTotal = (int) Math.ceil((double)pageInfo.getTotal()/(double)carRenewLogVo.getPageSize());
+		list = pageInfo.getList();
+		logger.info("list返回记录数");
+		logger.info(list != null ? list.size() + "":0 + "");
+		carRenewLogVo.setPages(pageNumTotal);
+		carRenewLogVo.setTotalNum((int) pageInfo.getTotal());
+		carRenewLogVo.setPageSize(carRenewLogVo.getPageSize());
+		carRenewLogVo.setList(list);
+		carRenewLogVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
+		return carRenewLogVo;
+	}
 
 	public static void main(String[] args) {
 		String stringA="appid=ym5e3ad2743739c30a&carNo=川A55D67&parkKey=m3kgkktp&rand=5.394985805&version=v1.0&";

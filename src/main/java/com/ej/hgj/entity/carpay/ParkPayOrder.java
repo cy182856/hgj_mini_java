@@ -46,6 +46,8 @@ public class ParkPayOrder {
 
     private Integer isDeduction;
 
+    private Integer deductionNum;
+
     private String inTime;
 
     private String outTime;

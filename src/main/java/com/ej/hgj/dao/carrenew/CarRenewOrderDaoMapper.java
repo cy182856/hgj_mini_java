@@ -25,4 +25,7 @@ public interface CarRenewOrderDaoMapper {
 
     void updateCallBackCode(CarRenewOrder carRenewOrder);
 
+    List<CarRenewOrder> getList(CarRenewOrder carRenewOrder);
+
+
 }

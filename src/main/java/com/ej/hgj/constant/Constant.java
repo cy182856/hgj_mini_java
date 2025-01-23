@@ -236,6 +236,9 @@ public class Constant<https> {
     // 智慧停车车辆续费月费用
     public static String ZHTC_MONTH_COST = "zhtc_month_cost";
 
+    // 智慧停车每小时停车费
+    public static String ZHTC_HOUR_PARK_COST = "zhtc_hour_park_cost";
+
     // 支付状态 0-预下单成功
     public static final int ORDER_STATUS_PRE = 0;
     // 支付状态 1-支付中

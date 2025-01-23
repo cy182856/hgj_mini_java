@@ -1,6 +1,7 @@
 package com.ej.hgj.dao.carpay;
 
 import com.ej.hgj.entity.carpay.ParkPayOrder;
+import com.ej.hgj.entity.visit.VisitLog;
 import com.ej.hgj.vo.carpay.CarPayOrderStatusVo;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,8 @@ public interface ParkPayOrderDaoMapper {
     ParkPayOrder getParkPayOrder(CarPayOrderStatusVo requestOrderStatusVo);
 
     List<ParkPayOrder> getOrderList_1(String beForTenMin);
+
+    List<ParkPayOrder> getList(ParkPayOrder parkPayOrder);
 
     void save(ParkPayOrder parkPayOrder);
 
