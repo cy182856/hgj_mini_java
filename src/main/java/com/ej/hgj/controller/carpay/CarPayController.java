@@ -136,26 +136,26 @@ public class CarPayController extends BaseController {
 		String version = "\"version\":\"v1.0\"";
 		String end = "}";
 		String signData = "";
-		String expMinus = "";
+//		String expMinus = "";
 		// 是否选择停车卡抵扣
-		if(radioChecked == true && cardInfo != null){
+		//if(radioChecked == true && cardInfo != null){
 //			Integer expNum = cardInfo.getTotalNum() - cardInfo.getApplyNum();
 //			expMinus = (expNum * 60)+"";
-			expMinus = (hourNumValue * 60) + "";
-			signData = "appid=" + appId + "&carNo=" + carCode + "&freeMinutes=" + expMinus + "&parkKey=" + authCode + "&rand=" + randomNumber + "&version=v1.0&";
-		}else {
+//			expMinus = (hourNumValue * 60) + "";
+//			signData = "appid=" + appId + "&carNo=" + carCode + "&freeMinutes=" + expMinus + "&parkKey=" + authCode + "&rand=" + randomNumber + "&version=v1.0&";
+		//}else {
 			signData = "appid=" + appId + "&carNo=" + carCode + "&parkKey=" + authCode + "&rand=" + randomNumber + "&version=v1.0&";
-		}
+		//}
 		String stringSignTemp = signData + appSecret;
 		String sign = DigestUtils.md5Hex(stringSignTemp).toUpperCase();
 		String signJson = ",\"sign\":\"" + sign + "\"";
 		String pramJson = "";
-		if(radioChecked == true && cardInfo != null){
-			String freeMinutes = "\"freeMinutes\":\"" + expMinus + "\",";
-			pramJson = start + appid + carNo + freeMinutes + parkKey + rand + version + signJson + end;
-		}else {
+		//if(radioChecked == true && cardInfo != null){
+		//	String freeMinutes = "\"freeMinutes\":\"" + expMinus + "\",";
+		//	pramJson = start + appid + carNo + freeMinutes + parkKey + rand + version + signJson + end;
+	//	}else {
 			pramJson = start + appid + carNo + parkKey + rand + version + signJson + end;
-		}
+	//	}
 		try{
 			JSONObject resultJson = HttpClientUtil.sendPost(apiUrl + "/Inquire/GetCarNoOrderFee", pramJson);
 			String code = resultJson.get("code").toString();
@@ -176,7 +176,25 @@ public class CarPayController extends BaseController {
 //				if(radioChecked == true){
 //					totalAmount = "0.0";
 //				}
+				// 接口返回支付金额
 				BigDecimal payFee = new BigDecimal(totalAmount);
+
+				// 计算扣减后实付金额
+				if(radioChecked == true && cardInfo != null){
+					// 获取每小时停车费
+					ConstantConfig zhtc_hour_park_cost = constantConfDaoMapper.getByKey(Constant.ZHTC_HOUR_PARK_COST);
+					BigDecimal hourCost = new BigDecimal(zhtc_hour_park_cost.getConfigValue());
+					BigDecimal subtract = payFee.subtract(hourCost.multiply(new BigDecimal(hourNumValue)));
+					if(subtract.compareTo(BigDecimal.ZERO) < 0){
+						payFee = BigDecimal.ZERO;
+					}else {
+						payFee = subtract;
+					}
+				}
+
+				// todo 测试
+				payFee = payFee.divide(new BigDecimal("800"));
+
 				if((payFee.compareTo(BigDecimal.ZERO) > 0) || (payFee.compareTo(BigDecimal.ZERO) == 0 && radioChecked == true)){
 					payFeeStatus = true;
 					String inParkTime = jsonData.getString("enterTime");
@@ -453,25 +471,25 @@ public class CarPayController extends BaseController {
 			String version = "\"version\":\"v1.0\"";
 			String end = "}";
 			String signData = "";
-			String expMinus = "";
+		//	String expMinus = "";
 			// 是否选择停车卡抵扣
-			if (radioChecked == true) {
+			//if (radioChecked == true) {
 				//expMinus = (expNum * 60) + "";
-				expMinus = (hourNumValue * 60) + "";
-				signData = "appid=" + appId + "&carNo=" + carCode + "&freeMinutes=" + expMinus + "&parkKey=" + authCode + "&rand=" + randomNumber + "&version=v1.0&";
-			} else {
+			//	expMinus = (hourNumValue * 60) + "";
+			//	signData = "appid=" + appId + "&carNo=" + carCode + "&freeMinutes=" + expMinus + "&parkKey=" + authCode + "&rand=" + randomNumber + "&version=v1.0&";
+		//	} else {
 				signData = "appid=" + appId + "&carNo=" + carCode + "&parkKey=" + authCode + "&rand=" + randomNumber + "&version=v1.0&";
-			}
+		//	}
 			String stringSignTemp = signData + appSecret;
 			String sign = DigestUtils.md5Hex(stringSignTemp).toUpperCase();
 			String signJson = ",\"sign\":\"" + sign + "\"";
 			String pramJson = "";
-			if (radioChecked == true) {
-				String freeMinutes = "\"freeMinutes\":\"" + expMinus + "\",";
-				pramJson = start + appid + carNo + freeMinutes + parkKey + rand + version + signJson + end;
-			} else {
+		//	if (radioChecked == true) {
+		//		String freeMinutes = "\"freeMinutes\":\"" + expMinus + "\",";
+		//		pramJson = start + appid + carNo + freeMinutes + parkKey + rand + version + signJson + end;
+		//	} else {
 				pramJson = start + appid + carNo + parkKey + rand + version + signJson + end;
-			}
+		//	}
 			JSONObject resultJson = HttpClientUtil.sendPost(apiUrl + "/Inquire/GetCarNoOrderFee", pramJson);
 			String code = resultJson.get("code").toString();
 			String msg = resultJson.getString("msg");
@@ -480,7 +498,10 @@ public class CarPayController extends BaseController {
 			String orderId = TimestampGenerator.generateSerialNumber();
 			Date sysDate = new Date();
 			int intTotalAmount = 0;
+			// 应付金额，接口返回
 			BigDecimal payAmount = null;
+			// 实付金额,抵扣以后金额
+			BigDecimal actAmount = null;
 			// 1-成功 0-失败
 			if ("1".equals(code)) {
 				JSONObject jsonData = resultJson.getJSONObject("data");
@@ -491,12 +512,32 @@ public class CarPayController extends BaseController {
 //					totalAmount = "0.0";
 //				}
 				payAmount = new BigDecimal(totalAmount);
+
 				// 校验提交订单时无费用发生，提示离场
 				if(radioChecked == false && payAmount.compareTo(BigDecimal.ZERO) <= 0){
 					carPayResponseVo.setRespCode("999");
 					carPayResponseVo.setErrDesc("该车牌目前无需付费，可直接出场");
 					return carPayResponseVo;
 				}
+
+				// 计算扣减后实付金额
+				if(radioChecked == true && cardInfo != null){
+					// 获取每小时停车费
+					ConstantConfig zhtc_hour_park_cost = constantConfDaoMapper.getByKey(Constant.ZHTC_HOUR_PARK_COST);
+					BigDecimal hourCost = new BigDecimal(zhtc_hour_park_cost.getConfigValue());
+					BigDecimal subtract = payAmount.subtract(hourCost.multiply(new BigDecimal(hourNumValue)));
+					if(subtract.compareTo(BigDecimal.ZERO) < 0){
+						actAmount = BigDecimal.ZERO;
+					}else {
+						actAmount = subtract;
+					}
+				}else {
+					actAmount = payAmount;
+				}
+
+				// todo 测试
+				actAmount = actAmount.divide(new BigDecimal("800"));
+
 				// 入场时间
 				String enterTime = jsonData.getString("enterTime");
 				// 停车场订单号
@@ -519,7 +560,8 @@ public class CarPayController extends BaseController {
 				HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
 				parkPayOrder.setCstName(hgjCst.getCstName());
 				parkPayOrder.setPayAmount(payAmount);
-				BigDecimal multiply = payAmount.multiply(new BigDecimal("100"));
+				parkPayOrder.setActAmount(actAmount);
+				BigDecimal multiply = actAmount.multiply(new BigDecimal("100"));
 				intTotalAmount = multiply.intValue();
 				parkPayOrder.setAmountTotal(intTotalAmount);
 				parkPayOrder.setIpItemName(orderId);
@@ -580,7 +622,7 @@ public class CarPayController extends BaseController {
 				return carPayResponseVo;
 			}
 
-			if (payAmount != null && payAmount.compareTo(BigDecimal.ZERO) > 0) {
+			if (actAmount != null && actAmount.compareTo(BigDecimal.ZERO) > 0) {
 				// 服务商小程appId
 				ConstantConfig spMiniProgramApp = constantConfDaoMapper.getByKey(Constant.MINI_PROGRAM_APP_EJ_WYGJ);
 				// 特约商户小程appId

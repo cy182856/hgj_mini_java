@@ -28,6 +28,8 @@ public class ParkPayOrder {
 
     private BigDecimal payAmount;
 
+    private BigDecimal actAmount;
+
     private Integer amountTotal;
 
     private String ipItemName;

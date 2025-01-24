@@ -84,21 +84,25 @@ public class BillServiceImpl implements BillService {
         // 获取思源接口地址
         ConstantConfig constantConfig = constantConfDaoMapper.getByKey("sy_url");
         String p7 = initReturnVisit(openId, outTradeNo, fee, orgId, fnRevId , payMoney, fillProName);
-        // 获取请求结果, 调用思源接口-微信缴费
-        JSONObject jsonObject = SyPostClient.appWeChatPayFee("AppWeChat_PayFee", p7, null, "SSSySWIN*(SK_WH()", constantConfig.getConfigValue());
-        // 1-成功 0-失败
-        String status = jsonObject.getString("status");
-        String msg = jsonObject.getString("msg");
         // 更新思源接口返回信息
         BillMergeDetail billMergeDetail = new BillMergeDetail();
         billMergeDetail.setId(id);
         billMergeDetail.setUpdateTime(new Date());
-        if("1".equals(status)){
-            billMergeDetail.setSyPayStatus(Constant.SY_ORDER_SYNC_SUCCESS);
-        }else if("0".equals(status)){
-            billMergeDetail.setSyPayStatus(Constant.SY_ORDER_SYNC_FAIL);
+        try {
+            // 获取请求结果, 调用思源接口-微信缴费
+            JSONObject jsonObject = SyPostClient.appWeChatPayFee("AppWeChat_PayFee", p7, null, "SSSySWIN*(SK_WH()", constantConfig.getConfigValue());
+            // 1-成功 0-失败
+            String status = jsonObject.getString("status");
+            String msg = jsonObject.getString("msg");
+            if("1".equals(status)){
+                billMergeDetail.setSyPayStatus(Constant.SY_ORDER_SYNC_SUCCESS);
+            }else if("0".equals(status)){
+                billMergeDetail.setSyPayStatus(Constant.SY_ORDER_SYNC_FAIL);
+            }
+            billMergeDetail.setSyPayMsg(msg);
+        }catch (Exception e){
+            billMergeDetail.setSyPayMsg(e.toString());
         }
-        billMergeDetail.setSyPayMsg(msg);
         billMergeDetailDaoMapper.update(billMergeDetail);
         logger.info("思源订单状态同步成功! ID:"+ id + " 订单号:" + outTradeNo);
     }
