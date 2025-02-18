@@ -12,6 +12,7 @@ import com.ej.hgj.enums.JiasvBasicRespCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
 import com.ej.hgj.utils.DateUtils;
 import com.ej.hgj.utils.bill.TimestampGenerator;
+import com.ej.hgj.utils.file.FileSendClient;
 import com.ej.hgj.vo.gonggao.GonggaoVo;
 import com.ej.hgj.vo.gonggao.GonggaoTypeVo;
 import com.github.pagehelper.PageHelper;
@@ -225,9 +226,13 @@ public class GonggaoController extends BaseController {
 	public GonggaoVo queryGonggaoContent(@RequestBody GonggaoVo gonggaoVo) throws IOException {
 		Gonggao gonggao = gonggaoDaoMapper.getById(gonggaoVo.getId());
 		gonggaoVo.setGonggao(gonggao);
-		Path path = Paths.get(gonggao.getFilePath());
-		List<String> lines = Files.readAllLines(path);
-		String content = lines.toString();
+		//Path path = Paths.get(gonggao.getFilePath());
+		//List<String> lines = Files.readAllLines(path);
+		//String content = lines.toString();
+
+		String fileUrl = Constant.REMOTE_FILE_URL + "/" + gonggao.getFilePath();
+		String content = FileSendClient.downloadFileContent(fileUrl);
+
 		content = content.replace("[","");
 		content = content.replace("]","");
 		gonggao.setContent(content);

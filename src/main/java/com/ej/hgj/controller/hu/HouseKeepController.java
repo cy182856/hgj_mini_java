@@ -1,5 +1,6 @@
 package com.ej.hgj.controller.hu;
 
+import com.ej.hgj.constant.Constant;
 import com.ej.hgj.controller.base.BaseController;
 import com.ej.hgj.dao.config.ConstantConfDaoMapper;
 import com.ej.hgj.dao.config.ProConfDaoMapper;
@@ -21,6 +22,7 @@ import com.ej.hgj.entity.user.UserDutyPhone;
 import com.ej.hgj.enums.JiasvBasicRespCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
 import com.ej.hgj.utils.DateUtils;
+import com.ej.hgj.utils.file.FileSendClient;
 import com.ej.hgj.vo.bill.BillResponseVo;
 import com.ej.hgj.vo.hu.HouseInfoVO;
 import com.ej.hgj.vo.user.UserInfoVo;
@@ -103,17 +105,35 @@ public class HouseKeepController extends BaseController {
 			}
 			// 企微二维码转换
 			if(StringUtils.isNotBlank(user.getQrCode())){
-				String base64Image = "";
+//				String base64Image = "";
+//				try {
+//					BufferedImage image = ImageIO.read(new File(user.getQrCode()));
+//					ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//					ImageIO.write(image, "png", baos);
+//					byte[] imageBytes = baos.toByteArray();
+//					base64Image = Base64.getEncoder().encodeToString(imageBytes);
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//				user.setQrCode(base64Image);
+
 				try {
-					BufferedImage image = ImageIO.read(new File(user.getQrCode()));
-					ByteArrayOutputStream baos = new ByteArrayOutputStream();
-					ImageIO.write(image, "png", baos);
-					byte[] imageBytes = baos.toByteArray();
-					base64Image = Base64.getEncoder().encodeToString(imageBytes);
-				} catch (Exception e) {
+					String base64Image = "";
+					// 获取文件路径
+					String imgPath = user.getQrCode();
+					// 拼接远程文件地址
+					String fileUrl = Constant.REMOTE_FILE_URL + "/" + imgPath;
+					BufferedImage image = FileSendClient.downloadFileBufferedImage(fileUrl);
+					if(image != null) {
+						ByteArrayOutputStream baos = new ByteArrayOutputStream();
+						ImageIO.write(image, "png", baos);
+						byte[] imageBytes = baos.toByteArray();
+						base64Image = Base64.getEncoder().encodeToString(imageBytes);
+						user.setQrCode(base64Image);
+					}
+				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				user.setQrCode(base64Image);
 			}
 		}
 		userInfoVo.setUserList(list);

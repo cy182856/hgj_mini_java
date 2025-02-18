@@ -1,5 +1,6 @@
 package com.ej.hgj.controller.feedback;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ej.hgj.constant.AjaxResult;
 import com.ej.hgj.constant.Constant;
@@ -18,6 +19,8 @@ import com.ej.hgj.entity.config.ProConfig;
 import com.ej.hgj.entity.config.RepairConfig;
 import com.ej.hgj.entity.cst.HgjCst;
 import com.ej.hgj.entity.feedback.FeedBack;
+import com.ej.hgj.entity.file.FileMessage;
+import com.ej.hgj.entity.file.Request;
 import com.ej.hgj.entity.hu.CstInto;
 import com.ej.hgj.entity.hu.CstIntoHouse;
 import com.ej.hgj.entity.hu.HgjHouse;
@@ -34,12 +37,16 @@ import com.ej.hgj.sy.dao.workord.ReturnVisitDaoMapper;
 import com.ej.hgj.sy.dao.workord.WorkOrdDaoMapper;
 import com.ej.hgj.sy.dao.workord.WorkPosDaoMapper;
 import com.ej.hgj.utils.DateUtils;
+import com.ej.hgj.utils.HttpClientUtil;
 import com.ej.hgj.utils.SyPostClient;
 import com.ej.hgj.utils.bill.TimestampGenerator;
+import com.ej.hgj.utils.file.FileSendClient;
 import com.ej.hgj.vo.ResponseVo;
 import com.ej.hgj.vo.feedback.FeedbackRequestVo;
 import com.ej.hgj.vo.repair.RepairRequestVo;
 import com.ej.hgj.vo.repair.RepairResponseVo;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.apache.commons.lang3.StringUtils;
@@ -52,9 +59,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.crypto.Cipher;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import javax.xml.ws.Response;
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.ProtocolException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -65,8 +84,11 @@ public class FeedbackController extends BaseController {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	@Value("${upload.path.feedback}")
-	private String uploadPathFeedback;
+	@Value("${upload.path}")
+	private String uploadPath;
+
+	@Value("${upload.path.remote}")
+	private String uploadPathRemote;
 
 	@Autowired
 	private FeedbackDaoMapper feedbackDaoMapper;
@@ -76,6 +98,7 @@ public class FeedbackController extends BaseController {
 
 	@Autowired
 	private ProConfDaoMapper proConfDaoMapper;
+
 
 	@ResponseBody
 	@RequestMapping("/feedback.do")
@@ -119,13 +142,30 @@ public class FeedbackController extends BaseController {
 		feedBack.setCreateTime(new Date());
 		feedBack.setUpdateTime(new Date());
 		feedBack.setDeleteFlag(0);
-		feedBack.setImage(saveImg(fileList,id));
+		// 远程文件夹地址
+		String folderPathRemote = uploadPathRemote+"/feedback/" + new SimpleDateFormat("yyyyMMdd").format(new Date());
+		// 远程文件地址
+		String filePathRemote = folderPathRemote + "/" + id+".txt";
+		feedBack.setImage(filePathRemote);
 		feedbackDaoMapper.save(feedBack);
 		// 成功
 		responseVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
 		// 失败
 		//responseVo.setRespCode(Constant.FAIL_CODE);
 		//responseVo.setErrDesc("失败描述");
+
+		// 发送文件
+		try {
+			// 本地文件地址
+			String filePath = saveImg(fileList,id);
+			// 读取文件
+			byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
+			// 创建文件消息对象
+			FileMessage fileMessage = new FileMessage(folderPathRemote, id+".txt", fileBytes);
+			FileSendClient.sendFile(fileMessage);
+		} catch (Exception e) {
+			logger.info("Error in Send: " + e.getMessage());
+		}
 		return responseVo;
 	}
 
@@ -141,18 +181,19 @@ public class FeedbackController extends BaseController {
 				sb.append(str);
 			}
 			//目录不存在则直接创建
-			File filePath = new File(uploadPathFeedback);
+			File filePath = new File(uploadPath + "/feedback");
 			if (!filePath.exists()) {
 				filePath.mkdirs();
 			}
 			//创建年月日文件夹
-			File ymdFile = new File(uploadPathFeedback + File.separator + new SimpleDateFormat("yyyyMMdd").format(new Date()));
+			File ymdFile = new File(uploadPath + "/feedback/" + new SimpleDateFormat("yyyyMMdd").format(new Date()));
 			//目录不存在则直接创建
 			if (!ymdFile.exists()) {
 				ymdFile.mkdirs();
 			}
 			//在年月日文件夹下面创建txt文本存储图片base64码
 			File txtFile = new File(ymdFile.getPath() + "/" + no + ".txt");
+			//File txtFile = new File(uploadPath + "/feedback" + no + ".txt");
 			if (!txtFile.exists()) {
 				try {
 					txtFile.createNewFile();
@@ -193,26 +234,15 @@ public class FeedbackController extends BaseController {
 		responseVo.setPageSize(feedbackRequestVo.getPageSize());
 		if(list != null){
 			if(StringUtils.isNotBlank(id)) {
-				// 获取图片
+				// 获取文件路径
 				String imgPath = list.get(0).getImage();
-				String base64Img = "";
-				try {
-					// 创建BufferedReader对象，从本地文件中读取
-					BufferedReader reader = new BufferedReader(new FileReader(imgPath));
-					// 逐行读取文件内容
-					String line = "";
-					while ((line = reader.readLine()) != null) {
-						base64Img += line;
-					}
-					// 关闭文件
-					reader.close();
-				} catch (IOException e) {
-					e.printStackTrace();
+				// 拼接远程文件地址
+				String fileUrl = Constant.REMOTE_FILE_URL + "/" + imgPath;
+				String fileContent = FileSendClient.downloadFileContent(fileUrl);
+				if(StringUtils.isNotBlank(fileContent)) {
+					String[] fileList = fileContent.split(",");
+					responseVo.setFileList(fileList);
 				}
-
-				String[] fileList = base64Img.split(",");
-				//logger.info("报修图片:" + base64Img);
-				responseVo.setFileList(fileList);
 			}
 		}
 		responseVo.setFeedbackList(list);

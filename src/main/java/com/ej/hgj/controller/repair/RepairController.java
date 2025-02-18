@@ -16,6 +16,7 @@ import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.config.ProConfig;
 import com.ej.hgj.entity.config.RepairConfig;
 import com.ej.hgj.entity.cst.HgjCst;
+import com.ej.hgj.entity.file.FileMessage;
 import com.ej.hgj.entity.hu.CstInto;
 import com.ej.hgj.entity.hu.CstIntoHouse;
 import com.ej.hgj.entity.hu.HgjHouse;
@@ -35,6 +36,7 @@ import com.ej.hgj.utils.DateUtils;
 import com.ej.hgj.utils.GenerateUniqueIdUtil;
 import com.ej.hgj.utils.SyPostClient;
 import com.ej.hgj.utils.bill.TimestampGenerator;
+import com.ej.hgj.utils.file.FileSendClient;
 import com.ej.hgj.vo.repair.RepairRequestVo;
 import com.ej.hgj.vo.repair.RepairResponseVo;
 import com.github.pagehelper.PageHelper;
@@ -50,6 +52,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -66,6 +70,9 @@ public class RepairController extends BaseController {
 
 	@Value("${upload.path}")
 	private String uploadPath;
+
+	@Value("${upload.path.remote}")
+	private String uploadPathRemote;
 
 	@Autowired
 	private WorkOrdDaoMapper workOrdDaoMapper;
@@ -277,8 +284,12 @@ public class RepairController extends BaseController {
 			repairResponseVo.setErrDesc(JiasvBasicRespCode.SUCCESS.getRespDesc());
 			// 保存报修记录
 			RepairLog repairLog = new RepairLog();
+			// 远程文件夹地址
+			String folderPathRemote = uploadPathRemote+"/repair/" + new SimpleDateFormat("yyyyMMdd").format(new Date());
+			// 远程文件地址
+			String filePathRemote = folderPathRemote + "/" + no+".txt";
 			// 将图片数组转换为逗号分割的字符串
-			repairLog.setImage(saveImg(fileList,no));
+			repairLog.setImage(filePathRemote);
 			repairLog.setId(TimestampGenerator.generateSerialNumber());
 			repairLog.setProjectNum(orgId);
 			repairLog.setProjectName(orgName);
@@ -298,6 +309,18 @@ public class RepairController extends BaseController {
 			repairLog.setUpdateTime(new Date());
 			repairLog.setDeleteFlag(0);
 			repairLogDaoMapper.save(repairLog);
+			// 发送文件
+			try {
+				// 本地文件地址
+				String filePath = saveImg(fileList,no);
+				// 读取文件
+				byte[] fileBytes = Files.readAllBytes(Paths.get(filePath));
+				// 创建文件消息对象
+				FileMessage fileMessage = new FileMessage(folderPathRemote, no+".txt", fileBytes);
+				FileSendClient.sendFile(fileMessage);
+			} catch (Exception e) {
+				logger.info("Error in Send: " + e.getMessage());
+			}
 		}else {
 			repairResponseVo.setRespCode(Constant.FAIL_CODE);
 			repairResponseVo.setErrDesc(msg);
@@ -318,12 +341,12 @@ public class RepairController extends BaseController {
 				sb.append(str);
 			}
 			//目录不存在则直接创建
-			File filePath = new File(uploadPath);
+			File filePath = new File(uploadPath + "/repair");
 			if (!filePath.exists()) {
 				filePath.mkdirs();
 			}
 			//创建年月日文件夹
-			File ymdFile = new File(uploadPath + File.separator + new SimpleDateFormat("yyyyMMdd").format(new Date()));
+			File ymdFile = new File(uploadPath + "/repair/" + new SimpleDateFormat("yyyyMMdd").format(new Date()));
 			//目录不存在则直接创建
 			if (!ymdFile.exists()) {
 				ymdFile.mkdirs();
@@ -628,28 +651,42 @@ public class RepairController extends BaseController {
 		repairResponseVo.setTotalNum((int) pageInfo.getTotal());
 		repairResponseVo.setPageSize(repairRequestVo.getPageSize());
 		if(list != null){
-			if(repairNum != null) {
-				// 获取图片
-				String imgPath = list.get(0).getImage();
-				String base64Img = "";
-				try {
-					// 创建BufferedReader对象，从本地文件中读取
-					BufferedReader reader = new BufferedReader(new FileReader(imgPath));
-					// 逐行读取文件内容
-					String line = "";
-					while ((line = reader.readLine()) != null) {
-						base64Img += line;
-					}
-					// 关闭文件
-					reader.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 
-				String[] fileList = base64Img.split(",");
-				//logger.info("报修图片:" + base64Img);
-				repairResponseVo.setFileList(fileList);
+//			if(repairNum != null) {
+//				// 获取图片
+//				String imgPath = list.get(0).getImage();
+//				String base64Img = "";
+//				try {
+//					// 创建BufferedReader对象，从本地文件中读取
+//					BufferedReader reader = new BufferedReader(new FileReader(imgPath));
+//					// 逐行读取文件内容
+//					String line = "";
+//					while ((line = reader.readLine()) != null) {
+//						base64Img += line;
+//					}
+//					// 关闭文件
+//					reader.close();
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
+//
+//				String[] fileList = base64Img.split(",");
+//				//logger.info("报修图片:" + base64Img);
+//				repairResponseVo.setFileList(fileList);
+//			}
+
+			if(StringUtils.isNotBlank(repairNum)) {
+				// 获取文件路径
+				String imgPath = list.get(0).getImage();
+				// 拼接远程文件地址
+				String fileUrl = Constant.REMOTE_FILE_URL + "/" + imgPath;
+				String fileContent = FileSendClient.downloadFileContent(fileUrl);
+				if(StringUtils.isNotBlank(fileContent)) {
+					String[] fileList = fileContent.split(",");
+					repairResponseVo.setFileList(fileList);
+				}
 			}
+
 			// 获取思源报修单状态
 			List<String> woNoList = new ArrayList<>();
 			for(RepairLog r : list){

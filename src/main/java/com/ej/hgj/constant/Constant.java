@@ -30,6 +30,10 @@ public class Constant<https> {
     //public static String FILE_URL =  getConfigStringValue("jiasv.file.url.key");
     //public static String FILE_URL =  "https://hgj.shofw.com/upload/";
 
+    // 远程文件服务器地址
+    public static final String REMOTE_FILE_URL = "http://192.168.5.250:18566";
+    //public static final String REMOTE_FILE_URL = "http://192.168.23.28:18566";
+
     public static String SESSION_KEY = "key123456";
     public static String FAIL_CODE = "999";
     /**session失效时间*/
