@@ -116,17 +116,22 @@ public class LoginController extends BaseController {
             List<MenuMini> menuMinis = menuMiniDaoMapper.findMenuByProNumAndWxOpenId(loginInfo.getProNum(),loginInfo.getWxOpenId());
             if(!menuMinis.isEmpty()){
                 for(MenuMini menuMini : menuMinis){
-                    // 5-物业缴费
+                    // 物业缴费
                     if((menuMini.getId() == 5 || menuMini.getId() == 8) && priRev.compareTo(BigDecimal.ZERO) > 0){
                         // 欠费菜单显示小红点
                         menuMini.setDot(true);
                     }
-                    // 7-我的房屋
+                    // 我的房屋
                     if(menuMini.getId() == 7 && !cstIntoList.isEmpty() && byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 0 || byWxOpenIdAndStatus_1.getIntoRole() == 2)){
                         // 有待审核的入住申请菜单显示小红点， 仅限于业主租户、产权人
                         menuMini.setDot(true);
                     }
-                    // 19-租客管理
+                    // 费用查询
+                    if((menuMini.getId() == 22 || menuMini.getId() == 23) && priRev.compareTo(BigDecimal.ZERO) > 0){
+                        // 欠费菜单显示小红点
+                        menuMini.setDot(true);
+                    }
+                    // 租客管理
                     //if(menuMini.getId() == 19 && !cstIntoList.isEmpty() && byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 0 || byWxOpenIdAndStatus_1.getIntoRole() == 2)){
                         // 有待审核的入住申请菜单显示小红点， 仅限于业主租户、产权人
                         //menuMini.setDot(true);
