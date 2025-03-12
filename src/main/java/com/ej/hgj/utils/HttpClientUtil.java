@@ -91,6 +91,36 @@ public class HttpClientUtil {
         return new JSONObject();
     }
 
+    public static String sendPostParking(String url, String jsonMenu){
+        cn.hutool.http.HttpResponse httpResponse = null;
+        try {
+            // 设置请求头
+            Map<String, String > heads = new HashMap<String, String>();
+            heads.put("Content-Type", "application/json;charset=UTF-8");
+            httpResponse =  HttpRequest.post(url) // url
+                    .body(jsonMenu) // json参数
+                    .timeout(5 * 60 * 1000) // 超时
+                    .execute(); // 请求
+            if(httpResponse.getStatus() == 200){
+                //成功后响应数据
+                String result = httpResponse.body();
+                return result;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally{
+            try {
+                //释放连接
+                if(httpResponse != null){
+                    httpResponse.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return "";
+    }
+
     public static JSONObject doPost(String url, String jsonData){
         try (CloseableHttpClient client = HttpClients.createDefault()) {
             HttpPost post = new HttpPost(url);

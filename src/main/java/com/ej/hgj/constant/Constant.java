@@ -77,6 +77,8 @@ public class Constant<https> {
     public static String CARPAY_CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/carPay/callBack";
     // 服务商回调地址-车辆续费
     public static String CARRENEW_CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/carRenew/callBack";
+    // 服务商回调地址-月租车续费
+    public static String MONCARREN_CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/monCarRen/callBack";
     // 直连商户回调地址
     public static String CALLBACK_URL_BUS =  "https://zhgj.shofw.com/wx/callBackBus";
 
@@ -251,5 +253,17 @@ public class Constant<https> {
     public static final int ORDER_STATUS_SUCCESS = 2;
     // 支付状态 3-支付失败
     public static final int ORDER_STATUS_FAIL = 3;
+
+    // 立方停车接口地址
+    public static String LFTC_API_URL = "lftc_api_url";
+
+    // 立方停车api接口key
+    public static String LFTC_API_KEY = "lftc_api_key";
+
+    // 长期车续费可选月数
+    public static String MON_CAR_REN_NUM = "mon_car_ren_num";
+
+    // 长期车续费开票月数限制
+    public static String MON_CAR_REN_INVOICE_BEFORE_MONTH = "mon_car_ren_invoice_before_month";
 
 }

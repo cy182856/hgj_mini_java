@@ -1,4 +1,4 @@
-package com.ej.hgj.service.carrenew;
+package com.ej.hgj.service.moncarren;
 
 import com.alibaba.fastjson.JSONObject;
 import com.ej.hgj.constant.Constant;
@@ -8,17 +8,15 @@ import com.ej.hgj.dao.carpay.ParkPayOrderDaoMapper;
 import com.ej.hgj.dao.carpay.ParkPayOrderTempDaoMapper;
 import com.ej.hgj.dao.carrenew.CarRenewOrderDaoMapper;
 import com.ej.hgj.dao.config.ConstantConfDaoMapper;
-import com.ej.hgj.entity.card.CardCstBatch;
-import com.ej.hgj.entity.card.CardCstBill;
-import com.ej.hgj.entity.carpay.ParkPayOrder;
-import com.ej.hgj.entity.carpay.ParkPayOrderTemp;
+import com.ej.hgj.dao.moncarren.MonCarRenOrderDaoMapper;
 import com.ej.hgj.entity.carrenew.CarRenewOrder;
 import com.ej.hgj.entity.config.ConstantConfig;
-import com.ej.hgj.service.carpay.CarPayService;
+import com.ej.hgj.entity.moncarren.MonCarRenOrder;
+import com.ej.hgj.service.carrenew.CarRenewService;
+import com.ej.hgj.utils.AESUtils;
 import com.ej.hgj.utils.DateUtils;
 import com.ej.hgj.utils.HttpClientUtil;
 import com.ej.hgj.utils.bill.MyPrivatekey;
-import com.ej.hgj.utils.bill.TimestampGenerator;
 import com.ej.hgj.vo.bill.SignInfoVo;
 import okhttp3.HttpUrl;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -31,17 +29,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.Signature;
-import java.security.SignatureException;
+import java.security.*;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Random;
 
 @Service
 @Transactional
-public class CarRenewServiceImpl implements CarRenewService {
+public class MonCarRenServiceImpl implements MonCarRenService {
 
     Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -67,7 +64,7 @@ public class CarRenewServiceImpl implements CarRenewService {
     private CardCstBillDaoMapper cardCstBillDaoMapper;
 
     @Autowired
-    private CarRenewOrderDaoMapper carRenewOrderDaoMapper;
+    private MonCarRenOrderDaoMapper monCarRenOrderDaoMapper;
 
     @Override
     public String getToken(String method, HttpUrl url, String body, SignInfoVo signInfoVo, String proNum) {
@@ -130,70 +127,67 @@ public class CarRenewServiceImpl implements CarRenewService {
     }
 
     @Override
-    public void updateStatusSuccess(CarRenewOrder carRenewOrder) {
+    public void updateStatusSuccess(MonCarRenOrder monCarRenOrder) {
         // 订单号
-        String id = carRenewOrder.getId();
+        String id = monCarRenOrder.getId();
         // 更新订单表支付状态为支付成功
-        carRenewOrder.setOrderStatus(Constant.ORDER_STATUS_SUCCESS);
-        carRenewOrderDaoMapper.update(carRenewOrder);
+        monCarRenOrder.setOrderStatus(Constant.ORDER_STATUS_SUCCESS);
+        monCarRenOrderDaoMapper.update(monCarRenOrder);
         logger.info("--------------更新订单状态为支付成功----------订单号orderId:" + id);
-        // 调用月租车充值（按时间段）接口
-        ConstantConfig zhtc_api_url = constantConfDaoMapper.getByKey(Constant.ZHTC_API_URL);
-        String apiUrl = zhtc_api_url.getConfigValue();
-        ConstantConfig zhtc_api_app_id = constantConfDaoMapper.getByKey(Constant.ZHTC_API_APP_ID);
-        String appId = zhtc_api_app_id.getConfigValue();
-        ConstantConfig zhtc_api_app_secret = constantConfDaoMapper.getByKey(Constant.ZHTC_API_APP_SECRET);
-        String appSecret = zhtc_api_app_secret.getConfigValue();
-        ConstantConfig zhtc_api_auth_code = constantConfDaoMapper.getByKey(Constant.ZHTC_API_AUTH_CODE);
-        String authCode = zhtc_api_auth_code.getConfigValue();
-        Random random = new Random();
-        // 生成一个9位小数的随机数
-        double randomNumber = random.nextDouble();
-        // 保留9位小数
-        double carRenewRandomNumber = Math.round(randomNumber * 1e9) / 1e9;
-        String start = "{";
-        String appid = "\"appid\":\"" + appId + "\",";
-        String parkKey = "\"parkKey\":\"" + authCode + "\",";
-        String carRenewRand = "\"rand\":\"" + carRenewRandomNumber + "\",";
-        String mthChargeMoney = "\"mthChargeMoney\":\"" + carRenewOrder.getPayAmount() + "\",";
-        String beginTimeDate = "\"beginTime\":\"" + carRenewOrder.getRenewBeginTime() + "\",";
-        String endTimeData = "\"endTime\":\"" + carRenewOrder.getRenewEndTime() + "\",";
-        String isUpdateBeginTime = "\"isUpdateBeginTime\":\"" + 1 + "\",";
-        String carNoData = "\"carNo\":\"" + carRenewOrder.getCarCode() + "\",";
-        String version = "\"version\":\"v1.0\"";
-        String end = "}";
-        String carRenewSignData = "appid=" + appId + "&beginTime=" + carRenewOrder.getRenewBeginTime() + "&carNo=" + carRenewOrder.getCarCode() + "&endTime=" + carRenewOrder.getRenewEndTime() + "&isUpdateBeginTime=" + 1 + "&mthChargeMoney=" + carRenewOrder.getPayAmount() + "&parkKey=" + authCode + "&rand=" + carRenewRandomNumber + "&version=v1.0&";
-        String carRenewSignTemp = carRenewSignData + appSecret;
-        String carRenewSign = DigestUtils.md5Hex(carRenewSignTemp).toUpperCase();
-        String carRenewSignJson = ",\"sign\":\"" + carRenewSign + "\"";
-        String carRenewPramJson = start + appid + carNoData + mthChargeMoney + beginTimeDate + endTimeData + isUpdateBeginTime + parkKey  + carRenewRand + version + carRenewSignJson + end;
-        JSONObject carRenewResultJson = HttpClientUtil.sendPost(apiUrl + "/Inform/ChargeMonthCar", carRenewPramJson);
-        String carRenewCode = carRenewResultJson.get("code").toString();
-        String carRenewMsg = carRenewResultJson.getString("msg");
-        logger.info("------------月租车充值（按时间段）接口返回----------carRenewCode:" + carRenewCode +"|carRenewMsg:" + carRenewMsg);
-        // 更新订单表月租车充值回调状态
-        CarRenewOrder carRenewOrderPram = new CarRenewOrder();
-        carRenewOrderPram.setId(id);
-        carRenewOrderPram.setCallBackCode(carRenewCode);
-        carRenewOrderPram.setCallBackMsg(carRenewMsg);
-        carRenewOrderPram.setUpdateTime(new Date());
-        carRenewOrderDaoMapper.updateCallBackCode(carRenewOrderPram);
-        logger.info("--------更新月租车充值（按时间段）状态成功--------");
+        // 调用长期车续费接口
+        ConstantConfig lftc_api_url = constantConfDaoMapper.getByKey(Constant.LFTC_API_URL);
+        ConstantConfig lftc_api_key = constantConfDaoMapper.getByKey(Constant.LFTC_API_KEY);
+        Key k = AESUtils.toKey(org.apache.commons.codec.binary.Base64.decodeBase64(lftc_api_key.getConfigValue()));
+        // 支付成功时间格式化
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+        ZonedDateTime zonedDateTime = ZonedDateTime.parse(monCarRenOrder.getSuccessTime(), formatter);
+        String successTime = zonedDateTime.format(DateUtils.formatter_ymd_hms);
+        String data = "{\"carCode\":\"" +
+                monCarRenOrder.getCarCode() +
+                "\",\"chargeMoney\":" +
+                monCarRenOrder.getAmountTotal() +
+                ",\"endTime\":\"" +
+                monCarRenOrder.getRenewEndTime() +
+                "\",\"payTime\":\"" +
+                successTime +
+                "\",\"chargeType\":11,\"amountType\":1,\"chargeSource\":\"3\"}";
+        try {
+            byte[] encryptData = AESUtils.encrypt(data.getBytes("utf-8"), k);
+            String encryptStr = AESUtils.parseByte2HexStr(encryptData);
+            String resultData = HttpClientUtil.sendPostParking(lftc_api_url.getConfigValue() + "/RenewalLongUser", encryptStr);
+            byte[] decryptData = AESUtils.decrypt(AESUtils.parseHexStr2Byte(resultData), k);
+            String strData = new String(decryptData, "utf-8");
+            JSONObject jsonResult = JSONObject.parseObject(strData);
+            String resCode = jsonResult.getString("resCode");
+            String resMsg = jsonResult.getString("resMsg");
+            logger.info("------------长期车续费接口返回----------resCode:" + resCode + "|resMsg:" + resMsg);
+            // 更新订单表月租车充值回调状态
+            MonCarRenOrder monCarRenOrderPram = new MonCarRenOrder();
+            monCarRenOrderPram.setId(id);
+            monCarRenOrderPram.setCallBackCode(resCode);
+            monCarRenOrderPram.setCallBackMsg(resMsg);
+            monCarRenOrderPram.setUpdateTime(new Date());
+            monCarRenOrderDaoMapper.updateCallBackCode(monCarRenOrderPram);
+            logger.info("--------更新月租车充值（按时间段）状态成功--------");
+        }catch (Exception e){
+            e.printStackTrace();
+            logger.info("------长期车续费失败----------");
+        }
     }
 
     @Override
-    public void updateStatusFail(CarRenewOrder carRenewOrder) {
+    public void updateStatusFail(MonCarRenOrder monCarRenOrder) {
         // 支付失败更新订单状态
-        carRenewOrder.setOrderStatus(Constant.ORDER_STATUS_FAIL);
-        carRenewOrderDaoMapper.update(carRenewOrder);
+        monCarRenOrder.setOrderStatus(Constant.ORDER_STATUS_FAIL);
+        monCarRenOrderDaoMapper.update(monCarRenOrder);
     }
 
     @Override
-    public void updateStatusPro(CarRenewOrder carRenewOrder_0) {
+    public void updateStatusPro(MonCarRenOrder monCarRenOrder_0) {
         // 更新支付记录
-        carRenewOrder_0.setOrderStatus(Constant.ORDER_STATUS_PRO);
-        carRenewOrder_0.setUpdateTime(new Date());
-        carRenewOrderDaoMapper.update(carRenewOrder_0);
+        monCarRenOrder_0.setOrderStatus(Constant.ORDER_STATUS_PRO);
+        monCarRenOrder_0.setUpdateTime(new Date());
+        monCarRenOrderDaoMapper.update(monCarRenOrder_0);
     }
 
 

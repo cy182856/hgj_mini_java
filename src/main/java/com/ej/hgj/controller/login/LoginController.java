@@ -23,10 +23,13 @@ import com.ej.hgj.entity.login.JiasvOperationContext;
 import com.ej.hgj.entity.login.LoginInfo;
 import com.ej.hgj.sy.dao.bill.BillDaoMapper;
 import com.ej.hgj.sy.dao.bill.item.BillItemDaoMapper;
+import com.ej.hgj.utils.AESUtils;
 import com.ej.hgj.utils.CookieUtil;
+import com.ej.hgj.utils.HttpClientUtil;
 import com.ej.hgj.utils.TokenUtils;
 import com.ej.hgj.vo.bill.BillRequestVo;
 import com.ej.hgj.vo.bill.BillResponseVo;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,9 +39,14 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.math.BigDecimal;
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -215,4 +223,21 @@ public class LoginController extends BaseController {
         billResponseVo.setErrDesc(JiasvBasicRespCode.SUCCESS.getRespDesc());
         return billResponseVo;
     }
+
+
+    public static void main(String[] args) throws Exception {
+        Key k = AESUtils.toKey(Base64.decodeBase64("cmVmb3JtZXJyZWZvcm1lcg=="));
+        String data = "{\"carCode\":\"沪A372J2\"}";
+        byte[] encryptData = AESUtils.encrypt(data.getBytes("utf-8"), k);
+        String encryptStr = AESUtils.parseByte2HexStr(encryptData);
+        String url = "http://parking.shofw.com:9988/Parking/Handheld/GetLongUserInfo";
+        String result = HttpClientUtil.sendPostParking(url, encryptStr);
+        byte[] decryptData = AESUtils.decrypt(AESUtils.parseHexStr2Byte(result), k);
+        String strData = new String(decryptData, "utf-8");
+        JSONObject jsonResult = JSONObject.parseObject(strData);
+        System.out.println(jsonResult);
+
+    }
+
+
 }
