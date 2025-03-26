@@ -2,6 +2,7 @@ package com.ej.hgj.controller.moncarren;
 
 import cn.hutool.crypto.digest.MD5;
 import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ej.hgj.base.BaseRespVo;
 import com.ej.hgj.constant.Constant;
@@ -14,10 +15,15 @@ import com.ej.hgj.dao.carrenew.CarRenewOrderDaoMapper;
 import com.ej.hgj.dao.carrenew.CarTypeDaoMapper;
 import com.ej.hgj.dao.config.ConstantConfDaoMapper;
 import com.ej.hgj.dao.cst.HgjCstDaoMapper;
+import com.ej.hgj.dao.moncarren.MonCarRenInvoiceDaoMapper;
 import com.ej.hgj.dao.moncarren.MonCarRenOrderDaoMapper;
 import com.ej.hgj.entity.carrenew.CarRenewOrder;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.cst.HgjCst;
+import com.ej.hgj.entity.electricity.Electricity;
+import com.ej.hgj.entity.moncarren.CompanyInfo;
+import com.ej.hgj.entity.moncarren.InvoiceInfo;
+import com.ej.hgj.entity.moncarren.MonCarRenInvoice;
 import com.ej.hgj.entity.moncarren.MonCarRenOrder;
 import com.ej.hgj.enums.JiasvBasicRespCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
@@ -101,6 +107,9 @@ public class MonCarRenController extends BaseController {
 
 	@Autowired
 	private MonCarRenOrderDaoMapper monCarRenOrderDaoMapper;
+
+	@Autowired
+	private MonCarRenInvoiceDaoMapper monCarRenInvoiceDaoMapper;
 	/**
 	 * 车牌号获取月租车信息
 	 * @param monCarRenInfoVo
@@ -148,10 +157,16 @@ public class MonCarRenController extends BaseController {
 				Integer ruleAmountInt = Integer.valueOf(ruleAmount)/100;
 				BigDecimal monthAmount = new BigDecimal(ruleAmountInt);
 				// todo 测试用
-				monthAmount = new BigDecimal("0.01");
+				//monthAmount = new BigDecimal("0.01");
+
 				if(!"2".equals(ruleType)){
 					monCarRenResponseVo.setRespCode("999");
 					monCarRenResponseVo.setErrDesc("按期类型不符合");
+					return monCarRenResponseVo;
+				}
+				if("0".equals(ruleAmount)){
+					monCarRenResponseVo.setRespCode("999");
+					monCarRenResponseVo.setErrDesc("非客户车辆，请联系客服续费");
 					return monCarRenResponseVo;
 				}
 				// 月租车信息
@@ -276,6 +291,89 @@ public class MonCarRenController extends BaseController {
 	}
 
 	/**
+	 * 发票查看
+	 * @param monCarRenRequestVo
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/monCarRen/viewInvoice.do")
+	public JSONObject viewInvoice(@RequestBody MonCarRenRequestVo monCarRenRequestVo){
+		JSONObject jsonObject = new JSONObject();
+		// 查询开票信息
+		MonCarRenInvoice monCarRenInvoice = monCarRenInvoiceDaoMapper.getByOrderId(monCarRenRequestVo.getOrderId());
+		if(monCarRenInvoice == null){
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "无开票信息");
+			return jsonObject;
+		}
+		if(monCarRenInvoice.getInvoiceStatus() != 2){
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "开票状态错误");
+			return jsonObject;
+		}
+		jsonObject.put("monCarRenInvoice", monCarRenInvoice);
+		jsonObject.put("respCode", "000");
+		jsonObject.put("errDesc", "成功");
+		return jsonObject;
+	}
+
+	/**
+	 * 根据句抬头获取单位全称及税号
+	 * @param monCarRenRequestVo
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/monCarRen/companySearch.do")
+	public JSONObject companySearch(@RequestBody MonCarRenRequestVo monCarRenRequestVo){
+		JSONObject jsonObject = new JSONObject();
+
+		// 调用开票接口获取token
+		String tokenUrl = "http://api.yuxtech.com/invoice/getToken";
+		String tokenParam = "{\"username\":\"admin_91310110MA1G8DCX9W\",\"password\":\"ixLRI4ef\"}";
+		JSONObject tokenResultJson = HttpClientUtil.sendPost(tokenUrl, tokenParam);
+		String tokenResponse = tokenResultJson.getString("response");
+		JSONObject jsonResponse = JSONObject.parseObject(tokenResponse);
+		String access_token = jsonResponse.getString("access_token");
+		// 获取当前时间戳
+		long timeStamp = System.currentTimeMillis();
+		// 调用云台头获取接口
+		String companyUrlParam = "{\"companyName\":\"" +
+				monCarRenRequestVo.getSearchText() +
+				"\"}";
+		// 对参数加密获取MD5签名
+		String salt = "jrPrts7ovwg1uQM5";
+		String sign = SecurityUtil.encodeByMD5(salt + companyUrlParam);
+		String companyUrl = "http://api.yuxtech.com/invoice/bizinfoCompanySearch?token=" +
+				access_token +
+				"&method=bizinfoCompanySearch&timeStamp=" +
+				timeStamp +
+				"&appKey=1010043&version=1.0&sign=" +
+				sign +
+				"";
+		JSONObject companyResultJson = HttpClientUtil.sendPost(companyUrl, companyUrlParam);
+		boolean success = Boolean.valueOf(companyResultJson.getString("success"));
+		if(success == true){
+			String requestId = companyResultJson.getString("requestId");
+			String result = companyResultJson.getString("result");
+			List<CompanyInfo> companyInfoList = JSON.parseArray(result, CompanyInfo.class);
+			jsonObject.put("companyInfoList", companyInfoList);
+		}else {
+			String errorResponse = companyResultJson.getString("errorResponse");
+			JSONObject errorResponseJson = JSONObject.parseObject(errorResponse);
+			String code = errorResponseJson.getString("code");
+			String message = errorResponseJson.getString("message");
+			String subCode = errorResponseJson.getString("subCode");
+			String subMessage = errorResponseJson.getString("subMessage");
+			jsonObject.put("respCode", code);
+			jsonObject.put("errDesc", message);
+			return jsonObject;
+		}
+		jsonObject.put("respCode", "000");
+		jsonObject.put("errDesc", "成功");
+		return jsonObject;
+	}
+
+	/**
 	 * 开票
 	 * @param monCarRenRequestVo
 	 * @return
@@ -284,9 +382,167 @@ public class MonCarRenController extends BaseController {
 	@RequestMapping("/monCarRen/monCarInvoice.do")
 	public JSONObject monCarInvoice(@RequestBody MonCarRenRequestVo monCarRenRequestVo){
 		JSONObject jsonObject = new JSONObject();
+		// 根据开票类型传参1-单位开票  2-个人开票 个人开票不需要税号
+		String invoiceType = monCarRenRequestVo.getInvoiceType();
+		if(StringUtils.isBlank(invoiceType)) {
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "开票类型不能为空");
+			return jsonObject;
+		}
+		String buyerName = monCarRenRequestVo.getBuyerName();
+		if(StringUtils.isBlank(buyerName)) {
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "发票抬头不能为空");
+			return jsonObject;
+		}
+		String buyerTaxNo = monCarRenRequestVo.getBuyerTaxNo();
+		if(StringUtils.isBlank(buyerTaxNo) && "1".equals(invoiceType)) {
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "税号不能为空");
+			return jsonObject;
+		}
+		String pushEmail = monCarRenRequestVo.getPushEmail();
+		if(StringUtils.isBlank(pushEmail)) {
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "邮箱不能为空");
+			return jsonObject;
+		}
 		// 查询订单信息
 		MonCarRenOrder monCarRenOrder = monCarRenOrderDaoMapper.getById(monCarRenRequestVo.getOrderId());
+		if(monCarRenOrder == null){
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "订单不存在");
+			return jsonObject;
+		}
+		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+		ZonedDateTime zonedDateTime = ZonedDateTime.parse(monCarRenOrder.getSuccessTime(), formatter);
+		String successTime = zonedDateTime.format(DateUtils.formatter_ymd_hms);
+		// 调用开票接口获取token
+		String tokenUrl = "http://api.yuxtech.com/invoice/getToken";
+		String tokenParam = "{\"username\":\"admin_913101183420070187\",\"password\":\"9SJxjgyi\"}";
+		JSONObject tokenResultJson = HttpClientUtil.sendPost(tokenUrl, tokenParam);
+		String tokenResponse = tokenResultJson.getString("response");
+		JSONObject jsonResponse = JSONObject.parseObject(tokenResponse);
+		String access_token = jsonResponse.getString("access_token");
+		// 获取当前时间戳
+		long timeStamp = System.currentTimeMillis();
+		String invoiceParam = "";
+		if("1".equals(invoiceType)) {
+			// 调用开票接口
+			invoiceParam = "{\"invoiceType\":\"1\",\"invoiceTypeCode\":\"02\",\"taxNo\":\"913101183420070187\",\"orderNo\":\"" +
+					monCarRenOrder.getId() +
+					"\",\"orderDateTime\":\"" +
+					successTime +
+					"\",\"invoiceSpecialMark\":\"00\",\"priceTaxMark\":\"1\",\"invoiceDetailList\":[{\"goodsCode\":\"3040801010000000000\",\"goodsName\":\"停车费\",\"goodsQuantity\":1,\"goodsPrice\":" +
+					monCarRenOrder.getPayAmount() +
+					",\"goodsTotalPrice\":" +
+					monCarRenOrder.getPayAmount() +
+					",\"goodsTaxRate\":0.06}],\"leaseInfo\":{\"leasePropertyNo\":\"沪房地杨字（2015）第009043号\",\"leaseAddress\":\"上海市&杨浦区\",\"leaseDetailAddress\":\"杨树浦路1088号，江浦路39号\",\"leaseCrossSign\":\"否\",\"leaseAreaUnit\":\"2\",\"leaseHoldDateStart\":\"2007-03-31\",\"leaseHoldDateEnd\":\"2057-03-30\"},\"buyerName\":\"" +
+					buyerName +
+					"\",\"buyerTaxNo\":\"" +
+					buyerTaxNo +
+					"\",\"pushEmail\":\"" +
+					pushEmail +
+					"\",\"callBackUrl\":\"" +
+					Constant.MONCARREN_INVOICE_CALLBACK_URL +
+					"\"}";
+		}
+		if("2".equals(invoiceType)) {
+			// 调用开票接口
+			invoiceParam = "{\"invoiceType\":\"1\",\"invoiceTypeCode\":\"02\",\"taxNo\":\"913101183420070187\",\"orderNo\":\"" +
+					monCarRenOrder.getId() +
+					"\",\"orderDateTime\":\"" +
+					successTime +
+					"\",\"invoiceSpecialMark\":\"00\",\"priceTaxMark\":\"1\",\"invoiceDetailList\":[{\"goodsCode\":\"3040801010000000000\",\"goodsName\":\"停车费\",\"goodsQuantity\":1,\"goodsPrice\":" +
+					monCarRenOrder.getPayAmount() +
+					",\"goodsTotalPrice\":" +
+					monCarRenOrder.getPayAmount() +
+					",\"goodsTaxRate\":0.06}],\"leaseInfo\":{\"leasePropertyNo\":\"沪房地杨字（2015）第009043号\",\"leaseAddress\":\"上海市&杨浦区\",\"leaseDetailAddress\":\"杨树浦路1088号，江浦路39号\",\"leaseCrossSign\":\"否\",\"leaseAreaUnit\":\"2\",\"leaseHoldDateStart\":\"2007-03-31\",\"leaseHoldDateEnd\":\"2057-03-30\"},\"buyerName\":\"" +
+					buyerName +
+					"\",\"pushEmail\":\"" +
+					pushEmail +
+					"\",\"callBackUrl\":\"" +
+					Constant.MONCARREN_INVOICE_CALLBACK_URL +
+					"\"}";
+		}
+		// 对参数加密获取MD5签名
+		String salt = "oITcOlxUOW3cEfp3";
+		String sign = SecurityUtil.encodeByMD5(salt + invoiceParam);
+		String invoiceUrl = "http://api.yuxtech.com/invoice/xw?token=" +
+				access_token +
+				"&method=baiwang.s.outputinvoice.invoice&timeStamp=" +
+				timeStamp +
+				"&appKey=1010062&version=1.0&sign=" +
+				sign +
+				"";
+		JSONObject invoiceResultJson = HttpClientUtil.sendPost(invoiceUrl, invoiceParam);
+		boolean success = Boolean.valueOf(invoiceResultJson.getString("success"));
+		if(success == true){
+			String requestId = invoiceResultJson.getString("requestId");
+			String invoiceResponse = invoiceResultJson.getString("response");
+			JSONObject invoiceJson = JSONObject.parseObject(invoiceResponse);
+			String serialNo = invoiceJson.getString("serialNo");
+/**
+			// 开票成功获取发票pdf链接，调用开票结果查询接口
+			String pdfUrl = "";
+			String resCode = "";
+			String resMsg = "";
+			String queryInvoiceParam = "{\"taxNo\":\"913101183420070187\",\"serialNos\":[\"" +
+					serialNo +
+					"\"],\"orderNos\":[\"" +
+					monCarRenOrder.getId() +
+					"\"],\"detailMark\":\"0\"}";
+			// 对参数加密获取MD5签名
+			String queryInvoiceSign = SecurityUtil.encodeByMD5(salt + queryInvoiceParam);
+			String queryInvoiceUrl = "http://api.yuxtech.com/invoice/xw?token=" + access_token + "&method=baiwang.s.outputinvoice.query&appKey=1010062&sign=" + queryInvoiceSign;
+			JSONObject queryInvoiceJson = HttpClientUtil.sendPost(queryInvoiceUrl, queryInvoiceParam);
+			boolean queryInvoiceSuccess = Boolean.valueOf(queryInvoiceJson.getString("success"));
+			if(queryInvoiceSuccess == true && queryInvoiceJson != null){
+				String response = queryInvoiceJson.getString("response");
+				List<InvoiceInfo> invoiceInfoList = JSON.parseArray(response, InvoiceInfo.class);
+				if(!invoiceInfoList.isEmpty()){
+					pdfUrl = invoiceInfoList.get(0).getPdfUrl();
+				}
+			}else{
+				String errorResponse = queryInvoiceJson.getString("errorResponse");
+				JSONObject errorResponseJson = JSONObject.parseObject(errorResponse);
+				resCode = errorResponseJson.getString("code");
+				resMsg = errorResponseJson.getString("message");
+				jsonObject.put("respCode", resCode);
+				jsonObject.put("errDesc", resMsg);
+				return jsonObject;
+			}
+*/
+			// 保存开票记录
+			MonCarRenInvoice monCarRenInvoice = new MonCarRenInvoice();
+			monCarRenInvoice.setId(TimestampGenerator.generateSerialNumber());
+			monCarRenInvoice.setOrderId(monCarRenOrder.getId());
+			monCarRenInvoice.setRequestId(requestId);
+			monCarRenInvoice.setSerialNo(serialNo);
+			monCarRenInvoice.setBuyerName(buyerName);
+			monCarRenInvoice.setBuyerTaxNo(buyerTaxNo);
+			monCarRenInvoice.setPushEmail(pushEmail);
+			monCarRenInvoice.setInvoiceType(Integer.valueOf(invoiceType));
+			//monCarRenInvoice.setPdfUrl(pdfUrl);
+			//monCarRenInvoice.setResCode(resCode);
+			//monCarRenInvoice.setResMsg(resMsg);
+			monCarRenInvoice.setInvoiceStatus(1);
+			monCarRenInvoice.setCreateTime(new Date());
+			monCarRenInvoice.setUpdateTime(new Date());
+			monCarRenInvoice.setDeleteFlag(Constant.DELETE_FLAG_NOT);
+			monCarRenInvoiceDaoMapper.save(monCarRenInvoice);
 
+		}else {
+			String errorResponse = invoiceResultJson.getString("errorResponse");
+			JSONObject errorResponseJson = JSONObject.parseObject(errorResponse);
+			String code = errorResponseJson.getString("code");
+			String message = errorResponseJson.getString("message");
+			String subCode = errorResponseJson.getString("subCode");
+			String subMessage = errorResponseJson.getString("subMessage");
+			jsonObject.put("respCode", subCode);
+			jsonObject.put("errDesc", subMessage);
+			return jsonObject;
+		}
 		jsonObject.put("respCode", "000");
 		jsonObject.put("errDesc", "成功");
 		return jsonObject;
@@ -680,6 +936,28 @@ public class MonCarRenController extends BaseController {
 		return res;
 	}
 
+	@PostMapping(value = "/monCarRen/invoice/callBack")
+	@ResponseBody
+	public void invoiceCallBack(@RequestBody JSONObject jsonObject) {
+		logger.info("发票开具回调返回数据：" + jsonObject);
+		String data = jsonObject.getString("data");
+		JSONObject dataJson = JSONObject.parseObject(data);
+		String orderNo = dataJson.getString("orderNo");
+		String pdfUrl = dataJson.getString("pdfUrl");
+		String status = dataJson.getString("status");
+		String statusMessage = dataJson.getString("statusMessage");
+		MonCarRenInvoice monCarRenInvoice = new MonCarRenInvoice();
+		monCarRenInvoice.setOrderId(orderNo);
+		monCarRenInvoice.setPdfUrl(pdfUrl);
+		monCarRenInvoice.setResCode(status);
+		monCarRenInvoice.setResMsg(statusMessage);
+		if("01".equals(status)) {
+			monCarRenInvoice.setInvoiceStatus(2);
+		}
+		monCarRenInvoice.setUpdateTime(new Date());
+		monCarRenInvoiceDaoMapper.update(monCarRenInvoice);
+	}
+
 	@RequestMapping("/monCarRen/queryMonCarRenLog.do")
 	@ResponseBody
 	public MonCarRenLogVo queryMonCarRenLog(@RequestBody MonCarRenLogVo monCarRenLogVo) {
@@ -707,6 +985,10 @@ public class MonCarRenController extends BaseController {
 					// 支付时间不是N个月以前的，可以开票
 					c.setTimeStatus(0);
 				}
+				// 查询开票状态 1-开票中 2-开票成功 3-未开票
+				if(c.getInvoiceStatus() == null){
+					c.setInvoiceStatus(3);
+				}
 			}
 		}
 		PageInfo<MonCarRenOrder> pageInfo = new PageInfo<>(list);
@@ -724,12 +1006,12 @@ public class MonCarRenController extends BaseController {
 
 	public static void main(String[] args) {
 
-		String salt = "123456";
+		String salt = "oITcOlxUOW3cEfp3";
 		String data = "{\"invoiceType\":\"1\",\"orderNo\":\"2025030515172593651c\",\"orderDateTime\":\"2025-03-05 15:23:01\",\"invoiceSpecialMark\":\"06\",\"priceTaxMark\":\"1\",\"invoiceDetailList\":[{\"goodsLineNo\":1,\"goodsCode\":\"3040502020200000000\",\"goodsName\":\"停车费\",\"goodsSpecification\":\"\",\"goodsUnit\":\"\",\"goodsQuantity\":1,\"goodsPrice\":0,\"goodsTotalPrice\":1,\"goodsTaxRate\":0.05,\"vatSpecialManagement\":\"按5%简易征收\",\"freeTaxMark\":\"\"}],\"leaseInfo\":{\"leasePropertyNo\":\"沪房地杨字（2015）第009043号\",\"leaseAddress\":\"上海市&杨浦区\",\"leaseDetailAddress\":\"杨树浦路1088号，江浦路39号\",\"leaseCrossSign\":\"否\",\"leaseAreaUnit\":\"平方米\",\"leaseHoldDateStart\":\"2007-03-31\",\"leaseHoldDateEnd\":\"2057-03-30\"},\"buyerName\":\"安世亚太科技股份有限公司\",\"buyerTaxNo\":\"91110105756700197H\",\"invoiceTypeCode\":\"02\",\"taxNo\":\"913101183420070187\",\"naturalMark\":\"0\",\"pushEmail\":\"\",\"remarks\":\"\"}";
 		String saltData = salt + data;
 		String md5Str = SecurityUtil.encodeByMD5(saltData);
 		System.out.println(md5Str);
-		//System.out.println(System.currentTimeMillis());
+		System.out.println(System.currentTimeMillis());
 	}
 
 }

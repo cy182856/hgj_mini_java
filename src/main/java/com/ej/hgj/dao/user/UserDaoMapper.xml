@@ -68,7 +68,7 @@
                 WHERE
                     c.`code` = #{cstCode}
             )
-          and r.role_name = '管家'
+          and r.role_name = '管家' and u.delete_flag = 0
     </select>
 
     <insert id="insertList" parameterType="java.util.List">

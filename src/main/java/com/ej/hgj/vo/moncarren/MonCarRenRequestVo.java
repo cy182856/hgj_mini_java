@@ -29,4 +29,14 @@ public class MonCarRenRequestVo extends BaseReqVo implements Serializable {
 
 	private String endTime;
 
+	private String invoiceType;
+
+	private String buyerName;
+
+	private String buyerTaxNo;
+
+	private String searchText;
+
+	private String pushEmail;
+
 }

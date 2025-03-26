@@ -28,9 +28,9 @@ public class HttpClientUtil {
     public static String doGet(String url) {
         CloseableHttpClient httpCilent2 = HttpClients.createDefault();
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(5000)   //设置连接超时时间
-                .setConnectionRequestTimeout(5000) // 设置请求超时时间
-                .setSocketTimeout(5000)
+                .setConnectTimeout(30000)   //设置连接超时时间
+                .setConnectionRequestTimeout(30000) // 设置请求超时时间
+                .setSocketTimeout(30000)
                 .setRedirectsEnabled(true)//默认允许自动重定向
                 .build();
         HttpGet httpGet2 = new HttpGet(url);

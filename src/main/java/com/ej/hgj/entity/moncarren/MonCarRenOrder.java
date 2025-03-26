@@ -89,4 +89,8 @@ public class MonCarRenOrder {
     private Date createTime;
 
     private Integer timeStatus;
+
+    private Integer invoiceStatus;
+
+    private String pdfUrl;
 }

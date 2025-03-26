@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ej.hgj.dao.moncarren.MonCarRenInvoiceDaoMapper">
+
+    <resultMap id="BaseMap" type="com.ej.hgj.entity.moncarren.MonCarRenInvoice">
+        <result column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="order_id" jdbcType="VARCHAR" property="orderId"/>
+        <result column="request_id" jdbcType="VARCHAR" property="requestId"/>
+        <result column="serial_no" jdbcType="VARCHAR" property="serialNo"/>
+        <result column="buyer_name" jdbcType="VARCHAR" property="buyerName"/>
+        <result column="buyer_tax_no" jdbcType="VARCHAR" property="buyerTaxNo"/>
+        <result column="push_email" jdbcType="VARCHAR" property="pushEmail"/>
+        <result column="invoice_type" jdbcType="INTEGER" property="invoiceType"/>
+        <result column="pdf_url" jdbcType="VARCHAR" property="pdfUrl"/>
+        <result column="res_code" jdbcType="VARCHAR" property="resCode"/>
+        <result column="res_msg" jdbcType="VARCHAR" property="resMsg"/>
+        <result column="invoice_status" jdbcType="INTEGER" property="invoiceStatus"/>
+        <result column="create_by" jdbcType="VARCHAR" property="createBy"/>
+        <result column="update_by" jdbcType="VARCHAR" property="updateBy"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
+    </resultMap>
+    <sql id="Base_Column_List" >
+        id, order_id, request_id, serial_no, buyer_name, buyer_tax_no, push_email, invoice_type, pdf_url, res_code, res_msg,
+        invoice_status, create_time, update_time, create_by, update_by, delete_flag
+    </sql>
+
+    <!-- 根据key查询-->
+    <select id="getByOrderId" resultMap="BaseMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from t_mon_car_ren_invoice
+        where delete_flag = 0 and order_id = #{orderId,jdbcType=VARCHAR}
+    </select>
+
+    <!-- 保存-->
+    <insert id="save" parameterType="com.ej.hgj.entity.moncarren.MonCarRenInvoice" >
+        insert into  t_mon_car_ren_invoice(
+        <if test="id != null">
+            id,
+        </if>
+        <if test="orderId != null">
+            order_id,
+        </if>
+        <if test="requestId != null" >
+            request_id,
+        </if>
+        <if test="serialNo != null" >
+            serial_no,
+        </if>
+        <if test="buyerName != null">
+            buyer_name,
+        </if>
+        <if test="buyerTaxNo != null">
+            buyer_tax_no,
+        </if>
+        <if test="pushEmail != null">
+            push_email,
+        </if>
+        <if test="invoiceType != null">
+            invoice_type,
+        </if>
+        <if test="pdfUrl != null">
+            pdf_url,
+        </if>
+        <if test="resCode != null">
+            res_code,
+        </if>
+        <if test="resMsg != null">
+            res_msg,
+        </if>
+        <if test="invoiceStatus != null">
+            invoice_status,
+        </if>
+        <if test="createTime != null">
+            create_time,
+        </if>
+        <if test="createBy != null">
+            create_by,
+        </if>
+        <if test="updateTime != null">
+            update_time,
+        </if>
+        <if test="updateBy != null">
+            update_by,
+        </if>
+        <if test="deleteFlag != null">
+            delete_flag
+        </if>
+        )
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=VARCHAR},
+            </if>
+            <if test="orderId != null" >
+                #{orderId,jdbcType=VARCHAR},
+            </if>
+            <if test="requestId != null" >
+                #{requestId,jdbcType=VARCHAR},
+            </if>
+            <if test="serialNo != null" >
+                #{serialNo,jdbcType=VARCHAR},
+            </if>
+            <if test="buyerName != null" >
+                #{buyerName,jdbcType=VARCHAR},
+            </if>
+            <if test="buyerTaxNo != null" >
+                #{buyerTaxNo,jdbcType=VARCHAR},
+            </if>
+            <if test="pushEmail != null" >
+                #{pushEmail,jdbcType=VARCHAR},
+            </if>
+            <if test="invoiceType != null" >
+                #{invoiceType,jdbcType=INTEGER},
+            </if>
+            <if test="pdfUrl != null" >
+                #{pdfUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="resCode != null" >
+                #{resCode,jdbcType=VARCHAR},
+            </if>
+            <if test="resMsg != null" >
+                #{resMsg,jdbcType=VARCHAR},
+            </if>
+            <if test="invoiceStatus != null" >
+                #{invoiceStatus,jdbcType=INTEGER},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createBy != null">
+                #{createBy,jdbcType=VARCHAR},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateBy != null">
+                #{updateBy,jdbcType=VARCHAR},
+            </if>
+            <if test="deleteFlag != null">
+                #{deleteFlag,jdbcType=INTEGER}
+            </if>
+        </trim>
+    </insert>
+
+    <!-- 更新-->
+    <update id="update" parameterType="com.ej.hgj.entity.moncarren.MonCarRenInvoice" >
+        update
+        t_mon_car_ren_invoice
+        <set>
+            <if test="resCode != null">
+                res_code = #{resCode,jdbcType=VARCHAR},
+            </if>
+            <if test="resMsg != null">
+                res_msg = #{resMsg,jdbcType=VARCHAR},
+            </if>
+            <if test="pdfUrl != null">
+                pdf_url = #{pdfUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="invoiceStatus != null">
+                invoice_status = #{invoiceStatus,jdbcType=INTEGER},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where order_id = #{orderId,jdbcType=VARCHAR}
+    </update>
+
+</mapper>

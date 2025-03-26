@@ -79,6 +79,7 @@ public class Constant<https> {
     public static String CARRENEW_CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/carRenew/callBack";
     // 服务商回调地址-月租车续费
     public static String MONCARREN_CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/monCarRen/callBack";
+    //public static String MONCARREN_CALLBACK_URL =  "https://zhgjtest.xhguanjia.cn/wx/monCarRen/callBack";
     // 直连商户回调地址
     public static String CALLBACK_URL_BUS =  "https://zhgj.shofw.com/wx/callBackBus";
 
@@ -265,5 +266,15 @@ public class Constant<https> {
 
     // 长期车续费开票月数限制
     public static String MON_CAR_REN_INVOICE_BEFORE_MONTH = "mon_car_ren_invoice_before_month";
+
+    // 电费查询日期区间选择年数限制
+    public static String ELECTRICITY_PICKER_BEFORE_MONTH = "electricity_picker_before_month";
+
+    // 电费查询接口
+    public static String ELECTRICITY_API_URL = "electricity_api_url";
+
+    // 发票开具回调地址
+    public static String MONCARREN_INVOICE_CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/monCarRen/invoice/callBack";
+      //public static String MONCARREN_INVOICE_CALLBACK_URL =  "https://zhgjtest.xhguanjia.cn/wx/monCarRen/invoice/callBack";
 
 }
