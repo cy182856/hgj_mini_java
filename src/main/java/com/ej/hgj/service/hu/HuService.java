@@ -15,6 +15,8 @@ public interface HuService {
 
     JSONObject updateIntoStatus(JSONObject jsonObject, HuCheckInRequest huCheckInRequest, CstInto cstInto);
 
+    JSONObject saveStaffInto(JSONObject jsonObject, HuCheckInRequest huCheckInRequest);
+
     void updateStatus(HouseInfoVO houseInfoVO);
 
     String saveCstIntoInfo(IntoVo intoVo);

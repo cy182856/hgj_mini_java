@@ -6,10 +6,12 @@ import com.ej.hgj.constant.Constant;
 import com.ej.hgj.controller.base.BaseController;
 import com.ej.hgj.dao.config.ConstantConfDaoMapper;
 import com.ej.hgj.dao.cst.CstMeterDaoMapper;
+import com.ej.hgj.entity.carrenew.CarRenewOrder;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.cst.CstMeter;
 import com.ej.hgj.entity.electricity.Electricity;
 import com.ej.hgj.enums.MonsterBasicRespCode;
+import com.ej.hgj.utils.DateUtils;
 import com.ej.hgj.utils.HttpClientUtil;
 import com.ej.hgj.vo.electricity.ElectricityVo;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +27,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -42,10 +46,78 @@ public class ElectricityController extends BaseController {
 	@Autowired
 	private CstMeterDaoMapper cstUserDaoMapper;
 
+
+	/**
+	 * 电费余额查询
+	 * @param electricityVo
+	 * @return
+	 * @throws ParseException
+	 */
+	@RequestMapping("/electricity/queryElectricitySurplus.do")
+	@ResponseBody
+	public ElectricityVo queryElectricitySurplus(@RequestBody ElectricityVo electricityVo) throws ParseException {
+		CstMeter cstMeterPram = new CstMeter();
+		cstMeterPram.setCstCode(electricityVo.getCstCode());
+		cstMeterPram.setUserId(electricityVo.getUserId());
+		List<CstMeter> cstMeterList = cstUserDaoMapper.getList(cstMeterPram);
+		// 电表绑定验证
+		if (cstMeterList.isEmpty()) {
+			electricityVo.setRespCode("111");
+			electricityVo.setErrDesc("客户未绑定电表,请咨询客服");
+			return electricityVo;
+		}
+		// 获取客户电表编号拼接字符串
+		String userId = "";
+		for(CstMeter c : cstMeterList){
+			userId += c.getUserId()+",";
+		}
+		StringBuilder userIds = new StringBuilder(userId);
+		userIds.deleteCharAt(userIds.length() - 1);
+		// 调用电费余额查询接口
+		ConstantConfig constantConfig = constantConfDaoMapper.getByProNumAndKey(electricityVo.getProNum(), Constant.ELECTRICITY_API_URL);
+		// 请求接口
+		String url = constantConfig.getConfigValue() + "/GetRemainingElectricityBill?userIds=" + userIds + "";
+		JSONObject jsonObject = JSONObject.parseObject(HttpClientUtil.doGet(url));
+		String code = jsonObject.getString("code");
+		String message = jsonObject.getString("message");
+		String data = jsonObject.getString("data");
+		logger.info("queryElectricitySurplus code：" + code + "||message：" + message);
+		if (code.equals("0") && StringUtils.isNotBlank(data)) {
+			List<Electricity> list = JSON.parseArray(data, Electricity.class);
+			if(!list.isEmpty()) {
+				for (Electricity e : list) {
+					if (StringUtils.isNotBlank(e.getDateTime())) {
+						LocalDateTime localDateTime = LocalDateTime.parse(e.getDateTime());
+						Date dateTime = Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+						String formatted = DateUtils.strYmdHms(dateTime);
+						e.setDateTime(formatted);
+					}
+				}
+			}
+			logger.info("查询记录返回：" + list != null ? list.size() + "" : 0 + "");
+			electricityVo.setList(list);
+			electricityVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
+		} else {
+			electricityVo.setRespCode("999");
+			electricityVo.setErrDesc(message);
+			return electricityVo;
+		}
+		return electricityVo;
+	}
+
+	/**
+	 * 用电量查询
+	 * @param electricityVo
+	 * @return
+	 * @throws ParseException
+	 */
 	@RequestMapping("/electricity/queryElectricity.do")
 	@ResponseBody
 	public ElectricityVo queryElectricity(@RequestBody ElectricityVo electricityVo) throws ParseException {
-		List<CstMeter> cstMeterList = cstUserDaoMapper.getByCstCode(electricityVo.getCstCode());
+		CstMeter cstMeterPram = new CstMeter();
+		cstMeterPram.setCstCode(electricityVo.getCstCode());
+		cstMeterPram.setUserId(electricityVo.getUserId());
+		List<CstMeter> cstMeterList = cstUserDaoMapper.getList(cstMeterPram);
 		// 电表绑定验证
 		if (cstMeterList.isEmpty()) {
 			electricityVo.setRespCode("111");
@@ -72,7 +144,7 @@ public class ElectricityController extends BaseController {
 			for (CstMeter cstMeter : cstMeterUserIdList) {
 				ConstantConfig constantConfig = constantConfDaoMapper.getByProNumAndKey(electricityVo.getProNum(), Constant.ELECTRICITY_API_URL);
 				// 请求接口
-				String url = constantConfig.getConfigValue() + "?userId=" +
+				String url = constantConfig.getConfigValue() + "/GetElectricityBillsAsyncForApp?userId=" +
 						cstMeter.getUserId() +
 						"&startDate=" +
 						electricityVo.getStartDate() +
@@ -135,11 +207,19 @@ public class ElectricityController extends BaseController {
 		return electricityVo;
 	}
 
+	/**
+	 * 用电明细
+	 * @param electricityVo
+	 * @return
+	 * @throws ParseException
+	 */
 	@RequestMapping("/electricity/queryElectricityDetail.do")
 	@ResponseBody
 	public ElectricityVo queryElectricityDetail(@RequestBody ElectricityVo electricityVo) throws ParseException {
-		List<CstMeter> cstMeterList = cstUserDaoMapper.getByCstCode(electricityVo.getCstCode());
-		// 电表绑定验证
+		CstMeter cstMeterPram = new CstMeter();
+		cstMeterPram.setCstCode(electricityVo.getCstCode());
+		cstMeterPram.setUserId(electricityVo.getUserId());
+		List<CstMeter> cstMeterList = cstUserDaoMapper.getList(cstMeterPram);		// 电表绑定验证
 		if (cstMeterList.isEmpty()) {
 			electricityVo.setRespCode("111");
 			electricityVo.setErrDesc("客户未绑定电表,请咨询客服");
@@ -165,7 +245,7 @@ public class ElectricityController extends BaseController {
 			for (CstMeter cstMeter : cstMeterUserIdList) {
 				ConstantConfig constantConfig = constantConfDaoMapper.getByProNumAndKey(electricityVo.getProNum(), Constant.ELECTRICITY_API_URL);
 				// 请求接口
-				String url = constantConfig.getConfigValue() + "?userId=" +
+				String url = constantConfig.getConfigValue() + "/GetElectricityBillsAsyncForApp?userId=" +
 						cstMeter.getUserId() +
 						"&startDate=" +
 						electricityVo.getStartDate() +

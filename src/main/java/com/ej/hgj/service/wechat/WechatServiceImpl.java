@@ -513,14 +513,26 @@ public class WechatServiceImpl implements WechatService{
 
     public void sendClaimConfirmMsg(String objectId, String wxOpenId) throws BusinessException {
 
+        String proNum = null;
+        String cstCode = null;
+        String cstName = null;
+
         // objectId去掉前三位
         String cstIntoId = objectId.substring(3);
 
-        CstInto cstInto = cstIntoMapper.getById(cstIntoId);
-        String proNum = cstInto.getProjectNum();
-        String cstCode = cstInto.getCstCode();
-        HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
-        String cstName = hgjCst.getCstName();
+        String[] cstIntos = cstIntoId.split(",");
+        if("1".equals(cstIntos[0])){
+            cstCode = cstIntos[1];
+            HgjCst byCstCode = hgjCstDaoMapper.getByCstCode(cstCode);
+            proNum = byCstCode.getOrgId();
+            cstName = byCstCode.getCstName();
+        }else {
+            CstInto cstInto = cstIntoMapper.getById(cstIntos[0]);
+            proNum = cstInto.getProjectNum();
+            cstCode = cstInto.getCstCode();
+            HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(cstCode);
+            cstName = hgjCst.getCstName();
+        }
 
         try {
             // 获取token

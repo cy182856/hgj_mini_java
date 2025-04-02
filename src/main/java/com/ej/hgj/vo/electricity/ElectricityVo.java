@@ -38,5 +38,6 @@ public class ElectricityVo implements Serializable{
 
 	private String endDate;
 
+	private String userId;
 
 }

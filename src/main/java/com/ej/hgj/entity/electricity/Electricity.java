@@ -23,4 +23,8 @@ public class Electricity {
 
     private String sumUsedPowerStr;
 
+    private String dateTime;
+
+    private String money;
+
 }

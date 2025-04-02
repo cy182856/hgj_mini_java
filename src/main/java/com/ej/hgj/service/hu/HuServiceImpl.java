@@ -2,12 +2,16 @@ package com.ej.hgj.service.hu;
 
 import com.alibaba.fastjson.JSONObject;
 import com.ej.hgj.constant.Constant;
+import com.ej.hgj.dao.cst.HgjCstDaoMapper;
 import com.ej.hgj.dao.hu.CstIntoCardMapper;
 import com.ej.hgj.dao.hu.CstIntoHouseDaoMapper;
 import com.ej.hgj.dao.hu.CstIntoMapper;
+import com.ej.hgj.dao.hu.HgjHouseDaoMapper;
 import com.ej.hgj.dao.role.RoleDaoMapper;
+import com.ej.hgj.entity.cst.HgjCst;
 import com.ej.hgj.entity.hu.CstInto;
 import com.ej.hgj.entity.hu.CstIntoHouse;
+import com.ej.hgj.entity.hu.HgjHouse;
 import com.ej.hgj.entity.role.Role;
 import com.ej.hgj.request.hu.HuCheckInRequest;
 import com.ej.hgj.service.role.RoleService;
@@ -38,6 +42,12 @@ public class HuServiceImpl implements HuService {
 
     @Autowired
     private CstIntoCardMapper cstIntoCardMapper;
+
+    @Autowired
+    private HgjCstDaoMapper hgjCstDaoMapper;
+
+    @Autowired
+    private HgjHouseDaoMapper hgjHouseDaoMapper;
 
     @Override
     public JSONObject updateIntoStatus(JSONObject jsonObject, HuCheckInRequest huCheckInRequest, CstInto cstInto) {
@@ -84,6 +94,56 @@ public class HuServiceImpl implements HuService {
             jsonObject.put("errDesc", "请勿重复绑定!");
         }
 
+        return jsonObject;
+    }
+
+    @Override
+    public JSONObject saveStaffInto(JSONObject jsonObject, HuCheckInRequest huCheckInRequest) {
+        // 根据微信号与入住状态 1-已入住,3-审核中,查出一条入住信息
+        CstInto cstIntoByWxOpenId = cstIntoMapper.getByWxOpenIdAndStatus_1_3(huCheckInRequest.getWxOpenId());
+        if(cstIntoByWxOpenId == null){
+            // 查询客户信息
+            HgjCst hgjCst = hgjCstDaoMapper.getByCstCode(huCheckInRequest.getCstCode());
+            // 保存员工入住信息
+            CstInto cstInto = new CstInto();
+            String cstIntoId = TimestampGenerator.generateSerialNumber();
+            cstInto.setId(cstIntoId);
+            cstInto.setProjectNum(hgjCst.getOrgId());
+            cstInto.setWxOpenId(huCheckInRequest.getWxOpenId());
+            cstInto.setUserName(huCheckInRequest.getUserName());
+            cstInto.setPhone(huCheckInRequest.getPhone());
+            cstInto.setCstCode(hgjCst.getCode());
+            cstInto.setIntoRole(1);
+            cstInto.setIntoStatus(Constant.INTO_STATUS_Y);
+            cstInto.setCreateTime(new Date());
+            cstInto.setUpdateTime(new Date());
+            cstInto.setDeleteFlag(Constant.DELETE_FLAG_NOT);
+            cstIntoMapper.save(cstInto);
+            // 保存员工入住房间
+            HgjHouse hgjHouse = new HgjHouse();
+            hgjHouse.setCstCode(hgjCst.getCode());
+            List<HgjHouse> hgjHouseList = hgjHouseDaoMapper.getListByCstCode(hgjHouse);
+            List<CstIntoHouse> cstIntoHouseList = new ArrayList<>();
+            if(!hgjHouseList.isEmpty()) {
+                for (HgjHouse house : hgjHouseList) {
+                    CstIntoHouse cstIntoHouse = new CstIntoHouse();
+                    cstIntoHouse.setId(TimestampGenerator.generateSerialNumber());
+                    cstIntoHouse.setCstIntoId(cstIntoId);
+                    cstIntoHouse.setHouseId(house.getId());
+                    cstIntoHouse.setIntoStatus(Constant.INTO_STATUS_Y);
+                    cstIntoHouse.setCreateTime(new Date());
+                    cstIntoHouse.setUpdateTime(new Date());
+                    cstIntoHouse.setDeleteFlag(Constant.DELETE_FLAG_NOT);
+                    cstIntoHouseList.add(cstIntoHouse);
+                }
+                cstIntoHouseDaoMapper.insertList(cstIntoHouseList);
+            }
+            jsonObject.put("respCode", Constant.SUCCESS);
+            logger.info("---------------"+huCheckInRequest.getCstCode()+"员工入住成功-----------------");
+        }else {
+            jsonObject.put("respCode", Constant.FAIL_RESULT_CODE);
+            jsonObject.put("errDesc", "请勿重复绑定!");
+        }
         return jsonObject;
     }
 

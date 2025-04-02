@@ -10,7 +10,7 @@ import java.util.List;
 @Component
 public interface CstMeterDaoMapper {
 
-    List<CstMeter> getByCstCode(String cstCode);
+    List<CstMeter> getList(CstMeter cstMeter);
 
 
 }

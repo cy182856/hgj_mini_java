@@ -240,13 +240,28 @@ public class HuController extends BaseController {
             jsonObject.put("errDesc", "手机号为空!");
             return jsonObject;
         }
-        CstInto cstInto = cstIntoMapper.getById(huCheckInRequest.getCstIntoId());
-        if(cstInto == null){
+        String cstIntoId = huCheckInRequest.getCstIntoId();
+        if(StringUtils.isBlank(cstIntoId)){
             jsonObject.put("respCode", Constant.FAIL_RESULT_CODE);
-            jsonObject.put("errDesc", "入住信息已失效!");
+            jsonObject.put("errDesc", "入住编号为空!");
             return jsonObject;
         }
-        return huService.updateIntoStatus(jsonObject, huCheckInRequest, cstInto);
+        JSONObject jsonResult = null;
+        // 员工入住，无需审核并且拥有客户所有房屋权限
+        String[] cstIntos = cstIntoId.split(",");
+        if("1".equals(cstIntos[0])){
+            jsonResult = huService.saveStaffInto(jsonObject, huCheckInRequest);
+        }else {
+            // 客户入住
+            CstInto cstInto = cstIntoMapper.getById(cstIntos[0]);
+            if(cstInto == null){
+                jsonObject.put("respCode", Constant.FAIL_RESULT_CODE);
+                jsonObject.put("errDesc", "入住信息已失效!");
+                return jsonObject;
+            }
+            jsonResult = huService.updateIntoStatus(jsonObject, huCheckInRequest, cstInto);
+        }
+        return jsonResult;
     }
 
 
@@ -823,5 +838,9 @@ public class HuController extends BaseController {
 //        }
 //        return jsonObject;
 //    }
-
+    public static void main(String[] args) {
+        String s = "123";
+        String[] ss = s.split(",");
+        System.out.println(ss[0]);
+    }
 }
