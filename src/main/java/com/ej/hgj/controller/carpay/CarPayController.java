@@ -193,7 +193,7 @@ public class CarPayController extends BaseController {
 				}
 
 				// todo 测试
-				payFee = payFee.divide(new BigDecimal("800"));
+				//payFee = payFee.divide(new BigDecimal("1000"));
 
 				if((payFee.compareTo(BigDecimal.ZERO) > 0) || (payFee.compareTo(BigDecimal.ZERO) == 0 && radioChecked == true)){
 					payFeeStatus = true;
@@ -536,7 +536,7 @@ public class CarPayController extends BaseController {
 				}
 
 				// todo 测试
-				actAmount = actAmount.divide(new BigDecimal("800"));
+				//actAmount = actAmount.divide(new BigDecimal("1000"));
 
 				// 入场时间
 				String enterTime = jsonData.getString("enterTime");

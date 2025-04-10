@@ -73,8 +73,9 @@ public class Constant<https> {
     //public static String CALLBACK_URL =  "https://hgj.shofw.com/jiasv/callBack";
     // 服务商回调地址
     public static String CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/callBack";
-    // 服务商回调地址-停车缴费
+    // 服务商回调地址-停车缴费-新弘北外滩
     public static String CARPAY_CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/carPay/callBack";
+    //public static String CARPAY_CALLBACK_URL =  "https://zhgjtest.xhguanjia.cn/wx/carPay/callBack";
     // 服务商回调地址-车辆续费
     public static String CARRENEW_CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/carRenew/callBack";
     // 服务商回调地址-月租车续费
