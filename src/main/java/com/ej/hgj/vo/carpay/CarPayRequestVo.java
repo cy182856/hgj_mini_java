@@ -29,4 +29,6 @@ public class CarPayRequestVo extends BaseReqVo implements Serializable {
 
 	private Integer hourNumValue;
 
+	private String orderId;
+
 }

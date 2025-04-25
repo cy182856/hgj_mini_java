@@ -1,12 +1,14 @@
 package com.ej.hgj.controller.carpay;
 
 import cn.hutool.json.JSONUtil;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ej.hgj.base.BaseRespVo;
 import com.ej.hgj.constant.Constant;
 import com.ej.hgj.controller.base.BaseController;
 import com.ej.hgj.dao.card.CardCstBatchDaoMapper;
 import com.ej.hgj.dao.card.CardCstDaoMapper;
+import com.ej.hgj.dao.carpay.ParkPayInvoiceDaoMapper;
 import com.ej.hgj.dao.carpay.ParkPayOrderDaoMapper;
 import com.ej.hgj.dao.carpay.ParkPayOrderTempDaoMapper;
 import com.ej.hgj.dao.config.ConstantConfDaoMapper;
@@ -15,21 +17,28 @@ import com.ej.hgj.dao.hu.CstIntoCardMapper;
 import com.ej.hgj.dao.hu.CstIntoMapper;
 import java.math.RoundingMode;
 import com.ej.hgj.entity.card.CardCst;
+import com.ej.hgj.entity.carpay.ParkPayInvoice;
 import com.ej.hgj.entity.carpay.ParkPayOrder;
 import com.ej.hgj.entity.carpay.ParkPayOrderTemp;
 import com.ej.hgj.entity.config.ConstantConfig;
 import com.ej.hgj.entity.cst.HgjCst;
 import com.ej.hgj.entity.hu.CstInto;
 import com.ej.hgj.entity.hu.CstIntoCard;
+import com.ej.hgj.entity.moncarren.CompanyInfo;
+import com.ej.hgj.entity.moncarren.MonCarRenInvoice;
+import com.ej.hgj.entity.moncarren.MonCarRenOrder;
 import com.ej.hgj.entity.opendoor.OpenDoorLog;
 import com.ej.hgj.enums.JiasvBasicRespCode;
 import com.ej.hgj.enums.MonsterBasicRespCode;
 import com.ej.hgj.service.carpay.CarPayService;
 import com.ej.hgj.utils.DateUtils;
 import com.ej.hgj.utils.HttpClientUtil;
+import com.ej.hgj.utils.SecurityUtil;
 import com.ej.hgj.utils.bill.*;
 import com.ej.hgj.vo.bill.SignInfoVo;
 import com.ej.hgj.vo.carpay.*;
+import com.ej.hgj.vo.moncarren.MonCarRenOrderStatusVo;
+import com.ej.hgj.vo.moncarren.MonCarRenRequestVo;
 import com.ej.hgj.vo.opendoor.OpenDoorCodeVo;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -55,10 +64,15 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+/**
+ * 新弘北外滩停车缴费
+ */
 @Controller
 public class CarPayController extends BaseController {
 
@@ -96,6 +110,9 @@ public class CarPayController extends BaseController {
 
 	@Autowired
 	private CstIntoMapper cstIntoMapper;
+
+	@Autowired
+	private ParkPayInvoiceDaoMapper parkPayInvoiceDaoMapper;
 
 	/**
 	 * 车牌号查询停车订单费用接口
@@ -944,11 +961,30 @@ public class CarPayController extends BaseController {
 		parkPayOrder.setWxOpenId(carPayLogVo.getWxOpenId());
 		List<ParkPayOrder> list = parkPayOrderDaoMapper.getList(parkPayOrder);
 		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+		// 计算N个月前的日期
+		ConstantConfig byProNumAndKey = constantConfDaoMapper.getByProNumAndKey(carPayLogVo.getProNum(), Constant.ZHTC_INVOICE_BEFORE_MONTH);
+		LocalDate creationBeforeMonth = LocalDate.now().minusMonths(Integer.valueOf(byProNumAndKey.getConfigValue()));
 		for(ParkPayOrder p : list){
 			if(StringUtils.isNotBlank(p.getSuccessTime())) {
 				ZonedDateTime zonedDateTime = ZonedDateTime.parse(p.getSuccessTime(), formatter);
 				String formatted = zonedDateTime.format(DateUtils.formatter_ymd_hms);
 				p.setSuccessTime(formatted);
+
+				// 判断支付时间是否是N个月前的
+				DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+				LocalDateTime localDateSuccessTime = LocalDateTime.parse(formatted, dateTimeFormatter);
+				LocalDate paymentTime = localDateSuccessTime.toLocalDate();
+				if (paymentTime.isBefore(creationBeforeMonth)) {
+					// 支付时间是N个月以前的，无法开票
+					p.setTimeStatus(1);
+				}else{
+					// 支付时间不是N个月以前的，可以开票
+					p.setTimeStatus(0);
+				}
+				// 查询开票状态 1-开票中 2-开票成功 3-未开票
+				if(p.getInvoiceStatus() == null){
+					p.setInvoiceStatus(3);
+				}
 			}
 		}
 		PageInfo<ParkPayOrder> pageInfo = new PageInfo<>(list);
@@ -963,6 +999,298 @@ public class CarPayController extends BaseController {
 		carPayLogVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
 		return carPayLogVo;
 	}
+
+	/**
+	 * 开票验证
+	 * @param carPayRequestVo
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/carpay/parkPayInvoiceCheck.do")
+	public JSONObject parkPayInvoiceCheck(@RequestBody CarPayRequestVo carPayRequestVo){
+		JSONObject jsonObject = new JSONObject();
+		// 查询订单信息
+		ParkPayOrder parkPayOrder = parkPayOrderDaoMapper.getById(carPayRequestVo.getOrderId());
+		if(parkPayOrder == null){
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "订单不存在");
+			return jsonObject;
+		}
+		if(parkPayOrder.getOrderStatus() != 2){
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "订单状态错误");
+			return jsonObject;
+		}
+		// 计算N个月前的日期
+		ConstantConfig byProNumAndKey = constantConfDaoMapper.getByProNumAndKey(carPayRequestVo.getProNum(), Constant.ZHTC_INVOICE_BEFORE_MONTH);
+		LocalDate creationBeforeMonth = LocalDate.now().minusMonths(Integer.valueOf(byProNumAndKey.getConfigValue()));
+		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+		ZonedDateTime zonedDateTime = ZonedDateTime.parse(parkPayOrder.getSuccessTime(), formatter);
+		String successTime = zonedDateTime.format(DateUtils.formatter_ymd_hms);
+		// 判断支付时间是否是N个月前的
+		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		LocalDateTime localDateSuccessTime = LocalDateTime.parse(successTime, dateTimeFormatter);
+		LocalDate paymentTime = localDateSuccessTime.toLocalDate();
+		if (paymentTime.isBefore(creationBeforeMonth)) {
+			// 支付时间超过N个月
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "订单已超过" + byProNumAndKey.getConfigValue() + "个月无法开票");
+			return jsonObject;
+		}
+		jsonObject.put("respCode", "000");
+		jsonObject.put("errDesc", "成功");
+		return jsonObject;
+	}
+
+	/**
+	 * 根据抬头获取单位全称及税号
+	 * @param monCarRenRequestVo
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/carpay/parkPayCompanySearch.do")
+	public JSONObject parkPayCompanySearch(@RequestBody MonCarRenRequestVo monCarRenRequestVo){
+		JSONObject jsonObject = new JSONObject();
+
+		// 调用开票接口获取token
+		String tokenUrl = "http://api.yuxtech.com/invoice/getToken";
+		String tokenParam = "{\"username\":\"admin_91310110MA1G8DCX9W\",\"password\":\"ixLRI4ef\"}";
+		JSONObject tokenResultJson = HttpClientUtil.sendPost(tokenUrl, tokenParam);
+		String tokenResponse = tokenResultJson.getString("response");
+		JSONObject jsonResponse = JSONObject.parseObject(tokenResponse);
+		String access_token = jsonResponse.getString("access_token");
+		// 获取当前时间戳
+		long timeStamp = System.currentTimeMillis();
+		// 调用云台头获取接口
+		String companyUrlParam = "{\"companyName\":\"" +
+				monCarRenRequestVo.getSearchText() +
+				"\"}";
+		// 对参数加密获取MD5签名
+		String salt = "jrPrts7ovwg1uQM5";
+		String sign = SecurityUtil.encodeByMD5(salt + companyUrlParam);
+		String companyUrl = "http://api.yuxtech.com/invoice/bizinfoCompanySearch?token=" +
+				access_token +
+				"&method=bizinfoCompanySearch&timeStamp=" +
+				timeStamp +
+				"&appKey=1010043&version=1.0&sign=" +
+				sign +
+				"";
+		JSONObject companyResultJson = HttpClientUtil.sendPost(companyUrl, companyUrlParam);
+		boolean success = Boolean.valueOf(companyResultJson.getString("success"));
+		if(success == true){
+			String requestId = companyResultJson.getString("requestId");
+			String result = companyResultJson.getString("result");
+			List<CompanyInfo> companyInfoList = JSON.parseArray(result, CompanyInfo.class);
+			jsonObject.put("companyInfoList", companyInfoList);
+		}else {
+			String errorResponse = companyResultJson.getString("errorResponse");
+			JSONObject errorResponseJson = JSONObject.parseObject(errorResponse);
+			String code = errorResponseJson.getString("code");
+			String message = errorResponseJson.getString("message");
+			String subCode = errorResponseJson.getString("subCode");
+			String subMessage = errorResponseJson.getString("subMessage");
+			jsonObject.put("respCode", code);
+			jsonObject.put("errDesc", message);
+			return jsonObject;
+		}
+		jsonObject.put("respCode", "000");
+		jsonObject.put("errDesc", "成功");
+		return jsonObject;
+	}
+
+	/**
+	 * 开票
+	 * @param monCarRenRequestVo
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/carpay/parkPayInvoice.do")
+	public JSONObject parkPayInvoice(@RequestBody MonCarRenRequestVo monCarRenRequestVo){
+		JSONObject jsonObject = new JSONObject();
+		// 根据开票类型传参1-单位开票  2-个人开票 个人开票不需要税号
+		String invoiceType = monCarRenRequestVo.getInvoiceType();
+		if(StringUtils.isBlank(invoiceType)) {
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "开票类型不能为空");
+			return jsonObject;
+		}
+		String buyerName = monCarRenRequestVo.getBuyerName();
+		if(StringUtils.isBlank(buyerName)) {
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "发票抬头不能为空");
+			return jsonObject;
+		}
+		String buyerTaxNo = monCarRenRequestVo.getBuyerTaxNo();
+		if(StringUtils.isBlank(buyerTaxNo) && "1".equals(invoiceType)) {
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "税号不能为空");
+			return jsonObject;
+		}
+		String pushEmail = monCarRenRequestVo.getPushEmail();
+		if(StringUtils.isBlank(pushEmail)) {
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "邮箱不能为空");
+			return jsonObject;
+		}
+		// 查询订单信息
+		ParkPayOrder parkPayOrder = parkPayOrderDaoMapper.getById(monCarRenRequestVo.getOrderId());
+		if(parkPayOrder == null){
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "订单不存在");
+			return jsonObject;
+		}
+		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+		ZonedDateTime zonedDateTime = ZonedDateTime.parse(parkPayOrder.getSuccessTime(), formatter);
+		String successTime = zonedDateTime.format(DateUtils.formatter_ymd_hms);
+		// 调用开票接口获取token
+		String tokenUrl = "http://api.yuxtech.com/invoice/getToken";
+		String tokenParam = "{\"username\":\"admin_91310109735421199K\",\"password\":\"1nXub5s7\"}";
+		JSONObject tokenResultJson = HttpClientUtil.sendPost(tokenUrl, tokenParam);
+		String tokenResponse = tokenResultJson.getString("response");
+		JSONObject jsonResponse = JSONObject.parseObject(tokenResponse);
+		String access_token = jsonResponse.getString("access_token");
+		// 获取当前时间戳
+		long timeStamp = System.currentTimeMillis();
+		String invoiceParam = "";
+		if("1".equals(invoiceType)) {
+			// 调用开票接口
+			invoiceParam = "{\"invoiceType\":\"1\",\"invoiceTypeCode\":\"02\",\"taxNo\":\"91310109735421199K\",\"orderNo\":\"" +
+					parkPayOrder.getId() +
+					"\",\"orderDateTime\":\"" +
+					successTime +
+					"\",\"invoiceSpecialMark\":\"06\",\"priceTaxMark\":\"1\",\"invoiceDetailList\":[{\"goodsCode\":\"3040502020200000000\",\"goodsName\":\"停车费\",\"goodsQuantity\":1,\"goodsPrice\":" +
+					parkPayOrder.getActAmount() +
+					",\"goodsTotalPrice\":" +
+					parkPayOrder.getActAmount() +
+					",\"goodsTaxRate\":0.09}],\"leaseInfo\":{\"leasePropertyNo\":\"沪房地杨字（2015）第009043号\",\"leaseAddress\":\"上海市&杨浦区\",\"leaseDetailAddress\":\"杨树浦路1088号，江浦路39号\",\"leaseCrossSign\":\"否\",\"leaseAreaUnit\":\"2\",\"leaseHoldDateStart\":\"2007-03-31\",\"leaseHoldDateEnd\":\"2057-03-30\"},\"buyerName\":\"" +
+					buyerName +
+					"\",\"buyerTaxNo\":\"" +
+					buyerTaxNo +
+					"\",\"pushEmail\":\"" +
+					pushEmail +
+					"\",\"callBackUrl\":\"" +
+					Constant.PARK_PAY_INVOICE_CALLBACK_URL +
+					"\"}";
+		}
+		if("2".equals(invoiceType)) {
+			// 调用开票接口
+			invoiceParam = "{\"invoiceType\":\"1\",\"invoiceTypeCode\":\"02\",\"taxNo\":\"91310109735421199K\",\"orderNo\":\"" +
+					parkPayOrder.getId() +
+					"\",\"orderDateTime\":\"" +
+					successTime +
+					"\",\"invoiceSpecialMark\":\"06\",\"priceTaxMark\":\"1\",\"invoiceDetailList\":[{\"goodsCode\":\"3040502020200000000\",\"goodsName\":\"停车费\",\"goodsQuantity\":1,\"goodsPrice\":" +
+					parkPayOrder.getActAmount() +
+					",\"goodsTotalPrice\":" +
+					parkPayOrder.getActAmount() +
+					",\"goodsTaxRate\":0.09}],\"leaseInfo\":{\"leasePropertyNo\":\"沪房地杨字（2015）第009043号\",\"leaseAddress\":\"上海市&杨浦区\",\"leaseDetailAddress\":\"杨树浦路1088号，江浦路39号\",\"leaseCrossSign\":\"否\",\"leaseAreaUnit\":\"2\",\"leaseHoldDateStart\":\"2007-03-31\",\"leaseHoldDateEnd\":\"2057-03-30\"},\"buyerName\":\"" +
+					buyerName +
+					"\",\"pushEmail\":\"" +
+					pushEmail +
+					"\",\"callBackUrl\":\"" +
+					Constant.PARK_PAY_INVOICE_CALLBACK_URL +
+					"\"}";
+		}
+		// 对参数加密获取MD5签名
+		String salt = "rw0bErdIVqWQM4dG";
+		String sign = SecurityUtil.encodeByMD5(salt + invoiceParam);
+		String invoiceUrl = "http://api.yuxtech.com/invoice/xw?token=" +
+				access_token +
+				"&method=baiwang.s.outputinvoice.invoice&timeStamp=" +
+				timeStamp +
+				"&appKey=1010064&version=1.0&sign=" +
+				sign +
+				"";
+		JSONObject invoiceResultJson = HttpClientUtil.sendPost(invoiceUrl, invoiceParam);
+		boolean success = Boolean.valueOf(invoiceResultJson.getString("success"));
+		if(success == true){
+			String requestId = invoiceResultJson.getString("requestId");
+			String invoiceResponse = invoiceResultJson.getString("response");
+			JSONObject invoiceJson = JSONObject.parseObject(invoiceResponse);
+			String serialNo = invoiceJson.getString("serialNo");
+			// 保存开票记录
+			ParkPayInvoice parkPayInvoice = new ParkPayInvoice();
+			parkPayInvoice.setId(TimestampGenerator.generateSerialNumber());
+			parkPayInvoice.setOrderId(parkPayOrder.getId());
+			parkPayInvoice.setRequestId(requestId);
+			parkPayInvoice.setSerialNo(serialNo);
+			parkPayInvoice.setBuyerName(buyerName);
+			parkPayInvoice.setBuyerTaxNo(buyerTaxNo);
+			parkPayInvoice.setPushEmail(pushEmail);
+			parkPayInvoice.setInvoiceType(Integer.valueOf(invoiceType));
+			//monCarRenInvoice.setPdfUrl(pdfUrl);
+			//monCarRenInvoice.setResCode(resCode);
+			//monCarRenInvoice.setResMsg(resMsg);
+			parkPayInvoice.setInvoiceStatus(1);
+			parkPayInvoice.setCreateTime(new Date());
+			parkPayInvoice.setUpdateTime(new Date());
+			parkPayInvoice.setDeleteFlag(Constant.DELETE_FLAG_NOT);
+			parkPayInvoiceDaoMapper.save(parkPayInvoice);
+
+		}else {
+			String errorResponse = invoiceResultJson.getString("errorResponse");
+			JSONObject errorResponseJson = JSONObject.parseObject(errorResponse);
+			String code = errorResponseJson.getString("code");
+			String message = errorResponseJson.getString("message");
+			String subCode = errorResponseJson.getString("subCode");
+			String subMessage = errorResponseJson.getString("subMessage");
+			jsonObject.put("respCode", subCode);
+			jsonObject.put("errDesc", subMessage);
+			return jsonObject;
+		}
+		jsonObject.put("respCode", "000");
+		jsonObject.put("errDesc", "成功");
+		return jsonObject;
+	}
+
+	/**
+	 * 发票查看
+	 * @param carPayRequestVo
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/carpay/parkPayViewInvoice.do")
+	public JSONObject parkPayViewInvoice(@RequestBody CarPayRequestVo carPayRequestVo){
+		JSONObject jsonObject = new JSONObject();
+		// 查询开票信息
+		ParkPayInvoice parkPayInvoice = parkPayInvoiceDaoMapper.getByOrderId(carPayRequestVo.getOrderId());
+		if(parkPayInvoice == null){
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "无开票信息");
+			return jsonObject;
+		}
+		if(parkPayInvoice.getInvoiceStatus() != 2){
+			jsonObject.put("respCode", "999");
+			jsonObject.put("errDesc", "开票状态错误");
+			return jsonObject;
+		}
+		jsonObject.put("monCarRenInvoice", parkPayInvoice);
+		jsonObject.put("respCode", "000");
+		jsonObject.put("errDesc", "成功");
+		return jsonObject;
+	}
+
+	@PostMapping(value = "/carPay/invoice/callBack")
+	@ResponseBody
+	public void invoiceCallBack(@RequestBody JSONObject jsonObject) {
+		logger.info("发票开具回调返回数据：" + jsonObject);
+		String data = jsonObject.getString("data");
+		JSONObject dataJson = JSONObject.parseObject(data);
+		String orderNo = dataJson.getString("orderNo");
+		String pdfUrl = dataJson.getString("pdfUrl");
+		String status = dataJson.getString("status");
+		String statusMessage = dataJson.getString("statusMessage");
+		ParkPayInvoice parkPayInvoice = new ParkPayInvoice();
+		parkPayInvoice.setOrderId(orderNo);
+		parkPayInvoice.setPdfUrl(pdfUrl);
+		parkPayInvoice.setResCode(status);
+		parkPayInvoice.setResMsg(statusMessage);
+		if("01".equals(status)) {
+			parkPayInvoice.setInvoiceStatus(2);
+		}
+		parkPayInvoice.setUpdateTime(new Date());
+		parkPayInvoiceDaoMapper.update(parkPayInvoice);
+	}
+
 
 	public static void main(String[] args) {
 //		String stringA="appid=ym5e3ad2743739c30a&carNo=川A55D67&parkKey=m3kgkktp&rand=5.394985805&version=v1.0&";

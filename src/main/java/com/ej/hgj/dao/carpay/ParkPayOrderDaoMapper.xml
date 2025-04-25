@@ -31,6 +31,9 @@
         <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
         <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
         <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
+
+        <result column="invoice_status" jdbcType="INTEGER" property="invoiceStatus"/>
+        <result column="pdf_url" jdbcType="VARCHAR" property="pdfUrl"/>
     </resultMap>
     <sql id="Base_Column_List" >
         id, pro_num, park_order_no, card_cst_batch_id, car_code, wx_open_id, cst_code, cst_name, pay_amount, act_amount, amount_total, ip_item_name,transaction_id,trade_type,
@@ -71,19 +74,19 @@
     <!-- 查询列表-->
     <select id="getList" resultMap="BaseMap"  parameterType="com.ej.hgj.entity.carpay.ParkPayOrder">
         select
-        <include refid="Base_Column_List" />
-        from t_park_pay_order
-        where delete_flag = 0 and order_status in (1,2)
+        a.*,b.invoice_status,b.pdf_url
+        from t_park_pay_order a left join t_park_pay_order_invoice b on a.id=b.order_id
+        where a.delete_flag = 0 and a.order_status in (1,2)
         <if test="proNum != null">
-            and pro_num = #{proNum,jdbcType=VARCHAR}
+            and a.pro_num = #{proNum,jdbcType=VARCHAR}
         </if>
         <if test="wxOpenId != null">
-            and wx_open_id = #{wxOpenId,jdbcType=VARCHAR}
+            and a.wx_open_id = #{wxOpenId,jdbcType=VARCHAR}
         </if>
         <if test="cstCode != null">
-            and cst_code = #{cstCode,jdbcType=VARCHAR}
+            and a.cst_code = #{cstCode,jdbcType=VARCHAR}
         </if>
-        order by update_time desc
+        order by a.update_time desc
     </select>
 
     <!-- 保存-->

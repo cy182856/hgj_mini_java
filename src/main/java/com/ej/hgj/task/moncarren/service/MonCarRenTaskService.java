@@ -79,7 +79,7 @@ public class MonCarRenTaskService {
 
     // 支付中订单报错才可以改为失败,因为预支付订单会返回订单未支付,这时候并未真的支付,所以不能改为支付失败
     public void updateOrderStatus_1() {
-        logger.info("----------------------长期车续费支付中订单定时任务处理开始--------------------------- ");
+        logger.info("----------------------OFW月租车续费支付中订单定时任务处理开始--------------------------- ");
         // 查询5分钟前支付中订单
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MINUTE, -5);
@@ -123,21 +123,21 @@ public class MonCarRenTaskService {
                         ConstantConfig spMchIdCon = constantConfDaoMapper.getByKey(Constant.SP_MCH_ID_YY);
                         spMchId = spMchIdCon.getConfigValue();
                         // 子服务商户号-凡享
-                        ConstantConfig subMchIdCon = constantConfDaoMapper.getByProNumAndKey(monCarRenOrder.getProNum(), Constant.SUB_MCH_ID_FX);
+                        ConstantConfig subMchIdCon = constantConfDaoMapper.getByProNumAndKey(monCarRenOrder.getProNum(), Constant.SUB_MCH_ID_FX_OFW);
                         subMchId = subMchIdCon.getConfigValue();
                         signInfo.setSpMchId(spMchId);
                         // 子服务商户号
                         signInfo.setSubMchId(subMchId);
                     }else if("10001".equals(proNum)){
                         // 服务商户号-宜悦
-                        ConstantConfig spMchIdCon = constantConfDaoMapper.getByKey(Constant.SP_MCH_ID_YY);
-                        spMchId = spMchIdCon.getConfigValue();
+                        //ConstantConfig spMchIdCon = constantConfDaoMapper.getByKey(Constant.SP_MCH_ID_YY);
+                        //spMchId = spMchIdCon.getConfigValue();
                         // 子服务商户号-凡享
-                        ConstantConfig subMchIdCon = constantConfDaoMapper.getByProNumAndKey(monCarRenOrder.getProNum(), Constant.SUB_MCH_ID_FX);
-                        subMchId = subMchIdCon.getConfigValue();
-                        signInfo.setSpMchId(spMchId);
+                        //ConstantConfig subMchIdCon = constantConfDaoMapper.getByProNumAndKey(monCarRenOrder.getProNum(), Constant.SUB_MCH_ID_FX);
+                        //subMchId = subMchIdCon.getConfigValue();
+                        //signInfo.setSpMchId(spMchId);
                         // 子服务商户号
-                        signInfo.setSubMchId(subMchId);
+                        //signInfo.setSubMchId(subMchId);
                     }
                     // 证书序列号 10000-东方渔人码头 10001-凡享
                     ConstantConfig serialNo = constantConfDaoMapper.getByKey(Constant.SERIAL_NO_YY);
@@ -181,7 +181,7 @@ public class MonCarRenTaskService {
                 }
             }
         }
-        logger.info("----------------------长期车续费支付中订单定时任务处理结束--------------------------- ");
+        logger.info("----------------------OFW月租车续费支付中订单定时任务处理结束--------------------------- ");
     }
 
 

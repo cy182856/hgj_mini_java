@@ -54,6 +54,8 @@ public class Constant<https> {
     public static final String SP_MCH_ID_YY = "sp_mch_id_yy";
     // 子服务商户号-凡享
     public static final String SUB_MCH_ID_FX = "sub_mch_id_fx";
+    // 子服务商户号-渔人码头凡享
+    public static final String SUB_MCH_ID_FX_OFW = "sub_mch_id_fx_ofw";
     // 直连商户号
     public static final String MCH_ID = "mch_id";
     // 服务商证书序列号
@@ -265,8 +267,11 @@ public class Constant<https> {
     // 长期车续费可选月数
     public static String MON_CAR_REN_NUM = "mon_car_ren_num";
 
-    // 长期车续费开票月数限制
+    // 东方渔人码头长期车续费开票月数限制
     public static String MON_CAR_REN_INVOICE_BEFORE_MONTH = "mon_car_ren_invoice_before_month";
+
+    // 新弘北外滩停车缴费开票月数限制
+    public static String ZHTC_INVOICE_BEFORE_MONTH = "zhtc_invoice_before_month";
 
     // 电费查询日期区间选择年数限制
     public static String ELECTRICITY_PICKER_BEFORE_MONTH = "electricity_picker_before_month";
@@ -274,8 +279,12 @@ public class Constant<https> {
     // 电费查询接口
     public static String ELECTRICITY_API_URL = "electricity_api_url";
 
-    // 发票开具回调地址
+    // 东方渔人码头长期车续费发票开具回调地址
     public static String MONCARREN_INVOICE_CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/monCarRen/invoice/callBack";
       //public static String MONCARREN_INVOICE_CALLBACK_URL =  "https://zhgjtest.xhguanjia.cn/wx/monCarRen/invoice/callBack";
+
+    // 新弘北外滩停车缴费发票开具回调地址
+    public static String PARK_PAY_INVOICE_CALLBACK_URL =  "https://zhgj.xhguanjia.cn/wx/carPay/invoice/callBack";
+    //public static String PARK_PAY_INVOICE_CALLBACK_URL =  "https://zhgjtest.xhguanjia.cn/wx/carPay/invoice/callBack";
 
 }

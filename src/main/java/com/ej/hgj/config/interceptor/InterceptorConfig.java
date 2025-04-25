@@ -25,6 +25,7 @@ public class InterceptorConfig extends WebMvcConfigurerAdapter {
                         "/**/carRenew/callBack/**",
                         "/**/monCarRen/callBack/**",
                         "/**/monCarRen/invoice/callBack/**",
+                        "/**/carPay/invoice/callBack/**",
                         "/**/hu/**",
                         "/**/pass/code/**"
                 ); //放行接口

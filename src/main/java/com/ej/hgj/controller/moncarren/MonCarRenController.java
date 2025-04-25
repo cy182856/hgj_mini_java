@@ -64,6 +64,9 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+/**
+ * 东方渔人码头长期车续费
+ */
 @Controller
 public class MonCarRenController extends BaseController {
 
@@ -717,16 +720,17 @@ public class MonCarRenController extends BaseController {
 				ConstantConfig spMchId = constantConfDaoMapper.getByKey(Constant.SP_MCH_ID_YY);
 				signInfo.setSpMchId(spMchId.getConfigValue());
 				// 子服务商户号-凡享
-				ConstantConfig subMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SUB_MCH_ID_FX);
+				ConstantConfig subMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SUB_MCH_ID_FX_OFW);
 				signInfo.setSubMchId(subMchId.getConfigValue());
 				// 服务商模式-大连路项目
 			} else if ("10001".equals(proNum)) {
 				// 服务商户号-宜悦
-				ConstantConfig spMchId = constantConfDaoMapper.getByKey(Constant.SP_MCH_ID_YY);
-				signInfo.setSpMchId(spMchId.getConfigValue());
+				//ConstantConfig spMchId = constantConfDaoMapper.getByKey(Constant.SP_MCH_ID_YY);
+				//signInfo.setSpMchId(spMchId.getConfigValue());
 				// 子服务商户号-凡享
-				ConstantConfig subMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SUB_MCH_ID_FX);
-				signInfo.setSubMchId(subMchId.getConfigValue());
+				//ConstantConfig subMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SUB_MCH_ID_FX);
+				//signInfo.setSubMchId(subMchId.getConfigValue());
+				//signInfo.setSubMchId(subMchId.getConfigValue());
 			}
 			// 证书序列号
 			ConstantConfig serialNo = constantConfDaoMapper.getByKey(Constant.SERIAL_NO_YY);
@@ -1007,7 +1011,7 @@ public class MonCarRenController extends BaseController {
 	public static void main(String[] args) {
 
 		String salt = "oITcOlxUOW3cEfp3";
-		String data = "{\"invoiceType\":\"1\",\"orderNo\":\"2025030515172593651c\",\"orderDateTime\":\"2025-03-05 15:23:01\",\"invoiceSpecialMark\":\"06\",\"priceTaxMark\":\"1\",\"invoiceDetailList\":[{\"goodsLineNo\":1,\"goodsCode\":\"3040502020200000000\",\"goodsName\":\"停车费\",\"goodsSpecification\":\"\",\"goodsUnit\":\"\",\"goodsQuantity\":1,\"goodsPrice\":0,\"goodsTotalPrice\":1,\"goodsTaxRate\":0.05,\"vatSpecialManagement\":\"按5%简易征收\",\"freeTaxMark\":\"\"}],\"leaseInfo\":{\"leasePropertyNo\":\"沪房地杨字（2015）第009043号\",\"leaseAddress\":\"上海市&杨浦区\",\"leaseDetailAddress\":\"杨树浦路1088号，江浦路39号\",\"leaseCrossSign\":\"否\",\"leaseAreaUnit\":\"平方米\",\"leaseHoldDateStart\":\"2007-03-31\",\"leaseHoldDateEnd\":\"2057-03-30\"},\"buyerName\":\"安世亚太科技股份有限公司\",\"buyerTaxNo\":\"91110105756700197H\",\"invoiceTypeCode\":\"02\",\"taxNo\":\"913101183420070187\",\"naturalMark\":\"0\",\"pushEmail\":\"\",\"remarks\":\"\"}";
+		String data = "{\"companyName\":\"凡享资产\"}";
 		String saltData = salt + data;
 		String md5Str = SecurityUtil.encodeByMD5(saltData);
 		System.out.println(md5Str);
