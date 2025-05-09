@@ -40,7 +40,7 @@
         select
         g.*,t.name as type_name
         from t_gonggao g left join t_gonggao_type t on g.type = t.id
-        where g.delete_flag = 0 and g.is_show = 0 and g.`source` = 2
+        where g.delete_flag = 0 and g.is_show = 0 and g.`source` = 3
         <if test="title != null">
             and g.title like CONCAT('%', #{title,jdbcType=VARCHAR},'%') ESCAPE '/'
         </if>

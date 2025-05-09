@@ -54,6 +54,8 @@ public class Constant<https> {
     public static final String SP_MCH_ID_YY = "sp_mch_id_yy";
     // 子服务商户号-凡享
     public static final String SUB_MCH_ID_FX = "sub_mch_id_fx";
+    // 子服务商户号-鸿旭
+    public static final String SUB_MCH_ID_HX = "sub_mch_id_hx";
     // 子服务商户号-渔人码头凡享
     public static final String SUB_MCH_ID_FX_OFW = "sub_mch_id_fx_ofw";
     // 直连商户号
@@ -272,6 +274,12 @@ public class Constant<https> {
 
     // 新弘北外滩停车缴费开票月数限制
     public static String ZHTC_INVOICE_BEFORE_MONTH = "zhtc_invoice_before_month";
+
+    // 新弘停车抵扣说明文字
+    public static String XH_PARK_COUPON_DESC = "xh_park_coupon_desc";
+
+    // 新弘停车抵扣当天可抵扣次数
+    public static String XH_PARK_COUPON_DAY_MAX_NUM = "xh_park_coupon_day_max_num";
 
     // 电费查询日期区间选择年数限制
     public static String ELECTRICITY_PICKER_BEFORE_MONTH = "electricity_picker_before_month";

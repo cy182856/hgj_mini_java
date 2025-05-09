@@ -26,7 +26,7 @@ public class CarPayFinishTask implements SchedulingConfigurer {
     private CarPayTaskService carPayTaskService;
 
     /**
-     * 支付完成后支付中订单定时任务
+     * 鸿旭临停缴费支付完成后支付中订单定时任务
      */
     @Override
     public void configureTasks(ScheduledTaskRegistrar scheduledTaskRegistrar) {

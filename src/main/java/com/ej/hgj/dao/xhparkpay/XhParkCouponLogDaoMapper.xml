@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ej.hgj.dao.xhparkpay.XhParkCouponLogDaoMapper">
+
+    <resultMap id="BaseMap" type="com.ej.hgj.entity.xhparkpay.XhParkCouponLog">
+        <result column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="pro_num" jdbcType="VARCHAR" property="proNum"/>
+        <result column="coupon_no" jdbcType="VARCHAR" property="couponNo"/>
+        <result column="card_cst_batch_id" jdbcType="VARCHAR" property="cardCstBatchId"/>
+        <result column="car_code" jdbcType="VARCHAR" property="carCode"/>
+        <result column="wx_open_id" jdbcType="VARCHAR" property="wxOpenId"/>
+        <result column="cst_code" jdbcType="VARCHAR" property="cstCode"/>
+        <result column="deduction_num" jdbcType="INTEGER" property="deductionNum"/>
+        <result column="create_by" jdbcType="VARCHAR" property="createBy"/>
+        <result column="update_by" jdbcType="VARCHAR" property="updateBy"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="delete_flag" jdbcType="INTEGER" property="deleteFlag"/>
+    </resultMap>
+    <sql id="Base_Column_List" >
+        id, pro_num, coupon_no, card_cst_batch_id, car_code, wx_open_id, cst_code, deduction_num, create_time, update_time, create_by,
+        update_by, delete_flag
+    </sql>
+
+    <!-- 保存-->
+    <insert id="save" parameterType="com.ej.hgj.entity.xhparkpay.XhParkCouponLog" >
+        insert into  t_xh_park_coupon_log(
+        <if test="id != null">
+            id,
+        </if>
+        <if test="proNum != null">
+            pro_num,
+        </if>
+        <if test="couponNo != null">
+            coupon_no,
+        </if>
+        <if test="cardCstBatchId != null">
+            card_cst_batch_id,
+        </if>
+        <if test="carCode != null">
+            car_code,
+        </if>
+        <if test="wxOpenId != null">
+            wx_open_id,
+        </if>
+        <if test="cstCode != null">
+            cst_code,
+        </if>
+        <if test="deductionNum != null">
+            deduction_num,
+        </if>
+        <if test="createTime != null">
+            create_time,
+        </if>
+        <if test="createBy != null">
+            create_by,
+        </if>
+        <if test="updateTime != null">
+            update_time,
+        </if>
+        <if test="updateBy != null">
+            update_by,
+        </if>
+        <if test="deleteFlag != null">
+            delete_flag
+        </if>
+        )
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="id != null" >
+                #{id,jdbcType=VARCHAR},
+            </if>
+            <if test="proNum != null" >
+                #{proNum,jdbcType=VARCHAR},
+            </if>
+            <if test="couponNo != null" >
+                #{couponNo,jdbcType=VARCHAR},
+            </if>
+            <if test="cardCstBatchId != null" >
+                #{cardCstBatchId,jdbcType=VARCHAR},
+            </if>
+            <if test="carCode != null" >
+                #{carCode,jdbcType=VARCHAR},
+            </if>
+            <if test="wxOpenId != null" >
+                #{wxOpenId,jdbcType=VARCHAR},
+            </if>
+            <if test="cstCode != null" >
+                #{cstCode,jdbcType=VARCHAR},
+            </if>
+            <if test="deductionNum != null" >
+                #{deductionNum,jdbcType=INTEGER},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="createBy != null">
+                #{createBy,jdbcType=VARCHAR},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateBy != null">
+                #{updateBy,jdbcType=VARCHAR},
+            </if>
+            <if test="deleteFlag != null">
+                #{deleteFlag,jdbcType=INTEGER}
+            </if>
+        </trim>
+    </insert>
+
+    <!-- 查询列表-->
+    <select id="getList" resultMap="BaseMap"  parameterType="com.ej.hgj.entity.xhparkpay.XhParkCouponLog">
+        select
+        <include refid="Base_Column_List" />
+        from t_xh_park_coupon_log a
+        where a.delete_flag = 0
+        <if test="proNum != null">
+            and a.pro_num = #{proNum,jdbcType=VARCHAR}
+        </if>
+        <if test="wxOpenId != null">
+            and a.wx_open_id = #{wxOpenId,jdbcType=VARCHAR}
+        </if>
+        <if test="cstCode != null">
+            and a.cst_code = #{cstCode,jdbcType=VARCHAR}
+        </if>
+        <if test="carCode != null">
+            and a.car_code = #{carCode,jdbcType=VARCHAR}
+        </if>
+        order by a.update_time desc
+    </select>
+
+    <!--根据车牌号查询当天数据-->
+    <select id="getListByCarCode" resultMap="BaseMap"  parameterType="java.lang.String">
+        select
+        <include refid="Base_Column_List" />
+        from t_xh_park_coupon_log
+        where delete_flag = 0 and car_code = #{carCode,jdbcType=VARCHAR}
+        and DATE(create_time) = DATE(NOW())
+    </select>
+
+
+</mapper>

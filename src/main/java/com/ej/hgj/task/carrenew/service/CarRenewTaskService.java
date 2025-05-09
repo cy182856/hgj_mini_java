@@ -77,7 +77,7 @@ public class CarRenewTaskService {
 
     // 支付中订单报错才可以改为失败,因为预支付订单会返回订单未支付,这时候并未真的支付,所以不能改为支付失败
     public void updateOrderStatus_1() {
-        logger.info("----------------------车辆续费支付中订单定时任务处理开始--------------------------- ");
+        logger.info("----------------------新弘月租车续费支付中订单定时任务处理开始--------------------------- ");
         // 查询5分钟前支付中订单
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MINUTE, -5);
@@ -170,7 +170,7 @@ public class CarRenewTaskService {
                 }
             }
         }
-        logger.info("----------------------车辆续费支付中订单定时任务处理结束--------------------------- ");
+        logger.info("----------------------新弘月租车续费支付中订单定时任务处理结束--------------------------- ");
     }
 
 

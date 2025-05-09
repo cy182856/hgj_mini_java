@@ -218,7 +218,7 @@ public class GonggaoController extends BaseController {
 	}
 
 	/**
-	 * 查询公告内容
+	 * 查询公告内容-编辑器
 	 * @return
 	 */
 	@RequestMapping("/gonggao/queryGonggaoContent.do")
@@ -236,6 +236,41 @@ public class GonggaoController extends BaseController {
 		content = content.replace("[","");
 		content = content.replace("]","");
 		gonggao.setContent(content);
+		gonggaoVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
+
+		// 根据项目号、wxOpenId、公告ID查询阅读记录
+		GonggaoRead gr = new GonggaoRead();
+		gr.setProNum(gonggaoVo.getProNum());
+		gr.setWxOpenId(gonggaoVo.getWxOpenId());
+		gr.setGonggaoId(gonggaoVo.getId());
+		gr.setReadStatus(1);
+		List<GonggaoRead> readList = gonggaoReadDaoMapper.getList(gr);
+		if(readList.isEmpty()) {
+			// 保存阅读记录
+			GonggaoRead gonggaoRead = new GonggaoRead();
+			gonggaoRead.setId(TimestampGenerator.generateSerialNumber());
+			gonggaoRead.setProNum(gonggaoVo.getProNum());
+			gonggaoRead.setTypeId(gonggao.getType());
+			gonggaoRead.setGonggaoId(gonggaoVo.getId());
+			gonggaoRead.setWxOpenId(gonggaoVo.getWxOpenId());
+			gonggaoRead.setReadStatus(1);
+			gonggaoRead.setCreateTime(new Date());
+			gonggaoRead.setUpdateTime(new Date());
+			gonggaoRead.setDeleteFlag(Constant.DELETE_FLAG_NOT);
+			gonggaoReadDaoMapper.save(gonggaoRead);
+		}
+		return gonggaoVo;
+	}
+
+	/**
+	 * 查询公告内容-金数据
+	 * @return
+	 */
+	@RequestMapping("/gonggao/queryGonggaoUrl.do")
+	@ResponseBody
+	public GonggaoVo queryGonggaoUrl(@RequestBody GonggaoVo gonggaoVo) throws IOException {
+		Gonggao gonggao = gonggaoDaoMapper.getById(gonggaoVo.getId());
+		gonggaoVo.setGonggao(gonggao);
 		gonggaoVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
 
 		// 根据项目号、wxOpenId、公告ID查询阅读记录

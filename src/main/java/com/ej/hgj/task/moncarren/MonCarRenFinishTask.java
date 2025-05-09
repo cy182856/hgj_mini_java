@@ -26,7 +26,7 @@ public class MonCarRenFinishTask implements SchedulingConfigurer {
     private MonCarRenTaskService monCarRenTaskService;
 
     /**
-     * 支付完成后支付中订单定时任务
+     * 渔人码头月租车续费支付完成后支付中订单定时任务
      */
     @Override
     public void configureTasks(ScheduledTaskRegistrar scheduledTaskRegistrar) {
