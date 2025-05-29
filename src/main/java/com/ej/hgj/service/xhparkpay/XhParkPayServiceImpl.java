@@ -69,6 +69,7 @@ public class XhParkPayServiceImpl implements XhParkPayService {
             xhParkCouponLog.setId(TimestampGenerator.generateSerialNumber());
             xhParkCouponLog.setProNum(carPayRequestVo.getProNum());
             xhParkCouponLog.setCouponNo(carPayRequestVo.getCouponNo());
+            xhParkCouponLog.setCouponKey(carPayRequestVo.getCouponKey());
             xhParkCouponLog.setCardCstBatchId(carPayRequestVo.getCardCstBatchId());
             xhParkCouponLog.setCarCode(carPayRequestVo.getCarCode());
             xhParkCouponLog.setWxOpenId(carPayRequestVo.getWxOpenId());

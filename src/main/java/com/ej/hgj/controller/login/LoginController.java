@@ -84,16 +84,6 @@ public class LoginController extends BaseController {
     @RequestMapping("/doLogin")
     public LoginInfo login(ModelMap model, HttpServletRequest request,HttpServletResponse resp,@RequestBody LoginInfo loginInfo) {
         logger.info("---------------------------------开始登录-----------------------------------");
-        String sessionId = request.getSession().getId();
-        CookieUtil.removeCookie(resp, CookieUtil.getCookie(request, Constant.SESSION_KEY));
-        CookieUtil.setCookie(resp, Constant.SESSION_KEY,sessionId, Constant.COOKIE_MAX_AGE);
-        loginInfo.setSessionId(sessionId);
-        JiasvOperationContext oc = new JiasvOperationContext();
-        oc.setProNum(loginInfo.getProNum());
-        oc.setCstCode(loginInfo.getCstCode());
-        oc.setWxOpenId(loginInfo.getWxOpenId());
-        JiasvOperationContextHolder.setJiasvOperationContext(oc);
-        request.getSession().setAttribute(JiasvOperationContextHolder.jiasvOperationContextSessionKey, oc);
 
         // 查询客户是否欠费
         BigDecimal priRev = new BigDecimal("0");

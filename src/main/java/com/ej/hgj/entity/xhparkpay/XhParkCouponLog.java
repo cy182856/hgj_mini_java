@@ -15,6 +15,8 @@ public class XhParkCouponLog {
 
     private String couponNo;
 
+    private String couponKey;
+
     private String cardCstBatchId;
 
     private String carCode;

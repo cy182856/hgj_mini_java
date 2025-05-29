@@ -661,21 +661,21 @@ public class CarPayController extends BaseController {
 				// 服务商模式-东方渔人码头
 				if ("10000".equals(proNum)) {
 					// 服务商户号-宜悦
-					ConstantConfig spMchId = constantConfDaoMapper.getByKey(Constant.SP_MCH_ID_YY);
-					signInfo.setSpMchId(spMchId.getConfigValue());
+					//ConstantConfig spMchId = constantConfDaoMapper.getByKey(Constant.SP_MCH_ID_YY);
+					//signInfo.setSpMchId(spMchId.getConfigValue());
 					// 子服务商户号-东方渔人码头
-					ConstantConfig subMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SUB_MCH_ID);
-					signInfo.setSubMchId(subMchId.getConfigValue());
+					//ConstantConfig subMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SUB_MCH_ID);
+					//signInfo.setSubMchId(subMchId.getConfigValue());
 					// 服务商模式-大连路项目
 				} else if ("10001".equals(proNum)) {
 					// 服务商户号-宜悦
 					ConstantConfig spMchId = constantConfDaoMapper.getByKey(Constant.SP_MCH_ID_YY);
 					signInfo.setSpMchId(spMchId.getConfigValue());
-					// 子服务商户号-凡享
-					ConstantConfig subMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SUB_MCH_ID_FX);
+					// 子服务商户号-鸿旭
+					ConstantConfig subMchId = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.SUB_MCH_ID_HX);
 					signInfo.setSubMchId(subMchId.getConfigValue());
 				}
-				// 证书序列号
+				// 证书序列号 宜悦
 				ConstantConfig serialNo = constantConfDaoMapper.getByKey(Constant.SERIAL_NO_YY);
 				signInfo.setSerialNo(serialNo.getConfigValue());
 				String params = "";
@@ -1162,7 +1162,7 @@ public class CarPayController extends BaseController {
 					parkPayOrder.getActAmount() +
 					",\"goodsTotalPrice\":" +
 					parkPayOrder.getActAmount() +
-					",\"goodsTaxRate\":0.09}],\"leaseInfo\":{\"leasePropertyNo\":\"沪房地杨字（2015）第009043号\",\"leaseAddress\":\"上海市&杨浦区\",\"leaseDetailAddress\":\"杨树浦路1088号，江浦路39号\",\"leaseCrossSign\":\"否\",\"leaseAreaUnit\":\"2\",\"leaseHoldDateStart\":\"2007-03-31\",\"leaseHoldDateEnd\":\"2057-03-30\"},\"buyerName\":\"" +
+					",\"goodsTaxRate\":0.09}],\"leaseInfo\":{\"leasePropertyNo\":\"沪虹310109011047号\",\"leaseAddress\":\"上海市&虹口区\",\"leaseDetailAddress\":\"长阳路316号\",\"leaseCrossSign\":\"否\",\"leaseAreaUnit\":\"2\",\"leaseHoldDateStart\":\"2025-03-31\",\"leaseHoldDateEnd\":\"2065-03-30\"},\"buyerName\":\"" +
 					buyerName +
 					"\",\"buyerTaxNo\":\"" +
 					buyerTaxNo +
@@ -1182,7 +1182,7 @@ public class CarPayController extends BaseController {
 					parkPayOrder.getActAmount() +
 					",\"goodsTotalPrice\":" +
 					parkPayOrder.getActAmount() +
-					",\"goodsTaxRate\":0.09}],\"leaseInfo\":{\"leasePropertyNo\":\"沪房地杨字（2015）第009043号\",\"leaseAddress\":\"上海市&杨浦区\",\"leaseDetailAddress\":\"杨树浦路1088号，江浦路39号\",\"leaseCrossSign\":\"否\",\"leaseAreaUnit\":\"2\",\"leaseHoldDateStart\":\"2007-03-31\",\"leaseHoldDateEnd\":\"2057-03-30\"},\"buyerName\":\"" +
+					",\"goodsTaxRate\":0.09}],\"leaseInfo\":{\"leasePropertyNo\":\"沪虹310109011047号\",\"leaseAddress\":\"上海市&虹口区\",\"leaseDetailAddress\":\"长阳路316号\",\"leaseCrossSign\":\"否\",\"leaseAreaUnit\":\"2\",\"leaseHoldDateStart\":\"2025-03-31\",\"leaseHoldDateEnd\":\"2065-03-30\"},\"buyerName\":\"" +
 					buyerName +
 					"\",\"pushEmail\":\"" +
 					pushEmail +

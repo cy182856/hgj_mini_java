@@ -205,6 +205,15 @@ public class XhParkPayController extends BaseController {
 					carInfoVo.setTotalAmount(payFee);
 					carInfoVo.setParkDur(parkDur);
 
+					// 计算停车时长是否超过8小时
+					if(distanceTimes[0] > 0 || distanceTimes[1] > 7){
+						carInfoVo.setIsTimeOut(true);
+					}else {
+						carInfoVo.setIsTimeOut(false);
+					}
+					// 测试用
+					// carInfoVo.setIsTimeOut(false);
+
 					// 返回数据
 					carPayResponseVo.setCarInfoVo(carInfoVo);
 					carPayResponseVo.setPayFeeStatus(payFeeStatus);
@@ -328,6 +337,12 @@ public class XhParkPayController extends BaseController {
 			carPayResponseVo.setErrDesc("抵扣时长不能为空");
 			return carPayResponseVo;
 		}
+		if(hourNumValue > 8){
+			carPayResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
+			carPayResponseVo.setErrCode(JiasvBasicRespCode.RESULT_FAILED.getRespCode());
+			carPayResponseVo.setErrDesc("抵扣时长不能超过8小时");
+			return carPayResponseVo;
+		}
 		if(StringUtils.isBlank(carPayRequestVo.getCardCstBatchId())){
 			carPayResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
 			carPayResponseVo.setErrCode(JiasvBasicRespCode.RESULT_FAILED.getRespCode());
@@ -342,12 +357,12 @@ public class XhParkPayController extends BaseController {
 		}
 		// 校验车牌号当天抵扣次数
 		List<XhParkCouponLog> listByCarCode = xhParkCouponLogDaoMapper.getListByCarCode(carCode);
-		// 查询当天抵扣上线数
+		// 查询当天抵扣上限数
 		ConstantConfig byProNumAndKey = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.XH_PARK_COUPON_DAY_MAX_NUM);
 		if(!listByCarCode.isEmpty() && listByCarCode.size() >= Integer.valueOf(byProNumAndKey.getConfigValue())){
 			carPayResponseVo.setRespCode(MonsterBasicRespCode.RESULT_FAILED.getReturnCode());
 			carPayResponseVo.setErrCode(JiasvBasicRespCode.RESULT_FAILED.getRespCode());
-			carPayResponseVo.setErrDesc("当天抵扣次数已用完");
+			carPayResponseVo.setErrDesc("当天该车牌发券次数已用完");
 			return carPayResponseVo;
 		}
 		// 查询当月停车卡信息
@@ -401,6 +416,10 @@ public class XhParkPayController extends BaseController {
 			if("1".equals(code)){
 				logger.info("车牌优惠接口调用成功：" + "msg:" + msg +"||pramJson:" + pramJson);
 				carPayRequestVo.setCouponNo(couponNo);
+				String resultJsonData = resultJson.getString("data");
+				JSONObject jsonData = JSONObject.parseObject(resultJsonData);
+				String couponKey = jsonData.getString("couponKey");
+				carPayRequestVo.setCouponKey(couponKey);
 				xhParkPayService.carNoCouponSuccess(carPayRequestVo);
 				carPayResponseVo.setRespCode(MonsterBasicRespCode.SUCCESS.getReturnCode());
 				carPayResponseVo.setErrCode(JiasvBasicRespCode.SUCCESS.getRespCode());
@@ -437,6 +456,9 @@ public class XhParkPayController extends BaseController {
 		cstIntoCard.setCardId(2);
 		List<CstIntoCard> cstIntoCardList = cstIntoCardMapper.getList(cstIntoCard);
 		try{
+			// 查询停车抵扣说明文字
+			ConstantConfig byProNumAndKey = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.XH_PARK_COUPON_DESC);
+			jsonObject.put("xhParkCouponDesc", byProNumAndKey.getConfigValue());
 			// 查询当月停车卡信息
 			CardCst cardInfo = cardCstDaoMapper.getCardInfo(proNum, cstCode, "2", expDate);
 			if(cardInfo != null && byWxOpenIdAndStatus_1 != null && (byWxOpenIdAndStatus_1.getIntoRole() == 2 || !cstIntoCardList.isEmpty())){
@@ -444,12 +466,9 @@ public class XhParkPayController extends BaseController {
 				if(expNum <= 0) {
 					expNum = 0;
 				}
-				// 查询停车抵扣说明文字
-				ConstantConfig byProNumAndKey = constantConfDaoMapper.getByProNumAndKey(proNum, Constant.XH_PARK_COUPON_DESC);
 				jsonObject.put("cardCstBatchId", cardInfo.getCardCstBatchId());
 				jsonObject.put("expNum", expNum);
 				jsonObject.put("isCard", true);
-				jsonObject.put("xhParkCouponDesc", byProNumAndKey.getConfigValue());
 			}else {
 				jsonObject.put("expNum", "0");
 				jsonObject.put("isCard", false);
@@ -532,6 +551,9 @@ public class XhParkPayController extends BaseController {
 					Integer expNum = cardInfo.getTotalNum() - cardInfo.getApplyNum();
 					if(expNum < maxHour){
 						maxHour = expNum;
+					}
+					if(maxHour > 8){
+						maxHour = 8;
 					}
 				}
 				List<Integer> hourNumArray = new ArrayList<>();

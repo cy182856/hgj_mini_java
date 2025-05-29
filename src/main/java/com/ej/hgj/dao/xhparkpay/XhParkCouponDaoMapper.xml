@@ -3,7 +3,7 @@
 <mapper namespace="com.ej.hgj.dao.xhparkpay.XhParkCouponDaoMapper">
 
     <resultMap id="BaseMap" type="com.ej.hgj.entity.xhparkpay.XhParkCoupon">
-        <result column="id" jdbcType="VARCHAR" property="id"/>
+        <result column="id" jdbcType="INTEGER" property="id"/>
         <result column="pro_num" jdbcType="VARCHAR" property="proNum"/>
         <result column="coupon_no" jdbcType="VARCHAR" property="couponNo"/>
         <result column="coupon_hour" jdbcType="VARCHAR" property="couponHour"/>

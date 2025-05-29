@@ -17,4 +17,6 @@ public class CarInfoVo {
 
     private String parkDur;
 
+    private Boolean isTimeOut;
+
 }

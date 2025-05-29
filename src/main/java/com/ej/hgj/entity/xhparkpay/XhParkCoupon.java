@@ -9,7 +9,7 @@ import java.util.Date;
 @Data
 public class XhParkCoupon {
 
-    private String id;
+    private Integer id;
 
     private String proNum;
 

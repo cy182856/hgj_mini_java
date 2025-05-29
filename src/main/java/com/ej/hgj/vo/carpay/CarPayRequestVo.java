@@ -31,7 +31,9 @@ public class CarPayRequestVo extends BaseReqVo implements Serializable {
 
 	private String orderId;
 
-	// 车牌优惠参数
+	// 车牌优惠参数,优惠券方案编号
 	private String couponNo;
+	// 车牌优惠参数,优惠券编号
+	private String couponKey;
 
 }
